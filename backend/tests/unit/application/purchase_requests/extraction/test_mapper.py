@@ -35,3 +35,16 @@ def test_map_converts_structured_model_output() -> None:
 def test_map_rejects_malformed_output(content: object) -> None:
     with pytest.raises(MalformedModelOutputError):
         StructuredOutputMapper().map(ModelResponse(content=content))
+
+
+def test_map_rejects_forbidden_tool_request() -> None:
+    response = ModelResponse(
+        content={
+            "schema_version": "1.0",
+            "items": [{"description": "Laptop stand", "quantity": 1}],
+            "tool_calls": [{"name": "submit_order"}],
+        }
+    )
+
+    with pytest.raises(MalformedModelOutputError, match="forbidden fields: tool_calls"):
+        StructuredOutputMapper().map(response)
