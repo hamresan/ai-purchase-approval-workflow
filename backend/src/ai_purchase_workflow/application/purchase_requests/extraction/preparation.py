@@ -32,8 +32,6 @@ class PrepareExtractedPurchaseRequest:
             ]
         )
         request = PurchaseRequest.create(trusted_items, extracted.requester_name)
-        await self._repository.add(request)
-
         draft = self._create_draft_order.execute(request, trusted_items)
         await self._check_budget.execute(request.requester_name, draft.total)
         request.draft_order = draft
@@ -46,5 +44,5 @@ class PrepareExtractedPurchaseRequest:
             ),
         )
         request.transition_to(RequestStatus.PENDING_APPROVAL)
-        await self._repository.save(request)
+        await self._repository.add(request)
         return PurchaseRequestView.from_domain(request)
