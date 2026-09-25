@@ -11,6 +11,10 @@ from ai_purchase_workflow.application.purchase_requests.trusted_tools import (
 from ai_purchase_workflow.domain.purchase_requests import AuditEntry, PurchaseRequest, RequestStatus
 
 
+class PurchaseRequestPreparationError(Exception):
+    """Expected failure while preparing an extracted purchase request."""
+
+
 class PrepareExtractedPurchaseRequest:
     def __init__(
         self,
@@ -25,15 +29,18 @@ class PrepareExtractedPurchaseRequest:
         self._check_budget = check_budget
 
     async def execute(self, extracted: ExtractedPurchaseRequest) -> PurchaseRequestView:
-        trusted_items = tuple(
-            [
-                await self._find_vendor.resolve(item.description, item.quantity)
-                for item in extracted.items
-            ]
-        )
-        request = PurchaseRequest.create(trusted_items, extracted.requester_name)
-        draft = self._create_draft_order.execute(request, trusted_items)
-        await self._check_budget.execute(request.requester_name, draft.total)
+        try:
+            trusted_items = tuple(
+                [
+                    await self._find_vendor.resolve(item.description, item.quantity)
+                    for item in extracted.items
+                ]
+            )
+            request = PurchaseRequest.create(trusted_items, extracted.requester_name)
+            draft = self._create_draft_order.execute(request, trusted_items)
+            await self._check_budget.execute(request.requester_name, draft.total)
+        except Exception as error:
+            raise PurchaseRequestPreparationError(str(error)) from error
         request.draft_order = draft
         request.audit_entries = (
             *request.audit_entries,
