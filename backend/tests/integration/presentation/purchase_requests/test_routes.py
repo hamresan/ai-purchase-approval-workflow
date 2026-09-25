@@ -105,3 +105,98 @@ async def test_submit_before_approval_is_rejected_by_api(api_client: AsyncClient
     assert response.json() == {
         "detail": "An approved decision is required before order submission."
     }
+
+
+async def test_prepare_rejects_unknown_vendor_data(api_client: AsyncClient) -> None:
+    created = (
+        await api_client.post(
+            "/api/purchase-requests",
+            json={
+                "requester_name": "Dana",
+                "items": [
+                    {
+                        "description": "Unknown item",
+                        "quantity": 1,
+                        "unit_price_amount": "1.00",
+                        "currency": "USD",
+                    }
+                ],
+            },
+        )
+    ).json()
+
+    response = await api_client.post(f"/api/purchase-requests/{created['id']}/prepare")
+
+    assert response.status_code == 422
+    assert "No trusted vendor data" in response.json()["detail"]
+
+
+async def test_prepare_rejects_unavailable_quantity(api_client: AsyncClient) -> None:
+    created = (
+        await api_client.post(
+            "/api/purchase-requests",
+            json={
+                "requester_name": "Dana",
+                "items": [
+                    {
+                        "description": "Laptop stand",
+                        "quantity": 11,
+                        "unit_price_amount": "1.00",
+                        "currency": "USD",
+                    }
+                ],
+            },
+        )
+    ).json()
+
+    response = await api_client.post(f"/api/purchase-requests/{created['id']}/prepare")
+
+    assert response.status_code == 422
+    assert "unavailable" in response.json()["detail"]
+
+
+async def test_prepare_rejects_over_budget(api_client: AsyncClient) -> None:
+    created = (
+        await api_client.post(
+            "/api/purchase-requests",
+            json={
+                "requester_name": "Dana",
+                "items": [
+                    {
+                        "description": "Monitor",
+                        "quantity": 3,
+                        "unit_price_amount": "1.00",
+                        "currency": "USD",
+                    }
+                ],
+            },
+        )
+    ).json()
+
+    response = await api_client.post(f"/api/purchase-requests/{created['id']}/prepare")
+
+    assert response.status_code == 422
+    assert "exceeds the available budget" in response.json()["detail"]
+
+
+async def test_prepare_rejects_missing_budget_data(api_client: AsyncClient) -> None:
+    created = (
+        await api_client.post(
+            "/api/purchase-requests",
+            json={
+                "items": [
+                    {
+                        "description": "Laptop stand",
+                        "quantity": 1,
+                        "unit_price_amount": "1.00",
+                        "currency": "USD",
+                    }
+                ],
+            },
+        )
+    ).json()
+
+    response = await api_client.post(f"/api/purchase-requests/{created['id']}/prepare")
+
+    assert response.status_code == 422
+    assert "No trusted budget data" in response.json()["detail"]
