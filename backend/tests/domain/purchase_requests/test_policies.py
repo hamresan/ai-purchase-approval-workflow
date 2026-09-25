@@ -59,3 +59,16 @@ def test_approval_gate_rejects_request_without_approved_decision() -> None:
     request.transition_to(RequestStatus.REJECTED)
     with pytest.raises(DomainValidationError, match="approved decision"):
         ApprovalGatePolicy().ensure_submission_allowed(request)
+
+
+def test_budget_policy_rejects_currency_mismatch() -> None:
+    with pytest.raises(DomainValidationError, match="currency"):
+        BudgetPolicy().ensure_within_budget(
+            Money(Decimal("10"), "USD"),
+            Money(Decimal("10"), "EUR"),
+        )
+
+
+def test_draft_order_policy_rejects_empty_items() -> None:
+    with pytest.raises(DomainValidationError, match="at least one item"):
+        DraftOrderPolicy().calculate_total(())
