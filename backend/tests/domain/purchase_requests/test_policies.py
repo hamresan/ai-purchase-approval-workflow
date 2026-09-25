@@ -1,4 +1,5 @@
 from decimal import Decimal
+
 import pytest
 
 from ai_purchase_workflow.domain.purchase_requests import (
@@ -38,7 +39,9 @@ def test_vendor_policy_rejects_missing_vendor_and_unavailable_quantity() -> None
 
 def test_draft_order_policy_calculates_total_and_rejects_mixed_currency() -> None:
     policy = DraftOrderPolicy()
-    assert policy.calculate_total((item(quantity=2), item(amount="5.00"))).amount == Decimal("25.00")
+    assert policy.calculate_total((item(quantity=2), item(amount="5.00"))).amount == Decimal(
+        "25.00"
+    )
     eur_item = PurchaseItem("Other", 1, Money(Decimal("1"), "EUR"), "Vendor")
     with pytest.raises(DomainValidationError, match="same currency"):
         policy.calculate_total((item(), eur_item))

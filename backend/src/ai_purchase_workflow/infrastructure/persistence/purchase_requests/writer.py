@@ -55,7 +55,10 @@ class PurchaseRequestRelatedRecordWriter:
 
         if request.draft_order is not None and request.draft_order.id not in draft_ids:
             session.add(self._mapper.to_draft_model(request.draft_order))
-        if request.approval_decision is not None and request.approval_decision.id not in decision_ids:
+        if (
+            request.approval_decision is not None
+            and request.approval_decision.id not in decision_ids
+        ):
             session.add(self._mapper.to_decision_model(request.approval_decision))
 
         new_audits = tuple(audit for audit in request.audit_entries if audit.id not in audit_ids)

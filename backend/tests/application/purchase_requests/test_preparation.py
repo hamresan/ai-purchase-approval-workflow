@@ -1,6 +1,11 @@
 from decimal import Decimal
 
 import pytest
+from tests.application.purchase_requests.fakes import (
+    FakeBudgetReader,
+    FakeCatalogReader,
+    FakeOrderGateway,
+)
 
 from ai_purchase_workflow.application.purchase_requests import PurchaseRequestRepository
 from ai_purchase_workflow.application.purchase_requests.preparation import (
@@ -23,11 +28,6 @@ from ai_purchase_workflow.domain.purchase_requests import (
     PurchaseRequest,
     RequestStatus,
     VendorPolicy,
-)
-from tests.application.purchase_requests.fakes import (
-    FakeBudgetReader,
-    FakeCatalogReader,
-    FakeOrderGateway,
 )
 
 
@@ -67,9 +67,7 @@ async def test_prepare_purchase_request_builds_trusted_draft_and_moves_to_pendin
 async def test_prepare_purchase_request_rejects_missing_budget_data(
     repository: PurchaseRequestRepository,
 ) -> None:
-    request = PurchaseRequest.create(
-        (PurchaseItem("Laptop stand", 1, Money(Decimal("1"), "USD")),)
-    )
+    request = PurchaseRequest.create((PurchaseItem("Laptop stand", 1, Money(Decimal("1"), "USD")),))
     await repository.add(request)
     use_case = PreparePurchaseRequest(
         repository,

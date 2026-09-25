@@ -19,7 +19,9 @@ class VendorPolicy:
         if item.vendor is None:
             raise DomainValidationError("A trusted vendor is required.")
         if available_quantity < item.quantity:
-            raise DomainValidationError(f"Requested quantity for {item.description} is unavailable.")
+            raise DomainValidationError(
+                f"Requested quantity for {item.description} is unavailable."
+            )
 
 
 class DraftOrderPolicy:
