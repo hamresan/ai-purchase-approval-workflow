@@ -16,16 +16,22 @@ from ai_purchase_workflow.application.purchase_requests.extraction.mapper import
 from ai_purchase_workflow.application.purchase_requests.extraction.prompt import (
     PurchaseRequestPromptBuilder,
 )
-from ai_purchase_workflow.application.purchase_requests.extraction.service import (\n    ExtractPurchaseRequest,\n    ExtractionOutcome,\n)\nfrom ai_purchase_workflow.application.purchase_requests.extraction.validator import (
+from ai_purchase_workflow.application.purchase_requests.extraction.service import (
+    ExtractPurchaseRequest,
+    ExtractionOutcome,
+)
+from ai_purchase_workflow.application.purchase_requests.extraction.validator import (
     ExtractedRequestValidator,
 )
 
 __all__ = [
     "EXTRACTED_REQUEST_SCHEMA_VERSION",
     "AmbiguousExtractionError",
+    "ExtractPurchaseRequest",
     "ExtractedPurchaseItem",
-    "ExtractedPurchaseRequest",\n    "ExtractPurchaseRequest",\n    "ExtractionOutcome",
+    "ExtractedPurchaseRequest",
     "ExtractedRequestValidator",
+    "ExtractionOutcome",
     "MalformedModelOutputError",
     "ModelRequest",
     "ModelResponse",
