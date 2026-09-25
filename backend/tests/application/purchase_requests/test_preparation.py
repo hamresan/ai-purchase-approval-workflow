@@ -14,7 +14,9 @@ from ai_purchase_workflow.application.purchase_requests.trusted_tools import (
     SubmitOrder,
 )
 from ai_purchase_workflow.domain.purchase_requests import (
+    ApprovalDecision,
     ApprovalGatePolicy,
+    ApprovalOutcome,
     BudgetPolicy,
     DomainValidationError,
     DraftOrderPolicy,
@@ -101,3 +103,33 @@ async def test_submit_purchase_request_rejects_preapproval_at_application_bounda
     stored = await repository.get(request.id)
     assert stored is not None
     assert stored.status is RequestStatus.DRAFTING
+
+
+async def test_submit_purchase_request_submits_approved_draft_and_marks_request_submitted(
+    repository: PurchaseRequestRepository,
+) -> None:
+    item = PurchaseItem("Laptop stand", 1, Money(Decimal("35"), "USD"), "Trusted Vendor")
+    request = PurchaseRequest.create((item,), requester_name="Dana")
+    request.draft_order = CreateDraftOrder(DraftOrderPolicy()).execute(request, request.items)
+    request.transition_to(RequestStatus.PENDING_APPROVAL)
+    request.approval_decision = ApprovalDecision.create(
+        request.id,
+        ApprovalOutcome.APPROVED,
+        "approver",
+    )
+    request.transition_to(RequestStatus.APPROVED)
+    await repository.add(request)
+
+    gateway = FakeOrderGateway()
+    use_case = SubmitPurchaseRequest(
+        repository,
+        SubmitOrder(gateway, ApprovalGatePolicy()),
+    )
+
+    view = await use_case.execute(request.id)
+
+    assert gateway.submitted is True
+    assert view.status is RequestStatus.SUBMITTED
+    stored = await repository.get(request.id)
+    assert stored is not None
+    assert stored.status is RequestStatus.SUBMITTED
