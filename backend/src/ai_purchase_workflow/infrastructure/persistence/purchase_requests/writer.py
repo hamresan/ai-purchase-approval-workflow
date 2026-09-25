@@ -8,13 +8,21 @@ from ai_purchase_workflow.infrastructure.persistence.models import (
     DraftOrderModel,
 )
 from ai_purchase_workflow.infrastructure.persistence.purchase_requests.mapper import (
-    PurchaseItemRecordMapper,
+    PurchaseRequestRelatedRecordMapper,
 )
 
 
 class PurchaseRequestRelatedRecordWriter:
-    def __init__(self, item_mapper: PurchaseItemRecordMapper | None = None) -> None:
-        self._item_mapper = item_mapper or PurchaseItemRecordMapper()
+    def __init__(self, mapper: PurchaseRequestRelatedRecordMapper | None = None) -> None:
+        self._mapper = mapper or PurchaseRequestRelatedRecordMapper()
+
+    def add_to_session(self, session: AsyncSession, request: PurchaseRequest) -> None:
+        if request.draft_order is not None:
+            session.add(self._mapper.to_draft_model(request.draft_order))
+        if request.approval_decision is not None:
+            session.add(self._mapper.to_decision_model(request.approval_decision))
+        for sequence, audit in enumerate(request.audit_entries, start=1):
+            session.add(self._mapper.to_audit_model(audit, sequence))
 
     async def add_missing_to_session(
         self,
@@ -44,59 +52,12 @@ class PurchaseRequestRelatedRecordWriter:
                 )
             ).all()
         )
+
         if request.draft_order is not None and request.draft_order.id not in draft_ids:
-            self._add_draft(session, request)
+            session.add(self._mapper.to_draft_model(request.draft_order))
         if request.approval_decision is not None and request.approval_decision.id not in decision_ids:
-            self._add_decision(session, request)
+            session.add(self._mapper.to_decision_model(request.approval_decision))
+
         new_audits = tuple(audit for audit in request.audit_entries if audit.id not in audit_ids)
-        self._add_audits(session, request, new_audits, start_sequence=len(audit_ids) + 1)
-
-    def add_to_session(self, session: AsyncSession, request: PurchaseRequest) -> None:
-        self._add_draft(session, request)
-        self._add_decision(session, request)
-        self._add_audits(session, request, request.audit_entries, start_sequence=1)
-
-    def _add_draft(self, session: AsyncSession, request: PurchaseRequest) -> None:
-        if request.draft_order is not None:
-            draft = request.draft_order
-            session.add(
-                DraftOrderModel(
-                    id=draft.id,
-                    request_id=draft.request_id,
-                    items=[self._item_mapper.to_record(item) for item in draft.items],
-                    total_amount=draft.total.amount,
-                    currency=draft.total.currency,
-                    created_at=draft.created_at,
-                )
-            )
-    def _add_decision(self, session: AsyncSession, request: PurchaseRequest) -> None:
-        if request.approval_decision is not None:
-            decision = request.approval_decision
-            session.add(
-                ApprovalDecisionModel(
-                    id=decision.id,
-                    request_id=decision.request_id,
-                    outcome=decision.outcome.value,
-                    decided_by=decision.decided_by,
-                    reason=decision.reason,
-                    decided_at=decision.decided_at,
-                )
-            )
-    @staticmethod
-    def _add_audits(
-        session: AsyncSession,
-        request: PurchaseRequest,
-        audits: tuple,
-        start_sequence: int,
-    ) -> None:
-        for sequence, audit in enumerate(audits, start=start_sequence):
-            session.add(
-                AuditEntryModel(
-                    id=audit.id,
-                    request_id=audit.request_id,
-                    sequence=sequence,
-                    event_type=audit.event_type,
-                    message=audit.message,
-                    occurred_at=audit.occurred_at,
-                )
-            )
+        for sequence, audit in enumerate(new_audits, start=len(audit_ids) + 1):
+            session.add(self._mapper.to_audit_model(audit, sequence))
