@@ -19,7 +19,6 @@ from ai_purchase_workflow.application.purchase_requests.use_cases import (
 from ai_purchase_workflow.domain.purchase_requests import RequestStatus
 
 
-
 @pytest.mark.asyncio
 async def test_create_get_and_list_purchase_requests(
     repository: PurchaseRequestRepository,
@@ -44,6 +43,5 @@ async def test_create_get_and_list_purchase_requests(
 async def test_get_purchase_request_raises_for_unknown_id(
     repository: PurchaseRequestRepository,
 ) -> None:
-
     with pytest.raises(PurchaseRequestNotFoundError):
         await GetPurchaseRequest(repository).execute(uuid4())
