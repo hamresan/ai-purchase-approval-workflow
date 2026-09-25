@@ -52,10 +52,13 @@ class FindVendor:
         self._policy = policy
 
     async def execute(self, requested_item: PurchaseItem) -> PurchaseItem:
-        trusted = await self._reader.find_item(requested_item.description)
+        return await self.resolve(requested_item.description, requested_item.quantity)
+
+    async def resolve(self, description: str, quantity: int) -> PurchaseItem:
+        trusted = await self._reader.find_item(description)
         resolved = PurchaseItem(
             description=trusted.description,
-            quantity=requested_item.quantity,
+            quantity=quantity,
             unit_price=trusted.unit_price,
             vendor=trusted.vendor,
         )
