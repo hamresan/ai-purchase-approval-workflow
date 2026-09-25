@@ -9,6 +9,7 @@ from ai_purchase_workflow.application.purchase_requests.use_cases import (
     CreatePurchaseRequest,
     GetPurchaseRequest,
     ListPurchaseRequests,
+    PurchaseRequestNotFoundError,
 )
 
 __all__ = [
@@ -18,6 +19,7 @@ __all__ = [
     "GetPurchaseRequest",
     "ListPurchaseRequests",
     "PurchaseItemView",
+    "PurchaseRequestNotFoundError",
     "PurchaseRequestRepository",
     "PurchaseRequestView",
 ]
