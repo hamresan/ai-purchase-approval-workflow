@@ -12,6 +12,4 @@ dist/
 coverage/
 playwright-report/
 test-results/
-*.shtsconfig.tsbuildinfo
-frontend/tsconfig.tsbuildinfo
-*.sh
+*.tsbuildinfo
