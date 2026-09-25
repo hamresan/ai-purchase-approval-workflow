@@ -12,4 +12,5 @@ dist/
 coverage/
 playwright-report/
 test-results/
+*.sh
 *.tsbuildinfo
