@@ -17,7 +17,7 @@ WorkflowStatus = Literal["started", "extracted", "human_review", "pending_approv
 
 
 class PurchaseRequestWorkflowState(TypedDict):
-    checkpoint_id: str
+    workflow_id: str
     messages: tuple[str, ...]
     free_text: str
     status: WorkflowStatus
@@ -29,7 +29,7 @@ class PurchaseRequestWorkflowState(TypedDict):
 
 @dataclass(frozen=True, slots=True)
 class PurchaseRequestWorkflowResult:
-    checkpoint_id: str
+    workflow_id: str
     purchase_request_id: UUID | None
     status: WorkflowStatus
     needs_human_review: bool
@@ -61,10 +61,10 @@ class PurchaseRequestWorkflow:
         self,
         free_text: str,
         *,
-        checkpoint_id: str | None = None,
+        workflow_id: str | None = None,
     ) -> PurchaseRequestWorkflowResult:
         initial_state: PurchaseRequestWorkflowState = {
-            "checkpoint_id": checkpoint_id or str(uuid4()),
+            "workflow_id": workflow_id or str(uuid4()),
             "messages": (free_text,),
             "free_text": free_text,
             "status": "started",
@@ -73,7 +73,7 @@ class PurchaseRequestWorkflow:
         raw_state = await self._graph.ainvoke(initial_state)
         state = cast(PurchaseRequestWorkflowState, raw_state)
         return PurchaseRequestWorkflowResult(
-            checkpoint_id=state["checkpoint_id"],
+            workflow_id=state["workflow_id"],
             purchase_request_id=state.get("purchase_request_id"),
             status=state["status"],
             needs_human_review=state["status"] == "human_review",
