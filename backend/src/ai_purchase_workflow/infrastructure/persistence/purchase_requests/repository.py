@@ -33,6 +33,7 @@ class SqlAlchemyPurchaseRequestRepository(PurchaseRequestRepository):
 
     async def add(self, request: PurchaseRequest) -> None:
         self._session.add(self._mapper.to_model(request))
+        await self._session.flush()
         self._related_writer.add_to_session(self._session, request)
         await self._session.commit()
 
