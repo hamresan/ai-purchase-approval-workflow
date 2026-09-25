@@ -15,6 +15,9 @@ class InMemoryPurchaseRequestRepository(PurchaseRequestRepository):
     async def add(self, request: PurchaseRequest) -> None:
         self.requests[request.id] = request
 
+    async def save(self, request: PurchaseRequest) -> None:
+        self.requests[request.id] = request
+
     async def get(self, request_id: UUID) -> PurchaseRequest | None:
         return self.requests.get(request_id)
 
