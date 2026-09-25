@@ -11,7 +11,7 @@ from ai_purchase_workflow.application.purchase_requests.trusted_tools import (
 from ai_purchase_workflow.application.purchase_requests.use_cases import (
     PurchaseRequestNotFoundError,
 )
-from ai_purchase_workflow.domain.purchase_requests import AuditEntry, RequestStatus
+from ai_purchase_workflow.domain.purchase_requests import AuditEntry, PurchaseItem, RequestStatus
 
 
 class PreparePurchaseRequest:
@@ -32,7 +32,7 @@ class PreparePurchaseRequest:
         if request is None:
             raise PurchaseRequestNotFoundError(request_id)
 
-        trusted_items = []
+        trusted_items: list[PurchaseItem] = []
         for item in request.items:
             trusted_items.append(await self._find_vendor.execute(item))
         resolved_items = tuple(trusted_items)
