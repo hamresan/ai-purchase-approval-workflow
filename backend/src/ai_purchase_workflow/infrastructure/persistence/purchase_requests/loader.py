@@ -43,7 +43,9 @@ class PurchaseRequestAggregateLoader:
         ).all()
         decisions = (
             await self._session.scalars(
-                select(ApprovalDecisionModel).where(ApprovalDecisionModel.request_id.in_(request_ids))
+                select(ApprovalDecisionModel).where(
+                    ApprovalDecisionModel.request_id.in_(request_ids)
+                )
             )
         ).all()
         audits = (

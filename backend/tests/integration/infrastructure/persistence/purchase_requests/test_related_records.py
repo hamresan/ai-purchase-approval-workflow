@@ -55,12 +55,18 @@ async def test_repository_persists_related_business_records(db_session: AsyncSes
     assert loaded.approval_decision == request.approval_decision
     assert loaded.audit_entries == request.audit_entries
 
-    assert await db_session.scalar(
-        select(DraftOrderModel).where(DraftOrderModel.request_id == request.id)
-    ) is not None
-    assert await db_session.scalar(
-        select(ApprovalDecisionModel).where(ApprovalDecisionModel.request_id == request.id)
-    ) is not None
+    assert (
+        await db_session.scalar(
+            select(DraftOrderModel).where(DraftOrderModel.request_id == request.id)
+        )
+        is not None
+    )
+    assert (
+        await db_session.scalar(
+            select(ApprovalDecisionModel).where(ApprovalDecisionModel.request_id == request.id)
+        )
+        is not None
+    )
     audit_rows = (
         await db_session.scalars(
             select(AuditEntryModel)
