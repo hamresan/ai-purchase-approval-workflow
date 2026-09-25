@@ -1,4 +1,4 @@
-from collections.abc import Mapping
+from typing import cast
 
 from ai_purchase_workflow.application.purchase_requests.extraction.contracts import (
     ExtractedPurchaseItem,
@@ -9,7 +9,7 @@ from ai_purchase_workflow.application.purchase_requests.extraction.errors import
     MalformedModelOutputError,
 )
 
-StructuredObject = Mapping[str, object]
+StructuredObject = dict[str, object]
 
 
 class StructuredOutputMapper:
@@ -19,7 +19,8 @@ class StructuredOutputMapper:
         if not isinstance(items_value, list):
             raise MalformedModelOutputError("Model output items must be a list.")
 
-        items = tuple(self._map_item(item) for item in items_value)
+        raw_items = cast(list[object], items_value)
+        items = tuple(self._map_item(item) for item in raw_items)
         return ExtractedPurchaseRequest(
             schema_version=self._required_string(content, "schema_version"),
             requester_name=self._optional_string(content, "requester_name"),
@@ -42,7 +43,7 @@ class StructuredOutputMapper:
     def _as_object(value: object, error_message: str) -> StructuredObject:
         if not isinstance(value, dict):
             raise MalformedModelOutputError(error_message)
-        return {str(key): item for key, item in value.items()}
+        return cast(StructuredObject, value)
 
     @staticmethod
     def _required_string(value: StructuredObject, key: str) -> str:
