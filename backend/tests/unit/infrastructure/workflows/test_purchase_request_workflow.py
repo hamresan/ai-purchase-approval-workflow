@@ -17,7 +17,7 @@ from ai_purchase_workflow.application.purchase_requests.extraction import (
     PurchaseRequestPromptBuilder,
     StructuredOutputMapper,
 )
-from ai_purchase_workflow.application.purchase_requests.extraction.preparation import (
+from ai_purchase_workflow.application.purchase_requests.extracted_preparation import (
     PrepareExtractedPurchaseRequest,
 )
 from ai_purchase_workflow.application.purchase_requests.trusted_tools import (
