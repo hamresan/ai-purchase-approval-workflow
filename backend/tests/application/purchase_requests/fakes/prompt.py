@@ -1,4 +1,4 @@
-from ai_purchase_workflow.application.purchase_requests.extraction.prompt import (
+from ai_purchase_workflow.application.purchase_requests.extraction.prompting import (
     PromptTemplateReader,
 )
 
