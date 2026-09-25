@@ -17,6 +17,9 @@ class InMemoryPurchaseRequestRepository(PurchaseRequestRepository):
     async def get(self, request_id: UUID) -> PurchaseRequest | None:
         return self.requests.get(request_id)
 
+    async def get_for_update(self, request_id: UUID) -> PurchaseRequest | None:
+        return self.requests.get(request_id)
+
     async def list(
         self,
         status: RequestStatus | None = None,
