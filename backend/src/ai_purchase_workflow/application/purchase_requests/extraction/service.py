@@ -5,13 +5,13 @@ from ai_purchase_workflow.application.purchase_requests.extraction.contracts imp
     PurchaseRequestModel,
 )
 from ai_purchase_workflow.application.purchase_requests.extraction.errors import ExtractionError
-from ai_purchase_workflow.application.purchase_requests.extraction.mapper import (
+from ai_purchase_workflow.application.purchase_requests.extraction.mapping import (
     StructuredOutputMapper,
 )
-from ai_purchase_workflow.application.purchase_requests.extraction.prompt import (
+from ai_purchase_workflow.application.purchase_requests.extraction.prompting import (
     PurchaseRequestPromptBuilder,
 )
-from ai_purchase_workflow.application.purchase_requests.extraction.validator import (
+from ai_purchase_workflow.application.purchase_requests.extraction.validation import (
     ExtractedRequestValidator,
 )
 
