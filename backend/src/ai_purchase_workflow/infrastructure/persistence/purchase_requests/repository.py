@@ -1,16 +1,11 @@
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ai_purchase_workflow.application.purchase_requests.repository import PurchaseRequestRepository
 from ai_purchase_workflow.domain.purchase_requests import PurchaseRequest, RequestStatus
-from ai_purchase_workflow.infrastructure.persistence.models import (
-    ApprovalDecisionModel,
-    AuditEntryModel,
-    DraftOrderModel,
-    PurchaseRequestModel,
-)
+from ai_purchase_workflow.infrastructure.persistence.models import PurchaseRequestModel
 from ai_purchase_workflow.infrastructure.persistence.purchase_requests.loader import (
     PurchaseRequestAggregateLoader,
 )
@@ -47,11 +42,7 @@ class SqlAlchemyPurchaseRequestRepository(PurchaseRequestRepository):
         if model is None:
             raise LookupError(f"Purchase request {request.id} was not found.")
         self._mapper.update_model(model, request)
-        for related_model in (DraftOrderModel, ApprovalDecisionModel, AuditEntryModel):
-            await self._session.execute(
-                delete(related_model).where(related_model.request_id == request.id)
-            )
-        self._related_writer.add_to_session(self._session, request)
+        await self._related_writer.add_missing_to_session(self._session, request)
         await self._session.commit()
 
     async def get(self, request_id: UUID) -> PurchaseRequest | None:
