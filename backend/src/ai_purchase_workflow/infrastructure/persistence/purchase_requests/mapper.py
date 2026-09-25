@@ -57,6 +57,12 @@ class PurchaseRequestPersistenceMapper:
             updated_at=request.updated_at,
         )
 
+    def update_model(self, model: PurchaseRequestModel, request: PurchaseRequest) -> None:
+        model.requester_name = request.requester_name
+        model.status = request.status.value
+        model.items = [self._item_mapper.to_record(item) for item in request.items]
+        model.updated_at = request.updated_at
+
     def to_domain(
         self,
         model: PurchaseRequestModel,
