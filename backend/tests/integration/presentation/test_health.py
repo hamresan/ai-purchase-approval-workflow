@@ -1,17 +1,17 @@
-from typing import cast
-
-from fastapi.testclient import TestClient
-from httpx import Response
+from httpx import ASGITransport, AsyncClient
+import pytest
 
 from ai_purchase_workflow.composition_root.settings import Settings
 from ai_purchase_workflow.presentation.app import create_app
 
 
-def test_health_endpoint_returns_ok() -> None:
+@pytest.mark.asyncio
+async def test_health_endpoint_returns_ok() -> None:
     app = create_app(Settings())
+    transport = ASGITransport(app=app)
 
-    with TestClient(app) as client:
-        response = cast(Response, client.get("/health"))
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/health")
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
