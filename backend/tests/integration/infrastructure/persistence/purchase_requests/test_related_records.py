@@ -75,3 +75,54 @@ async def test_repository_persists_related_business_records(db_session: AsyncSes
         )
     ).all()
     assert [row.sequence for row in audit_rows] == [1, 2]
+
+
+@pytest.mark.asyncio
+async def test_repository_save_persists_new_draft_and_audit_without_rewriting_history(
+    db_session: AsyncSession,
+) -> None:
+    item = PurchaseItem("Monitor", 1, Money(Decimal("250.00"), "USD"), "Acme")
+    request = PurchaseRequest.create(items=(item,), requester_name="Alex")
+    repository = SqlAlchemyPurchaseRequestRepository(db_session)
+    await repository.add(request)
+
+    request.draft_order = DraftOrder.create(
+        request.id,
+        request.items,
+        Money(Decimal("250.00"), "USD"),
+    )
+    first_audit = AuditEntry.create(
+        request.id,
+        "purchase_request_prepared",
+        "Trusted purchase data validated and draft order created.",
+    )
+    request.audit_entries = (first_audit,)
+    request.transition_to(RequestStatus.PENDING_APPROVAL)
+    await repository.save(request)
+
+    loaded = await repository.get(request.id)
+    assert loaded is not None
+    assert loaded.draft_order == request.draft_order
+    assert loaded.audit_entries == (first_audit,)
+
+    second_audit = AuditEntry.create(
+        request.id,
+        "approval_recorded",
+        "Approval decision recorded.",
+    )
+    request.audit_entries = (*request.audit_entries, second_audit)
+    await repository.save(request)
+
+    reloaded = await repository.get(request.id)
+    assert reloaded is not None
+    assert reloaded.audit_entries == (first_audit, second_audit)
+
+    audit_rows = (
+        await db_session.scalars(
+            select(AuditEntryModel)
+            .where(AuditEntryModel.request_id == request.id)
+            .order_by(AuditEntryModel.sequence)
+        )
+    ).all()
+    assert [row.id for row in audit_rows] == [first_audit.id, second_audit.id]
+    assert [row.sequence for row in audit_rows] == [1, 2]

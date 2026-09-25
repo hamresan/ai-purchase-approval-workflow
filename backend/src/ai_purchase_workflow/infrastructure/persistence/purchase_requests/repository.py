@@ -37,6 +37,14 @@ class SqlAlchemyPurchaseRequestRepository(PurchaseRequestRepository):
         self._related_writer.add_to_session(self._session, request)
         await self._session.commit()
 
+    async def save(self, request: PurchaseRequest) -> None:
+        model = await self._session.get(PurchaseRequestModel, request.id)
+        if model is None:
+            raise LookupError(f"Purchase request {request.id} was not found.")
+        self._mapper.update_model(model, request)
+        await self._related_writer.add_missing_to_session(self._session, request)
+        await self._session.commit()
+
     async def get(self, request_id: UUID) -> PurchaseRequest | None:
         model = await self._session.get(PurchaseRequestModel, request_id)
         if model is None:

@@ -7,12 +7,16 @@ from ai_purchase_workflow.application.purchase_requests import (
     CreatePurchaseRequest,
     GetPurchaseRequest,
     ListPurchaseRequests,
+    PreparePurchaseRequest,
+    SubmitPurchaseRequest,
 )
 from ai_purchase_workflow.domain.purchase_requests import RequestStatus
 from ai_purchase_workflow.presentation.purchase_requests.dependencies import (
     get_create_purchase_request,
     get_list_purchase_requests,
+    get_prepare_purchase_request,
     get_purchase_request,
+    get_submit_purchase_request,
 )
 from ai_purchase_workflow.presentation.purchase_requests.mappers import PurchaseRequestCommandMapper
 from ai_purchase_workflow.presentation.purchase_requests.schemas import (
@@ -33,6 +37,14 @@ GetPurchaseRequestDependency = Annotated[
 ListPurchaseRequestsDependency = Annotated[
     ListPurchaseRequests,
     Depends(get_list_purchase_requests),
+]
+PreparePurchaseRequestDependency = Annotated[
+    PreparePurchaseRequest,
+    Depends(get_prepare_purchase_request),
+]
+SubmitPurchaseRequestDependency = Annotated[
+    SubmitPurchaseRequest,
+    Depends(get_submit_purchase_request),
 ]
 RequestStatusQuery = Annotated[RequestStatus | None, Query(alias="status")]
 
@@ -62,3 +74,21 @@ async def list_purchase_requests(
 ) -> list[PurchaseRequestResponse]:
     views = await use_case.execute(status=request_status)
     return [PurchaseRequestResponse.from_view(view) for view in views]
+
+
+@router.post("/{request_id}/prepare", response_model=PurchaseRequestResponse)
+async def prepare_purchase_request(
+    request_id: UUID,
+    use_case: PreparePurchaseRequestDependency,
+) -> PurchaseRequestResponse:
+    view = await use_case.execute(request_id)
+    return PurchaseRequestResponse.from_view(view)
+
+
+@router.post("/{request_id}/submit", response_model=PurchaseRequestResponse)
+async def submit_purchase_request(
+    request_id: UUID,
+    use_case: SubmitPurchaseRequestDependency,
+) -> PurchaseRequestResponse:
+    view = await use_case.execute(request_id)
+    return PurchaseRequestResponse.from_view(view)
