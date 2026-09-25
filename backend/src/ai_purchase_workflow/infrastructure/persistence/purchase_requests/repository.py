@@ -46,10 +46,7 @@ class SqlAlchemyPurchaseRequestRepository(PurchaseRequestRepository):
         model = await self._session.get(PurchaseRequestModel, request.id)
         if model is None:
             raise LookupError(f"Purchase request {request.id} was not found.")
-        model.requester_name = request.requester_name
-        model.status = request.status.value
-        model.items = [self._mapper._item_mapper.to_record(item) for item in request.items]
-        model.updated_at = request.updated_at
+        self._mapper.update_model(model, request)
         for related_model in (DraftOrderModel, ApprovalDecisionModel, AuditEntryModel):
             await self._session.execute(
                 delete(related_model).where(related_model.request_id == request.id)
