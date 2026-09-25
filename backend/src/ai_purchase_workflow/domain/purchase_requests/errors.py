@@ -8,4 +8,6 @@ class DomainValidationError(PurchaseRequestDomainError, ValueError):
 
 class InvalidRequestTransitionError(PurchaseRequestDomainError):
     def __init__(self, current_status: str, target_status: str) -> None:
-        super().__init__(f"Cannot transition purchase request from {current_status} to {target_status}.")
+        super().__init__(
+            f"Cannot transition purchase request from {current_status} to {target_status}."
+        )

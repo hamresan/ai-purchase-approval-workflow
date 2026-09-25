@@ -50,7 +50,9 @@ def test_purchase_request_allows_only_explicit_lifecycle_transitions() -> None:
         (RequestStatus.FAILED, RequestStatus.DRAFTING),
     ],
 )
-def test_purchase_request_rejects_forbidden_transitions(start: RequestStatus, target: RequestStatus) -> None:
+def test_purchase_request_rejects_forbidden_transitions(
+    start: RequestStatus, target: RequestStatus
+) -> None:
     request = PurchaseRequest.create(items=(make_item(),))
     if start is RequestStatus.PENDING_APPROVAL:
         request.transition_to(RequestStatus.PENDING_APPROVAL)

@@ -3,7 +3,12 @@ from decimal import Decimal
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ai_purchase_workflow.domain.purchase_requests import Money, PurchaseItem, PurchaseRequest, RequestStatus
+from ai_purchase_workflow.domain.purchase_requests import (
+    Money,
+    PurchaseItem,
+    PurchaseRequest,
+    RequestStatus,
+)
 from ai_purchase_workflow.infrastructure.persistence.purchase_requests import (
     SqlAlchemyPurchaseRequestRepository,
 )

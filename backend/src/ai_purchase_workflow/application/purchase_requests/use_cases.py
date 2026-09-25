@@ -5,7 +5,12 @@ from ai_purchase_workflow.application.purchase_requests.dto import (
     PurchaseRequestView,
 )
 from ai_purchase_workflow.application.purchase_requests.repository import PurchaseRequestRepository
-from ai_purchase_workflow.domain.purchase_requests import Money, PurchaseItem, PurchaseRequest, RequestStatus
+from ai_purchase_workflow.domain.purchase_requests import (
+    Money,
+    PurchaseItem,
+    PurchaseRequest,
+    RequestStatus,
+)
 
 
 class PurchaseRequestNotFoundError(LookupError):

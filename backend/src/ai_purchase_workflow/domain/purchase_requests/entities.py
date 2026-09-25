@@ -31,7 +31,9 @@ class PurchaseItem:
     vendor: str | None = None
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "description", RequiredText(self.description, "Item description").value)
+        object.__setattr__(
+            self, "description", RequiredText(self.description, "Item description").value
+        )
         if self.quantity <= 0:
             raise DomainValidationError("Item quantity must be greater than zero.")
         if self.vendor is not None:
@@ -51,10 +53,16 @@ class DraftOrder:
     created_at: datetime
 
     @classmethod
-    def create(cls, request_id: UUID, items: tuple[PurchaseItem, ...], total: Money) -> "DraftOrder":
+    def create(cls, request_id: UUID, items: tuple[PurchaseItem, ...], total: Money) -> DraftOrder:
         if not items:
             raise DomainValidationError("A draft order must contain at least one item.")
-        return cls(id=uuid4(), request_id=request_id, items=items, total=total, created_at=datetime.now(UTC))
+        return cls(
+            id=uuid4(),
+            request_id=request_id,
+            items=items,
+            total=total,
+            created_at=datetime.now(UTC),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,8 +81,10 @@ class ApprovalDecision:
         outcome: ApprovalOutcome,
         decided_by: str,
         reason: str | None = None,
-    ) -> "ApprovalDecision":
-        normalized_reason = None if reason is None else RequiredText(reason, "Decision reason").value
+    ) -> ApprovalDecision:
+        normalized_reason = (
+            None if reason is None else RequiredText(reason, "Decision reason").value
+        )
         return cls(
             id=uuid4(),
             request_id=request_id,
@@ -94,7 +104,7 @@ class AuditEntry:
     occurred_at: datetime
 
     @classmethod
-    def create(cls, request_id: UUID, event_type: str, message: str) -> "AuditEntry":
+    def create(cls, request_id: UUID, event_type: str, message: str) -> AuditEntry:
         return cls(
             id=uuid4(),
             request_id=request_id,
@@ -117,7 +127,9 @@ class PurchaseRequest:
     audit_entries: tuple[AuditEntry, ...] = field(default_factory=tuple)
 
     @classmethod
-    def create(cls, items: tuple[PurchaseItem, ...], requester_name: str | None = None) -> "PurchaseRequest":
+    def create(
+        cls, items: tuple[PurchaseItem, ...], requester_name: str | None = None
+    ) -> PurchaseRequest:
         if not items:
             raise DomainValidationError("A purchase request must contain at least one item.")
         normalized_requester = None
@@ -133,7 +145,9 @@ class PurchaseRequest:
             updated_at=now,
         )
 
-    def transition_to(self, target_status: RequestStatus, *, occurred_at: datetime | None = None) -> None:
+    def transition_to(
+        self, target_status: RequestStatus, *, occurred_at: datetime | None = None
+    ) -> None:
         if target_status not in _ALLOWED_TRANSITIONS[self.status]:
             raise InvalidRequestTransitionError(self.status.value, target_status.value)
         self.status = target_status
