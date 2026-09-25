@@ -22,9 +22,7 @@ class InMemoryPurchaseRequestRepository(PurchaseRequestRepository):
         self,
         status: RequestStatus | None = None,
     ) -> tuple[PurchaseRequest, ...]:
-        values = tuple(
-            sorted(self.requests.values(), key=lambda request: request.created_at)
-        )
+        values = tuple(sorted(self.requests.values(), key=lambda request: request.created_at))
         if status is None:
             return values
         return tuple(request for request in values if request.status is status)
