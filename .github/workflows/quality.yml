@@ -12,6 +12,6 @@ jobs:
         with: {python-version: "3.12"}
       - uses: actions/setup-node@v4
         with: {node-version: "22"}
-      - run: cd backend && uv sync --all-groups
+      - run: cd backend && uv sync --frozen --all-groups
       - run: cd frontend && npm install
       - run: make check
