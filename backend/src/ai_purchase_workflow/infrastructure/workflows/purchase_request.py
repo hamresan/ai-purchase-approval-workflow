@@ -29,7 +29,7 @@ class PurchaseRequestWorkflowState(TypedDict):
 
 @dataclass(frozen=True, slots=True)
 class PurchaseRequestWorkflowResult:
-    workflow_id: str
+    checkpoint_id: str
     purchase_request_id: UUID | None
     status: WorkflowStatus
     needs_human_review: bool
