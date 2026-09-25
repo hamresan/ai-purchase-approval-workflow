@@ -21,9 +21,7 @@ class ExtractPurchaseRequestNode:
         updated = state.copy()
         if outcome.needs_human_review or outcome.extracted_request is None:
             updated["status"] = "human_review"
-            updated["review_reason"] = (
-                outcome.review_reason or "Extraction requires human review."
-            )
+            updated["review_reason"] = outcome.review_reason or "Extraction requires human review."
             return updated
 
         updated["extracted_request"] = outcome.extracted_request
