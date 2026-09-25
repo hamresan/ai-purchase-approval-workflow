@@ -1,11 +1,6 @@
 from decimal import Decimal
 
 import pytest
-from tests.application.purchase_requests.fakes import (
-    FakeBudgetReader,
-    FakeCatalogReader,
-    FakeOrderGateway,
-)
 
 from ai_purchase_workflow.application.purchase_requests.trusted_tools import (
     CheckBudget,
@@ -25,6 +20,11 @@ from ai_purchase_workflow.domain.purchase_requests import (
     PurchaseRequest,
     RequestStatus,
     VendorPolicy,
+)
+from tests.application.purchase_requests.fakes import (
+    FakeBudgetReader,
+    FakeCatalogReader,
+    FakeOrderGateway,
 )
 
 
