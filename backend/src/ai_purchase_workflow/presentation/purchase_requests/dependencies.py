@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator
+from typing import Annotated
 
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,19 +20,16 @@ async def get_session(request: Request) -> AsyncIterator[AsyncSession]:
         yield session
 
 
-def get_create_purchase_request(
-    session: AsyncSession = Depends(get_session),
-) -> CreatePurchaseRequest:
+SessionDependency = Annotated[AsyncSession, Depends(get_session)]
+
+
+def get_create_purchase_request(session: SessionDependency) -> CreatePurchaseRequest:
     return CreatePurchaseRequest(SqlAlchemyPurchaseRequestRepository(session))
 
 
-def get_purchase_request(
-    session: AsyncSession = Depends(get_session),
-) -> GetPurchaseRequest:
+def get_purchase_request(session: SessionDependency) -> GetPurchaseRequest:
     return GetPurchaseRequest(SqlAlchemyPurchaseRequestRepository(session))
 
 
-def get_list_purchase_requests(
-    session: AsyncSession = Depends(get_session),
-) -> ListPurchaseRequests:
+def get_list_purchase_requests(session: SessionDependency) -> ListPurchaseRequests:
     return ListPurchaseRequests(SqlAlchemyPurchaseRequestRepository(session))
