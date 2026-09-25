@@ -52,6 +52,7 @@ async def test_prepare_purchase_request_builds_trusted_draft_and_moves_to_pendin
     assert stored.draft_order is not None
     assert stored.draft_order.items[0].vendor == "Trusted Vendor"
     assert stored.draft_order.total.amount == Decimal("50.00")
+    assert stored.audit_entries[0].event_type == "purchase_request_prepared"
 
 
 async def test_prepare_purchase_request_rejects_missing_budget_data(
