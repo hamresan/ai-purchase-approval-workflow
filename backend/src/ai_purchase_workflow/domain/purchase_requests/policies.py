@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from ai_purchase_workflow.domain.purchase_requests.entities import PurchaseItem, PurchaseRequest
 from ai_purchase_workflow.domain.purchase_requests.enums import ApprovalOutcome, RequestStatus
 from ai_purchase_workflow.domain.purchase_requests.errors import DomainValidationError
@@ -27,7 +29,7 @@ class DraftOrderPolicy:
         currency = items[0].unit_price.currency
         if any(item.unit_price.currency != currency for item in items):
             raise DomainValidationError("All draft order items must use the same currency.")
-        amount = sum((item.total_price.amount for item in items), start=items[0].unit_price.amount * 0)
+        amount = sum((item.total_price.amount for item in items), start=Decimal("0"))
         return Money(amount, currency)
 
 
