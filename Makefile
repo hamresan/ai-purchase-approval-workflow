@@ -1,4 +1,4 @@
-.PHONY: check backend-check frontend-check test e2e
+.PHONY: check backend-check frontend-check test
 
 check: backend-check frontend-check
 
@@ -16,6 +16,3 @@ frontend-check:
 test:
 	cd backend && uv run pytest
 	cd frontend && npm test -- --run
-
-e2e:
-	cd frontend && npm run test:e2e
