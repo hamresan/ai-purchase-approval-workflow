@@ -5,6 +5,18 @@ from ai_purchase_workflow.domain.purchase_requests.errors import DomainValidatio
 
 
 @dataclass(frozen=True, slots=True)
+class RequiredText:
+    value: str
+    field_name: str
+
+    def __post_init__(self) -> None:
+        normalized = self.value.strip()
+        if not normalized:
+            raise DomainValidationError(f"{self.field_name} is required.")
+        object.__setattr__(self, "value", normalized)
+
+
+@dataclass(frozen=True, slots=True)
 class Money:
     amount: Decimal
     currency: str
