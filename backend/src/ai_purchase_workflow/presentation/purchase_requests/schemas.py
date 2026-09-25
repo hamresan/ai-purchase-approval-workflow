@@ -1,8 +1,9 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ai_purchase_workflow.application.purchase_requests import PurchaseRequestView
 from ai_purchase_workflow.domain.purchase_requests import RequestStatus
@@ -19,6 +20,26 @@ class CreatePurchaseItemRequest(BaseModel):
 class CreatePurchaseRequestBody(BaseModel):
     requester_name: str | None = None
     items: list[CreatePurchaseItemRequest] = Field(min_length=1)
+
+
+class EditPurchaseItemBody(BaseModel):
+    description: str
+    quantity: int = Field(gt=0)
+
+
+class ApprovalBody(BaseModel):
+    action: Literal["approve", "reject", "edit"]
+    decided_by: str = Field(min_length=1)
+    reason: str | None = None
+    items: list[EditPurchaseItemBody] | None = None
+
+    @model_validator(mode="after")
+    def validate_action_payload(self) -> "ApprovalBody":
+        if self.action == "edit" and not self.items:
+            raise ValueError("Edited approval requests require at least one item.")
+        if self.action != "edit" and self.items is not None:
+            raise ValueError("Items are accepted only for the edit approval action.")
+        return self
 
 
 class PurchaseItemResponse(BaseModel):

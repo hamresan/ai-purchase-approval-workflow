@@ -43,7 +43,7 @@ class ApprovalDecisionModel(Base):
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
     request_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("purchase_requests.id", ondelete="CASCADE"), unique=True
+        PGUUID(as_uuid=True), ForeignKey("purchase_requests.id", ondelete="CASCADE"), index=True
     )
     outcome: Mapped[str] = mapped_column(String(20), nullable=False)
     decided_by: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -65,3 +65,15 @@ class AuditEntryModel(Base):
     event_type: Mapped[str] = mapped_column(String(100), nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class WorkflowThreadModel(Base):
+    __tablename__ = "workflow_threads"
+
+    request_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("purchase_requests.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    thread_id: Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

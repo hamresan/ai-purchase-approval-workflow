@@ -1,8 +1,12 @@
 from ai_purchase_workflow.application.purchase_requests import (
     CreatePurchaseItem,
     CreatePurchaseRequestCommand,
+    EditPurchaseItem,
 )
-from ai_purchase_workflow.presentation.purchase_requests.schemas import CreatePurchaseRequestBody
+from ai_purchase_workflow.presentation.purchase_requests.schemas import (
+    ApprovalBody,
+    CreatePurchaseRequestBody,
+)
 
 
 class PurchaseRequestCommandMapper:
@@ -20,4 +24,13 @@ class PurchaseRequestCommandMapper:
                 )
                 for item in body.items
             ),
+        )
+
+
+class ApprovalCommandMapper:
+    @staticmethod
+    def edit_items(body: ApprovalBody) -> tuple[EditPurchaseItem, ...]:
+        return tuple(
+            EditPurchaseItem(description=item.description, quantity=item.quantity)
+            for item in body.items or ()
         )

@@ -24,27 +24,46 @@ class PurchaseRequestRelatedRecordWriter:
         for sequence, audit in enumerate(request.audit_entries, start=1):
             session.add(self._mapper.to_audit_model(audit, sequence))
 
-    async def add_missing_to_session(
+    async def sync_to_session(
         self,
         session: AsyncSession,
         request: PurchaseRequest,
     ) -> None:
-        draft_ids = set(
-            (
-                await session.scalars(
-                    select(DraftOrderModel.id).where(DraftOrderModel.request_id == request.id)
-                )
-            ).all()
+        await self._sync_draft(session, request)
+        await self._add_missing_decision(session, request)
+        await self._add_missing_audits(session, request)
+
+    async def _sync_draft(self, session: AsyncSession, request: PurchaseRequest) -> None:
+        if request.draft_order is None:
+            return
+        model = await session.scalar(
+            select(DraftOrderModel).where(DraftOrderModel.request_id == request.id)
         )
-        decision_ids = set(
-            (
-                await session.scalars(
-                    select(ApprovalDecisionModel.id).where(
-                        ApprovalDecisionModel.request_id == request.id
-                    )
-                )
-            ).all()
+        if model is None:
+            session.add(self._mapper.to_draft_model(request.draft_order))
+            return
+        self._mapper.update_draft_model(model, request.draft_order)
+
+    async def _add_missing_decision(
+        self,
+        session: AsyncSession,
+        request: PurchaseRequest,
+    ) -> None:
+        if request.approval_decision is None:
+            return
+        exists = await session.scalar(
+            select(ApprovalDecisionModel.id).where(
+                ApprovalDecisionModel.id == request.approval_decision.id
+            )
         )
+        if exists is None:
+            session.add(self._mapper.to_decision_model(request.approval_decision))
+
+    async def _add_missing_audits(
+        self,
+        session: AsyncSession,
+        request: PurchaseRequest,
+    ) -> None:
         audit_ids = set(
             (
                 await session.scalars(
@@ -52,15 +71,6 @@ class PurchaseRequestRelatedRecordWriter:
                 )
             ).all()
         )
-
-        if request.draft_order is not None and request.draft_order.id not in draft_ids:
-            session.add(self._mapper.to_draft_model(request.draft_order))
-        if (
-            request.approval_decision is not None
-            and request.approval_decision.id not in decision_ids
-        ):
-            session.add(self._mapper.to_decision_model(request.approval_decision))
-
         new_audits = tuple(audit for audit in request.audit_entries if audit.id not in audit_ids)
         for sequence, audit in enumerate(new_audits, start=len(audit_ids) + 1):
             session.add(self._mapper.to_audit_model(audit, sequence))

@@ -42,11 +42,22 @@ class SqlAlchemyPurchaseRequestRepository(PurchaseRequestRepository):
         if model is None:
             raise LookupError(f"Purchase request {request.id} was not found.")
         self._mapper.update_model(model, request)
-        await self._related_writer.add_missing_to_session(self._session, request)
+        await self._related_writer.sync_to_session(self._session, request)
         await self._session.commit()
 
     async def get(self, request_id: UUID) -> PurchaseRequest | None:
         model = await self._session.get(PurchaseRequestModel, request_id)
+        if model is None:
+            return None
+        return await self._loader.load_one(model)
+
+    async def get_for_update(self, request_id: UUID) -> PurchaseRequest | None:
+        statement = (
+            select(PurchaseRequestModel)
+            .where(PurchaseRequestModel.id == request_id)
+            .with_for_update()
+        )
+        model = await self._session.scalar(statement)
         if model is None:
             return None
         return await self._loader.load_one(model)

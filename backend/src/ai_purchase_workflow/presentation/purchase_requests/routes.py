@@ -11,7 +11,11 @@ from ai_purchase_workflow.application.purchase_requests import (
     SubmitPurchaseRequest,
 )
 from ai_purchase_workflow.domain.purchase_requests import RequestStatus
+from ai_purchase_workflow.presentation.purchase_requests.approval_dispatcher import (
+    ApprovalActionDispatcher,
+)
 from ai_purchase_workflow.presentation.purchase_requests.dependencies import (
+    get_approval_dispatcher,
     get_create_purchase_request,
     get_list_purchase_requests,
     get_prepare_purchase_request,
@@ -20,6 +24,7 @@ from ai_purchase_workflow.presentation.purchase_requests.dependencies import (
 )
 from ai_purchase_workflow.presentation.purchase_requests.mappers import PurchaseRequestCommandMapper
 from ai_purchase_workflow.presentation.purchase_requests.schemas import (
+    ApprovalBody,
     CreatePurchaseRequestBody,
     PurchaseRequestResponse,
 )
@@ -45,6 +50,10 @@ PreparePurchaseRequestDependency = Annotated[
 SubmitPurchaseRequestDependency = Annotated[
     SubmitPurchaseRequest,
     Depends(get_submit_purchase_request),
+]
+ApprovalDispatcherDependency = Annotated[
+    ApprovalActionDispatcher,
+    Depends(get_approval_dispatcher),
 ]
 RequestStatusQuery = Annotated[RequestStatus | None, Query(alias="status")]
 
@@ -91,4 +100,14 @@ async def submit_purchase_request(
     use_case: SubmitPurchaseRequestDependency,
 ) -> PurchaseRequestResponse:
     view = await use_case.execute(request_id)
+    return PurchaseRequestResponse.from_view(view)
+
+
+@router.post("/{request_id}/approval", response_model=PurchaseRequestResponse)
+async def decide_purchase_request(
+    request_id: UUID,
+    body: ApprovalBody,
+    dispatcher: ApprovalDispatcherDependency,
+) -> PurchaseRequestResponse:
+    view = await dispatcher.execute(request_id, body)
     return PurchaseRequestResponse.from_view(view)
