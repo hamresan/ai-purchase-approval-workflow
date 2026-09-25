@@ -5,8 +5,8 @@ from uuid import UUID, uuid4
 from langgraph.graph import END, START, StateGraph
 
 from ai_purchase_workflow.application.purchase_requests.extraction import (
-    ExtractPurchaseRequest,
     ExtractedPurchaseRequest,
+    ExtractPurchaseRequest,
 )
 from ai_purchase_workflow.application.purchase_requests.extraction.preparation import (
     PrepareExtractedPurchaseRequest,
@@ -76,9 +76,7 @@ class PurchaseRequestWorkflow:
             tool_results=state.get("tool_results", ()),
         )
 
-    async def _extract(
-        self, state: PurchaseRequestWorkflowState
-    ) -> PurchaseRequestWorkflowState:
+    async def _extract(self, state: PurchaseRequestWorkflowState) -> PurchaseRequestWorkflowState:
         outcome = await self._extractor.execute(state["free_text"])
         if outcome.needs_human_review or outcome.extracted_request is None:
             return {
@@ -90,9 +88,7 @@ class PurchaseRequestWorkflow:
             "status": "extracted",
         }
 
-    async def _prepare(
-        self, state: PurchaseRequestWorkflowState
-    ) -> PurchaseRequestWorkflowState:
+    async def _prepare(self, state: PurchaseRequestWorkflowState) -> PurchaseRequestWorkflowState:
         try:
             request = await self._preparer.execute(state["extracted_request"])
         except Exception as error:

@@ -1,10 +1,18 @@
 from decimal import Decimal
 
 import pytest
+from tests.application.purchase_requests.fakes.prompt import FakePromptTemplateReader
+from tests.application.purchase_requests.fakes.repository import (
+    InMemoryPurchaseRequestRepository,
+)
+from tests.application.purchase_requests.fakes.trusted_tools import (
+    FakeBudgetReader,
+    FakeCatalogReader,
+)
 
 from ai_purchase_workflow.application.purchase_requests.extraction import (
-    ExtractPurchaseRequest,
     ExtractedRequestValidator,
+    ExtractPurchaseRequest,
     ModelResponse,
     PurchaseRequestPromptBuilder,
     StructuredOutputMapper,
@@ -25,14 +33,6 @@ from ai_purchase_workflow.domain.purchase_requests import (
 )
 from ai_purchase_workflow.infrastructure.models import FakePurchaseRequestModel
 from ai_purchase_workflow.infrastructure.workflows import PurchaseRequestWorkflow
-from tests.application.purchase_requests.fakes.prompt import FakePromptTemplateReader
-from tests.application.purchase_requests.fakes.repository import (
-    InMemoryPurchaseRequestRepository,
-)
-from tests.application.purchase_requests.fakes.trusted_tools import (
-    FakeBudgetReader,
-    FakeCatalogReader,
-)
 
 
 def build_workflow(
