@@ -1,4 +1,4 @@
-.PHONY: check backend-check frontend-check test
+.PHONY: check backend-check frontend-check test up down migrate logs
 
 check: backend-check frontend-check
 
@@ -16,3 +16,15 @@ frontend-check:
 test:
 	cd backend && uv run pytest
 	cd frontend && npm test -- --run
+
+up:
+	docker compose up -d --build
+
+down:
+	docker compose down
+
+migrate:
+	docker compose run --rm backend uv run alembic upgrade head
+
+logs:
+	docker compose logs -f
