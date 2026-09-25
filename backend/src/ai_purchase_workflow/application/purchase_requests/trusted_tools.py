@@ -1,7 +1,13 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-from ai_purchase_workflow.domain.purchase_requests import DraftOrder, Money, PurchaseItem, PurchaseRequest
+from ai_purchase_workflow.domain.purchase_requests import (
+    DomainValidationError,
+    DraftOrder,
+    Money,
+    PurchaseItem,
+    PurchaseRequest,
+)
 from ai_purchase_workflow.domain.purchase_requests.policies import (
     ApprovalGatePolicy,
     BudgetPolicy,
@@ -77,5 +83,5 @@ class SubmitOrder:
     async def execute(self, request: PurchaseRequest) -> str:
         self._policy.ensure_submission_allowed(request)
         if request.draft_order is None:
-            raise ValueError("Approved purchase request has no draft order.")
+            raise DomainValidationError("Approved purchase request has no draft order.")
         return await self._gateway.submit(request.draft_order)
