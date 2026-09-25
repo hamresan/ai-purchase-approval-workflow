@@ -16,6 +16,7 @@ export default defineConfig({
     setupFiles: "./tests/setup.ts",
     coverage: {
       provider: "v8",
+      include: ["src/app/**/*.{ts,tsx}"],
       reporter: ["text"],
       thresholds: {
         branches: 85,
