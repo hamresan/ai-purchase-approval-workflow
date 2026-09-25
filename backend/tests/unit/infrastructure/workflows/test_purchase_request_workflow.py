@@ -40,7 +40,7 @@ def build_workflow(
     *,
     catalog: FakeCatalogReader | None = None,
     budget: FakeBudgetReader | None = None,
-) -> tuple[PurchaseRequestWorkflow, InMemoryPurchaseRequestRepository]:
+) -> tuple[PurchaseRequestWorkflowRunner, InMemoryPurchaseRequestRepository]:
     repository = InMemoryPurchaseRequestRepository()
     extractor = ExtractPurchaseRequest(
         model=FakePurchaseRequestModel(ModelResponse(content)),
@@ -54,7 +54,18 @@ def build_workflow(
         create_draft_order=CreateDraftOrder(DraftOrderPolicy()),
         check_budget=CheckBudget(budget or FakeBudgetReader(), BudgetPolicy()),
     )
-    return PurchaseRequestWorkflow(extractor, preparer), repository
+    workflow = PurchaseRequestWorkflow(
+        ExtractPurchaseRequestNode(extractor),
+        PreparePurchaseRequestNode(preparer),
+    )
+    return (
+        PurchaseRequestWorkflowRunner(
+            workflow,
+            PurchaseRequestWorkflowStateFactory(),
+            PurchaseRequestWorkflowResultMapper(),
+        ),
+        repository,
+    )
 
 
 @pytest.mark.asyncio
