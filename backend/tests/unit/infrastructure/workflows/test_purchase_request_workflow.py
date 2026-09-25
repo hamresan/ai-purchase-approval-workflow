@@ -132,3 +132,23 @@ async def test_workflow_routes_tool_failure_to_human_review() -> None:
     assert "Trusted tool execution failed" in (result.review_reason or "")
     assert result.tool_results == ("prepare_failed",)
     assert len(repository.requests) == 0
+
+
+@pytest.mark.asyncio
+async def test_workflow_does_not_persist_request_when_budget_check_fails() -> None:
+    workflow, repository = build_workflow(
+        {
+            "schema_version": "1.0",
+            "requester_name": "Dana",
+            "items": [{"description": "Laptop stand", "quantity": 2}],
+        },
+        budget=FakeBudgetReader("10.00"),
+    )
+
+    result = await workflow.execute("Dana needs two laptop stands")
+
+    assert result.status == "human_review"
+    assert result.needs_human_review is True
+    assert result.purchase_request_id is None
+    assert result.tool_results == ("prepare_failed",)
+    assert repository.requests == {}
