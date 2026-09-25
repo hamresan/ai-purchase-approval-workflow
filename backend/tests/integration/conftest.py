@@ -11,10 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from ai_purchase_workflow.composition_root.settings import Settings
 from ai_purchase_workflow.presentation.app import create_app
 
-TEST_DATABASE_URL = os.getenv(
-    "TEST_DATABASE_URL",
-    "postgresql+asyncpg://postgres:postgres@localhost:5632/ai_purchase_workflow",
-)
+TEST_DATABASE_URL = os.environ["TEST_DATABASE_URL"]
 
 
 @pytest.fixture(scope="session", autouse=True)
