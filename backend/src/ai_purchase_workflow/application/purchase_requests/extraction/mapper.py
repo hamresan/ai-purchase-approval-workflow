@@ -10,11 +10,19 @@ from ai_purchase_workflow.application.purchase_requests.extraction.errors import
 )
 
 StructuredObject = dict[str, object]
+_ALLOWED_OUTPUT_FIELDS = frozenset(
+    {"schema_version", "requester_name", "items", "needs_human_review", "review_reason"}
+)
 
 
 class StructuredOutputMapper:
     def map(self, response: ModelResponse) -> ExtractedPurchaseRequest:
         content = self._as_object(response.content, "Model output must be a structured object.")
+        unexpected_fields = set(content) - _ALLOWED_OUTPUT_FIELDS
+        if unexpected_fields:
+            fields = ", ".join(sorted(unexpected_fields))
+            raise MalformedModelOutputError(f"Model output contains forbidden fields: {fields}.")
+
         items_value = content.get("items")
         if not isinstance(items_value, list):
             raise MalformedModelOutputError("Model output items must be a list.")
