@@ -1,3 +1,6 @@
+-include .env
+export TEST_DATABASE_URL
+
 .PHONY: check backend-check frontend-check test up down migrate logs
 
 check: backend-check frontend-check
