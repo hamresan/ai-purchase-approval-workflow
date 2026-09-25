@@ -3,6 +3,7 @@ from ai_purchase_workflow.application.purchase_requests.extraction import (
 )
 from ai_purchase_workflow.application.purchase_requests.extraction.preparation import (
     PrepareExtractedPurchaseRequest,
+    PurchaseRequestPreparationError,
 )
 from ai_purchase_workflow.infrastructure.workflows.state import (
     PurchaseRequestWorkflowState,
@@ -46,7 +47,7 @@ class PreparePurchaseRequestNode:
 
         try:
             request = await self._preparer.execute(extracted)
-        except Exception as error:
+        except PurchaseRequestPreparationError as error:
             updated = state.copy()
             updated["status"] = "human_review"
             updated["review_reason"] = f"Trusted tool execution failed: {error}"
