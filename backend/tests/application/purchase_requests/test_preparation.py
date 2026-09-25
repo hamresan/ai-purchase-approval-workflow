@@ -3,13 +3,18 @@ from decimal import Decimal
 import pytest
 
 from ai_purchase_workflow.application.purchase_requests import PurchaseRequestRepository
-from ai_purchase_workflow.application.purchase_requests.preparation import PreparePurchaseRequest
+from ai_purchase_workflow.application.purchase_requests.preparation import (
+    PreparePurchaseRequest,
+    SubmitPurchaseRequest,
+)
 from ai_purchase_workflow.application.purchase_requests.trusted_tools import (
     CheckBudget,
     CreateDraftOrder,
     FindVendor,
+    SubmitOrder,
 )
 from ai_purchase_workflow.domain.purchase_requests import (
+    ApprovalGatePolicy,
     BudgetPolicy,
     DomainValidationError,
     DraftOrderPolicy,
@@ -19,7 +24,11 @@ from ai_purchase_workflow.domain.purchase_requests import (
     RequestStatus,
     VendorPolicy,
 )
-from tests.application.purchase_requests.fakes import FakeBudgetReader, FakeCatalogReader
+from tests.application.purchase_requests.fakes import (
+    FakeBudgetReader,
+    FakeCatalogReader,
+    FakeOrderGateway,
+)
 
 
 async def test_prepare_purchase_request_builds_trusted_draft_and_moves_to_pending(
@@ -71,3 +80,26 @@ async def test_prepare_purchase_request_rejects_missing_budget_data(
 
     with pytest.raises(DomainValidationError, match="budget data"):
         await use_case.execute(request.id)
+
+
+async def test_submit_purchase_request_rejects_preapproval_at_application_boundary(
+    repository: PurchaseRequestRepository,
+) -> None:
+    request = PurchaseRequest.create(
+        (PurchaseItem("Laptop stand", 1, Money(Decimal("35"), "USD")),),
+        requester_name="Dana",
+    )
+    await repository.add(request)
+    gateway = FakeOrderGateway()
+    use_case = SubmitPurchaseRequest(
+        repository,
+        SubmitOrder(gateway, ApprovalGatePolicy()),
+    )
+
+    with pytest.raises(DomainValidationError, match="approved decision"):
+        await use_case.execute(request.id)
+
+    assert gateway.submitted is False
+    stored = await repository.get(request.id)
+    assert stored is not None
+    assert stored.status is RequestStatus.DRAFTING
