@@ -1,6 +1,4 @@
 from decimal import Decimal
-from uuid import uuid4
-
 import pytest
 
 from ai_purchase_workflow.domain.purchase_requests import (
