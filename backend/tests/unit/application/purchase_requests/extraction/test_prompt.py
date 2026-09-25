@@ -1,18 +1,31 @@
-import pytest
-
 from ai_purchase_workflow.application.purchase_requests.extraction import (
     PurchaseRequestPromptBuilder,
 )
+from ai_purchase_workflow.application.purchase_requests.extraction.prompt import (
+    PromptTemplateReader,
+)
 
 
-def test_build_normalizes_input_and_forbids_untrusted_facts() -> None:
-    request = PurchaseRequestPromptBuilder().build("  Buy two laptop stands  ")
+class FakePromptTemplateReader(PromptTemplateReader):
+    def read(self, name: str, version: str) -> str:
+        assert name == "purchase_request_extraction"
+        assert version == "v1"
+        return "Schema {schema_version}. Do not invent price, vendor, budget."
+
+
+def test_build_normalizes_input_and_renders_versioned_template() -> None:
+    request = PurchaseRequestPromptBuilder(FakePromptTemplateReader()).build(
+        "  Buy two laptop stands  "
+    )
 
     assert request.user_prompt == "Buy two laptop stands"
-    assert "Do not invent price, vendor, budget" in request.system_prompt
-    assert "schema version 1.0" in request.system_prompt
+    assert request.system_prompt == "Schema 1.0. Do not invent price, vendor, budget."
 
 
 def test_build_rejects_empty_text() -> None:
-    with pytest.raises(ValueError, match="must not be empty"):
-        PurchaseRequestPromptBuilder().build("   ")
+    try:
+        PurchaseRequestPromptBuilder(FakePromptTemplateReader()).build("   ")
+    except ValueError as error:
+        assert str(error) == "Purchase request text must not be empty."
+    else:
+        raise AssertionError("Expected empty purchase request text to be rejected.")
