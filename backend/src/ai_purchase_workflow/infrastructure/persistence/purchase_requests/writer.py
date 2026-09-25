@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ai_purchase_workflow.domain.purchase_requests import PurchaseRequest
@@ -15,7 +16,47 @@ class PurchaseRequestRelatedRecordWriter:
     def __init__(self, item_mapper: PurchaseItemRecordMapper | None = None) -> None:
         self._item_mapper = item_mapper or PurchaseItemRecordMapper()
 
+    async def add_missing_to_session(
+        self,
+        session: AsyncSession,
+        request: PurchaseRequest,
+    ) -> None:
+        draft_ids = set(
+            (
+                await session.scalars(
+                    select(DraftOrderModel.id).where(DraftOrderModel.request_id == request.id)
+                )
+            ).all()
+        )
+        decision_ids = set(
+            (
+                await session.scalars(
+                    select(ApprovalDecisionModel.id).where(
+                        ApprovalDecisionModel.request_id == request.id
+                    )
+                )
+            ).all()
+        )
+        audit_ids = set(
+            (
+                await session.scalars(
+                    select(AuditEntryModel.id).where(AuditEntryModel.request_id == request.id)
+                )
+            ).all()
+        )
+        if request.draft_order is not None and request.draft_order.id not in draft_ids:
+            self._add_draft(session, request)
+        if request.approval_decision is not None and request.approval_decision.id not in decision_ids:
+            self._add_decision(session, request)
+        new_audits = tuple(audit for audit in request.audit_entries if audit.id not in audit_ids)
+        self._add_audits(session, request, new_audits, start_sequence=len(audit_ids) + 1)
+
     def add_to_session(self, session: AsyncSession, request: PurchaseRequest) -> None:
+        self._add_draft(session, request)
+        self._add_decision(session, request)
+        self._add_audits(session, request, request.audit_entries, start_sequence=1)
+
+    def _add_draft(self, session: AsyncSession, request: PurchaseRequest) -> None:
         if request.draft_order is not None:
             draft = request.draft_order
             session.add(
@@ -28,6 +69,7 @@ class PurchaseRequestRelatedRecordWriter:
                     created_at=draft.created_at,
                 )
             )
+    def _add_decision(self, session: AsyncSession, request: PurchaseRequest) -> None:
         if request.approval_decision is not None:
             decision = request.approval_decision
             session.add(
@@ -40,7 +82,14 @@ class PurchaseRequestRelatedRecordWriter:
                     decided_at=decision.decided_at,
                 )
             )
-        for sequence, audit in enumerate(request.audit_entries, start=1):
+    @staticmethod
+    def _add_audits(
+        session: AsyncSession,
+        request: PurchaseRequest,
+        audits: tuple,
+        start_sequence: int,
+    ) -> None:
+        for sequence, audit in enumerate(audits, start=start_sequence):
             session.add(
                 AuditEntryModel(
                     id=audit.id,
