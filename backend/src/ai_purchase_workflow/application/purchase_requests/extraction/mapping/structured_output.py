@@ -7,7 +7,8 @@ from ai_purchase_workflow.application.purchase_requests.extraction.contracts imp
 from ai_purchase_workflow.application.purchase_requests.extraction.errors import (
     MalformedModelOutputError,
 )
-from ai_purchase_workflow.application.purchase_requests.extraction.mapping.structured_values import (
+
+from .structured_values import (
     as_structured_object,
     map_purchase_item,
     optional_bool,

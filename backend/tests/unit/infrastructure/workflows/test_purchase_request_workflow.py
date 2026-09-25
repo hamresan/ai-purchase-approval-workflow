@@ -10,15 +10,15 @@ from tests.application.purchase_requests.fakes.trusted_tools import (
     FakeCatalogReader,
 )
 
+from ai_purchase_workflow.application.purchase_requests.extracted_preparation import (
+    PrepareExtractedPurchaseRequest,
+)
 from ai_purchase_workflow.application.purchase_requests.extraction import (
     ExtractedRequestValidator,
     ExtractPurchaseRequest,
     ModelResponse,
     PurchaseRequestPromptBuilder,
     StructuredOutputMapper,
-)
-from ai_purchase_workflow.application.purchase_requests.extracted_preparation import (
-    PrepareExtractedPurchaseRequest,
 )
 from ai_purchase_workflow.application.purchase_requests.trusted_tools import (
     CheckBudget,

@@ -1,9 +1,9 @@
-from ai_purchase_workflow.application.purchase_requests.extraction.contracts.extracted_request import (
+from .extracted_request import (
     EXTRACTED_REQUEST_SCHEMA_VERSION,
     ExtractedPurchaseItem,
     ExtractedPurchaseRequest,
 )
-from ai_purchase_workflow.application.purchase_requests.extraction.contracts.model import (
+from .model import (
     ModelRequest,
     ModelResponse,
     PurchaseRequestModel,
