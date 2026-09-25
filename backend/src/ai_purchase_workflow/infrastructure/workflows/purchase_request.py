@@ -61,10 +61,10 @@ class PurchaseRequestWorkflow:
         self,
         free_text: str,
         *,
-        workflow_id: str | None = None,
+        checkpoint_id: str | None = None,
     ) -> PurchaseRequestWorkflowResult:
         initial_state: PurchaseRequestWorkflowState = {
-            "workflow_id": workflow_id or str(uuid4()),
+            "workflow_id": checkpoint_id or str(uuid4()),
             "messages": (free_text,),
             "free_text": free_text,
             "status": "started",
@@ -73,7 +73,7 @@ class PurchaseRequestWorkflow:
         raw_state = await self._graph.ainvoke(initial_state)
         state = cast(PurchaseRequestWorkflowState, raw_state)
         return PurchaseRequestWorkflowResult(
-            workflow_id=state["workflow_id"],
+            checkpoint_id=state["workflow_id"],
             purchase_request_id=state.get("purchase_request_id"),
             status=state["status"],
             needs_human_review=state["status"] == "human_review",
