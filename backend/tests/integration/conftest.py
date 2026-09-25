@@ -13,7 +13,7 @@ from ai_purchase_workflow.presentation.app import create_app
 
 TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
-    "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_purchase_workflow",
+    "postgresql+asyncpg://postgres:postgres@localhost:5632/ai_purchase_workflow",
 )
 
 
