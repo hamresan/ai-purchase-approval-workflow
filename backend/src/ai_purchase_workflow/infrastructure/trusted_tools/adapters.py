@@ -1,10 +1,12 @@
+from decimal import Decimal
+
 from ai_purchase_workflow.application.purchase_requests.trusted_tools import TrustedCatalogItem
 from ai_purchase_workflow.domain.purchase_requests import DomainValidationError, DraftOrder, Money
 
 
 class FixtureBudgetReader:
     def __init__(self) -> None:
-        self._budgets = {"Dana": Money("500.00", "USD")}
+        self._budgets = {"Dana": Money(Decimal("500.00"), "USD")}
 
     async def get_available_budget(self, requester_name: str | None, currency: str) -> Money:
         budget = self._budgets.get(requester_name or "")
@@ -19,13 +21,13 @@ class FixtureCatalogReader:
             "Laptop stand": TrustedCatalogItem(
                 description="Laptop stand",
                 vendor="Acme",
-                unit_price=Money("35.00", "USD"),
+                unit_price=Money(Decimal("35.00"), "USD"),
                 available_quantity=10,
             ),
             "Monitor": TrustedCatalogItem(
                 description="Monitor",
                 vendor="Northwind",
-                unit_price=Money("250.00", "USD"),
+                unit_price=Money(Decimal("250.00"), "USD"),
                 available_quantity=5,
             ),
         }
