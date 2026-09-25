@@ -9,7 +9,7 @@ from ai_purchase_workflow.application.purchase_requests.trusted_tools import (
     SubmitOrder,
 )
 from ai_purchase_workflow.application.purchase_requests.use_cases import PurchaseRequestNotFoundError
-from ai_purchase_workflow.domain.purchase_requests import RequestStatus
+from ai_purchase_workflow.domain.purchase_requests import AuditEntry, RequestStatus
 
 
 class PreparePurchaseRequest:
@@ -34,6 +34,14 @@ class PreparePurchaseRequest:
         draft = self._create_draft_order.execute(request, trusted_items)
         await self._check_budget.execute(request.requester_name, draft.total)
         request.draft_order = draft
+        request.audit_entries = (
+            *request.audit_entries,
+            AuditEntry.create(
+                request.id,
+                "purchase_request_prepared",
+                "Trusted purchase data validated and draft order created.",
+            ),
+        )
         request.transition_to(RequestStatus.PENDING_APPROVAL)
         await self._repository.save(request)
         return PurchaseRequestView.from_domain(request)
