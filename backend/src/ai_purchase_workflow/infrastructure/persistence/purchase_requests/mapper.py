@@ -111,3 +111,40 @@ class PurchaseRequestPersistenceMapper:
             approval_decision=approval_decision,
             audit_entries=audit_entries,
         )
+
+
+class PurchaseRequestRelatedRecordMapper:
+    def __init__(self, item_mapper: PurchaseItemRecordMapper | None = None) -> None:
+        self._item_mapper = item_mapper or PurchaseItemRecordMapper()
+
+    def to_draft_model(self, draft: DraftOrder) -> DraftOrderModel:
+        return DraftOrderModel(
+            id=draft.id,
+            request_id=draft.request_id,
+            items=[self._item_mapper.to_record(item) for item in draft.items],
+            total_amount=draft.total.amount,
+            currency=draft.total.currency,
+            created_at=draft.created_at,
+        )
+
+    @staticmethod
+    def to_decision_model(decision: ApprovalDecision) -> ApprovalDecisionModel:
+        return ApprovalDecisionModel(
+            id=decision.id,
+            request_id=decision.request_id,
+            outcome=decision.outcome.value,
+            decided_by=decision.decided_by,
+            reason=decision.reason,
+            decided_at=decision.decided_at,
+        )
+
+    @staticmethod
+    def to_audit_model(audit: AuditEntry, sequence: int) -> AuditEntryModel:
+        return AuditEntryModel(
+            id=audit.id,
+            request_id=audit.request_id,
+            sequence=sequence,
+            event_type=audit.event_type,
+            message=audit.message,
+            occurred_at=audit.occurred_at,
+        )
