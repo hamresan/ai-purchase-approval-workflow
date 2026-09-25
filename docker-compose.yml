@@ -2,11 +2,13 @@ services:
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: ai_purchase_workflow
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d ai_purchase_workflow"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -14,11 +16,11 @@ services:
   backend:
     build: ./backend
     environment:
-      APP_ENV: development
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/ai_purchase_workflow
-      FRONTEND_ORIGIN: http://localhost:5173
+      APP_ENV: ${APP_ENV}
+      DATABASE_URL: ${DATABASE_URL}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT}:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -26,6 +28,6 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT}:5173"
     depends_on:
       - backend
