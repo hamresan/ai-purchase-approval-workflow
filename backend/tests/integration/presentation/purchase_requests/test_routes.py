@@ -54,3 +54,54 @@ async def test_create_rejects_invalid_items(api_client: AsyncClient) -> None:
     )
 
     assert response.status_code == 422
+
+
+async def test_prepare_uses_trusted_fixture_data(api_client: AsyncClient) -> None:
+    created = (
+        await api_client.post(
+            "/api/purchase-requests",
+            json={
+                "requester_name": "Dana",
+                "items": [
+                    {
+                        "description": "Laptop stand",
+                        "quantity": 2,
+                        "unit_price_amount": "999.00",
+                        "currency": "USD",
+                        "vendor": "Untrusted Vendor",
+                    }
+                ],
+            },
+        )
+    ).json()
+
+    response = await api_client.post(f"/api/purchase-requests/{created['id']}/prepare")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "pending_approval"
+
+
+async def test_submit_before_approval_is_rejected_by_api(api_client: AsyncClient) -> None:
+    created = (
+        await api_client.post(
+            "/api/purchase-requests",
+            json={
+                "requester_name": "Dana",
+                "items": [
+                    {
+                        "description": "Laptop stand",
+                        "quantity": 1,
+                        "unit_price_amount": "35.00",
+                        "currency": "USD",
+                    }
+                ],
+            },
+        )
+    ).json()
+
+    response = await api_client.post(f"/api/purchase-requests/{created['id']}/submit")
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": "An approved decision is required before order submission."
+    }
