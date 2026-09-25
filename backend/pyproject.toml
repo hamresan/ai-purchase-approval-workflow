@@ -22,6 +22,7 @@ select=["E","F","I","B","UP","SIM","RUF"]
 pythonVersion="3.12"
 typeCheckingMode="strict"
 include=["src","tests"]
+ignore=["reportMissingTypeStubs","reportUnknownMemberType"]
 [tool.pytest.ini_options]
 testpaths=["tests"]
 asyncio_mode="auto"
