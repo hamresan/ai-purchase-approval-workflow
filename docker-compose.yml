@@ -6,16 +6,26 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     healthcheck:
-      test: ["CMD-SHELL","pg_isready -U postgres -d ai_purchase_workflow"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ai_purchase_workflow"]
       interval: 5s
       timeout: 5s
       retries: 10
+
   backend:
     build: ./backend
-    ports: ["8000:8000"]
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/ai_purchase_workflow
+      FRONTEND_ORIGIN: http://localhost:5173
+    ports:
+      - "8000:8000"
     depends_on:
-      postgres: {condition: service_healthy}
+      postgres:
+        condition: service_healthy
+
   frontend:
     build: ./frontend
-    ports: ["5173:5173"]
-    depends_on: [backend]
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
