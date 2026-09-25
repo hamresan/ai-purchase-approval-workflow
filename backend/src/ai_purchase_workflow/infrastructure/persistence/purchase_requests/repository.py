@@ -5,11 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ai_purchase_workflow.application.purchase_requests.repository import PurchaseRequestRepository
 from ai_purchase_workflow.domain.purchase_requests import PurchaseRequest, RequestStatus
-from ai_purchase_workflow.infrastructure.persistence.models import (
-    ApprovalDecisionModel,
-    AuditEntryModel,
-    DraftOrderModel,
-    PurchaseRequestModel,
+from ai_purchase_workflow.infrastructure.persistence.models import PurchaseRequestModel
+from ai_purchase_workflow.infrastructure.persistence.purchase_requests.loader import (
+    PurchaseRequestAggregateLoader,
 )
 from ai_purchase_workflow.infrastructure.persistence.purchase_requests.mapper import (
     PurchaseRequestPersistenceMapper,
@@ -25,10 +23,13 @@ class SqlAlchemyPurchaseRequestRepository(PurchaseRequestRepository):
         session: AsyncSession,
         mapper: PurchaseRequestPersistenceMapper | None = None,
         related_writer: PurchaseRequestRelatedRecordWriter | None = None,
+        loader: PurchaseRequestAggregateLoader | None = None,
     ) -> None:
+        resolved_mapper = mapper or PurchaseRequestPersistenceMapper()
         self._session = session
-        self._mapper = mapper or PurchaseRequestPersistenceMapper()
+        self._mapper = resolved_mapper
         self._related_writer = related_writer or PurchaseRequestRelatedRecordWriter()
+        self._loader = loader or PurchaseRequestAggregateLoader(session, resolved_mapper)
 
     async def add(self, request: PurchaseRequest) -> None:
         self._session.add(self._mapper.to_model(request))
@@ -39,32 +40,12 @@ class SqlAlchemyPurchaseRequestRepository(PurchaseRequestRepository):
         model = await self._session.get(PurchaseRequestModel, request_id)
         if model is None:
             return None
-        draft = await self._session.scalar(
-            select(DraftOrderModel).where(DraftOrderModel.request_id == model.id)
-        )
-        decision = await self._session.scalar(
-            select(ApprovalDecisionModel).where(ApprovalDecisionModel.request_id == model.id)
-        )
-        audits = tuple(
-            (
-                await self._session.scalars(
-                    select(AuditEntryModel)
-                    .where(AuditEntryModel.request_id == model.id)
-                    .order_by(AuditEntryModel.sequence)
-                )
-            ).all()
-        )
-        return self._mapper.to_domain(model, draft, decision, audits)
+        return await self._loader.load_one(model)
 
     async def list(self, status: RequestStatus | None = None) -> tuple[PurchaseRequest, ...]:
         statement = select(PurchaseRequestModel)
         if status is not None:
             statement = statement.where(PurchaseRequestModel.status == status.value)
         statement = statement.order_by(PurchaseRequestModel.created_at, PurchaseRequestModel.id)
-        models = (await self._session.scalars(statement)).all()
-        requests: list[PurchaseRequest] = []
-        for model in models:
-            request = await self.get(model.id)
-            if request is not None:
-                requests.append(request)
-        return tuple(requests)
+        models = tuple((await self._session.scalars(statement)).all())
+        return await self._loader.load_many(models)
