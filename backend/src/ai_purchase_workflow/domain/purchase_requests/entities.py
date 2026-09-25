@@ -9,7 +9,7 @@ from ai_purchase_workflow.domain.purchase_requests.errors import (
     DomainValidationError,
     InvalidRequestTransitionError,
 )
-from ai_purchase_workflow.domain.purchase_requests.value_objects import Money
+from ai_purchase_workflow.domain.purchase_requests.value_objects import Money, RequiredText
 
 _ALLOWED_TRANSITIONS: dict[RequestStatus, frozenset[RequestStatus]] = {
     RequestStatus.DRAFTING: frozenset({RequestStatus.PENDING_APPROVAL, RequestStatus.FAILED}),
@@ -23,17 +23,6 @@ _ALLOWED_TRANSITIONS: dict[RequestStatus, frozenset[RequestStatus]] = {
 }
 
 
-def _require_text(value: str, field_name: str) -> str:
-    normalized = value.strip()
-    if not normalized:
-        raise DomainValidationError(f"{field_name} is required.")
-    return normalized
-
-
-def _utc_now() -> datetime:
-    return datetime.now(UTC)
-
-
 @dataclass(frozen=True, slots=True)
 class PurchaseItem:
     description: str
@@ -42,11 +31,11 @@ class PurchaseItem:
     vendor: str | None = None
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "description", _require_text(self.description, "Item description"))
+        object.__setattr__(self, "description", RequiredText(self.description, "Item description").value)
         if self.quantity <= 0:
             raise DomainValidationError("Item quantity must be greater than zero.")
         if self.vendor is not None:
-            object.__setattr__(self, "vendor", _require_text(self.vendor, "Vendor"))
+            object.__setattr__(self, "vendor", RequiredText(self.vendor, "Vendor").value)
 
     @property
     def total_price(self) -> Money:
@@ -65,7 +54,7 @@ class DraftOrder:
     def create(cls, request_id: UUID, items: tuple[PurchaseItem, ...], total: Money) -> "DraftOrder":
         if not items:
             raise DomainValidationError("A draft order must contain at least one item.")
-        return cls(id=uuid4(), request_id=request_id, items=items, total=total, created_at=_utc_now())
+        return cls(id=uuid4(), request_id=request_id, items=items, total=total, created_at=datetime.now(UTC))
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,14 +74,14 @@ class ApprovalDecision:
         decided_by: str,
         reason: str | None = None,
     ) -> "ApprovalDecision":
-        normalized_reason = None if reason is None else _require_text(reason, "Decision reason")
+        normalized_reason = None if reason is None else RequiredText(reason, "Decision reason").value
         return cls(
             id=uuid4(),
             request_id=request_id,
             outcome=outcome,
-            decided_by=_require_text(decided_by, "Decided by"),
+            decided_by=RequiredText(decided_by, "Decided by").value,
             reason=normalized_reason,
-            decided_at=_utc_now(),
+            decided_at=datetime.now(UTC),
         )
 
 
@@ -109,9 +98,9 @@ class AuditEntry:
         return cls(
             id=uuid4(),
             request_id=request_id,
-            event_type=_require_text(event_type, "Audit event type"),
-            message=_require_text(message, "Audit message"),
-            occurred_at=_utc_now(),
+            event_type=RequiredText(event_type, "Audit event type").value,
+            message=RequiredText(message, "Audit message").value,
+            occurred_at=datetime.now(UTC),
         )
 
 
@@ -133,8 +122,8 @@ class PurchaseRequest:
             raise DomainValidationError("A purchase request must contain at least one item.")
         normalized_requester = None
         if requester_name is not None:
-            normalized_requester = _require_text(requester_name, "Requester name")
-        now = _utc_now()
+            normalized_requester = RequiredText(requester_name, "Requester name").value
+        now = datetime.now(UTC)
         return cls(
             id=uuid4(),
             requester_name=normalized_requester,
@@ -148,4 +137,4 @@ class PurchaseRequest:
         if target_status not in _ALLOWED_TRANSITIONS[self.status]:
             raise InvalidRequestTransitionError(self.status.value, target_status.value)
         self.status = target_status
-        self.updated_at = occurred_at or _utc_now()
+        self.updated_at = occurred_at or datetime.now(UTC)
