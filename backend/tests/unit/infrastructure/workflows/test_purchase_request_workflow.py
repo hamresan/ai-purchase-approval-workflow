@@ -33,8 +33,8 @@ from ai_purchase_workflow.application.purchase_requests.trusted_tools import (
     SubmitOrder,
 )
 from ai_purchase_workflow.domain.purchase_requests import (
-    ApprovalGatePolicy,
     ApprovalDecision,
+    ApprovalGatePolicy,
     ApprovalOutcome,
     BudgetPolicy,
     DraftOrderPolicy,

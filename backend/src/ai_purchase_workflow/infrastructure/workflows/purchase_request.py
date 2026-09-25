@@ -1,10 +1,10 @@
 # pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false
 from typing import cast
 
-from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command
 
+from ai_purchase_workflow.infrastructure.workflows.checkpoint_types import CheckpointSaver
 from ai_purchase_workflow.infrastructure.workflows.nodes import (
     AwaitApprovalNode,
     ExtractPurchaseRequestNode,
@@ -25,7 +25,7 @@ class PurchaseRequestWorkflow:
         prepare_node: PreparePurchaseRequestNode,
         await_approval_node: AwaitApprovalNode,
         submit_node: SubmitPurchaseRequestNode,
-        checkpointer: BaseCheckpointSaver,
+        checkpointer: CheckpointSaver,
     ) -> None:
         builder = StateGraph(PurchaseRequestWorkflowState)
         builder.add_node("extract", extract_node)

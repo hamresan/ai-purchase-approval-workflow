@@ -1,8 +1,4 @@
-from langgraph.checkpoint.base import BaseCheckpointSaver
-
-from ai_purchase_workflow.application.purchase_requests import (
-    PurchaseRequestRepository,
-)
+from ai_purchase_workflow.application.purchase_requests import PurchaseRequestRepository
 from ai_purchase_workflow.application.workflows import WorkflowThreadRepository
 from ai_purchase_workflow.composition_root.purchase_requests import (
     build_submit_purchase_request,
@@ -13,6 +9,7 @@ from ai_purchase_workflow.infrastructure.workflows import (
     PurchaseRequestWorkflow,
     SubmitPurchaseRequestNode,
 )
+from ai_purchase_workflow.infrastructure.workflows.checkpoint_types import CheckpointSaver
 from ai_purchase_workflow.infrastructure.workflows.resume_only import (
     ResumeOnlyExtractNode,
     ResumeOnlyPrepareNode,
@@ -21,7 +18,7 @@ from ai_purchase_workflow.infrastructure.workflows.resume_only import (
 
 def build_resume_purchase_request_workflow(
     repository: PurchaseRequestRepository,
-    checkpointer: BaseCheckpointSaver,
+    checkpointer: CheckpointSaver,
 ) -> PurchaseRequestWorkflow:
     return PurchaseRequestWorkflow(
         extract_node=ResumeOnlyExtractNode(),  # type: ignore[arg-type]
@@ -35,7 +32,7 @@ def build_resume_purchase_request_workflow(
 def build_workflow_gateway(
     repository: PurchaseRequestRepository,
     threads: WorkflowThreadRepository,
-    checkpointer: BaseCheckpointSaver,
+    checkpointer: CheckpointSaver,
 ) -> LangGraphPurchaseRequestWorkflowGateway:
     workflow = build_resume_purchase_request_workflow(repository, checkpointer)
     return LangGraphPurchaseRequestWorkflowGateway(workflow, threads)

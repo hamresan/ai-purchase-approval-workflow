@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
@@ -9,7 +9,7 @@ def to_psycopg_dsn(database_url: str) -> str:
 
 
 @asynccontextmanager
-async def postgres_checkpointer(database_url: str) -> AsyncIterator[AsyncPostgresSaver]:
+async def postgres_checkpointer(database_url: str) -> AsyncGenerator[AsyncPostgresSaver, None]:
     dsn = to_psycopg_dsn(database_url)
     async with AsyncPostgresSaver.from_conn_string(dsn) as checkpointer:
         await checkpointer.setup()
