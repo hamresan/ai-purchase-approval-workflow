@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -53,6 +53,9 @@ class ApprovalDecisionModel(Base):
 
 class AuditEntryModel(Base):
     __tablename__ = "audit_entries"
+    __table_args__ = (
+        UniqueConstraint("request_id", "sequence", name="uq_audit_entries_request_sequence"),
+    )
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
     request_id: Mapped[UUID] = mapped_column(
