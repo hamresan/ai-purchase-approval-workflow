@@ -10,17 +10,20 @@ from ai_purchase_workflow.application.purchase_requests import (
     GetPurchaseRequest,
     ListPurchaseRequests,
 )
+from ai_purchase_workflow.application.purchase_requests.repository import (
+    PurchaseRequestRepository,
+)
 from ai_purchase_workflow.application.purchase_requests.use_cases import (
     PurchaseRequestNotFoundError,
 )
 from ai_purchase_workflow.domain.purchase_requests import RequestStatus
 
-from .fakes import InMemoryPurchaseRequestRepository
 
 
 @pytest.mark.asyncio
-async def test_create_get_and_list_purchase_requests() -> None:
-    repository = InMemoryPurchaseRequestRepository()
+async def test_create_get_and_list_purchase_requests(
+    repository: PurchaseRequestRepository,
+) -> None:
     create = CreatePurchaseRequest(repository)
     get = GetPurchaseRequest(repository)
     list_requests = ListPurchaseRequests(repository)
@@ -38,8 +41,9 @@ async def test_create_get_and_list_purchase_requests() -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_purchase_request_raises_for_unknown_id() -> None:
-    repository = InMemoryPurchaseRequestRepository()
+async def test_get_purchase_request_raises_for_unknown_id(
+    repository: PurchaseRequestRepository,
+) -> None:
 
     with pytest.raises(PurchaseRequestNotFoundError):
         await GetPurchaseRequest(repository).execute(uuid4())
