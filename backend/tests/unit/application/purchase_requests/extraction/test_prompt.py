@@ -1,7 +1,8 @@
+from tests.application.purchase_requests.fakes.prompt import FakePromptTemplateReader
+
 from ai_purchase_workflow.application.purchase_requests.extraction import (
     PurchaseRequestPromptBuilder,
 )
-from tests.application.purchase_requests.fakes.prompt import FakePromptTemplateReader
 
 
 def test_build_normalizes_input_and_renders_versioned_template() -> None:

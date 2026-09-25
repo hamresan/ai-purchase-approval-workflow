@@ -17,8 +17,8 @@ from ai_purchase_workflow.application.purchase_requests.extraction.prompt import
     PurchaseRequestPromptBuilder,
 )
 from ai_purchase_workflow.application.purchase_requests.extraction.service import (
-    ExtractPurchaseRequest,
     ExtractionOutcome,
+    ExtractPurchaseRequest,
 )
 from ai_purchase_workflow.application.purchase_requests.extraction.validator import (
     ExtractedRequestValidator,

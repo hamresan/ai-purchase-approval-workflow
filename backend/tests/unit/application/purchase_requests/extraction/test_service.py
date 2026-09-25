@@ -1,14 +1,14 @@
 import pytest
+from tests.application.purchase_requests.fakes.prompt import FakePromptTemplateReader
 
 from ai_purchase_workflow.application.purchase_requests.extraction import (
-    ExtractPurchaseRequest,
     ExtractedRequestValidator,
+    ExtractPurchaseRequest,
     ModelResponse,
     PurchaseRequestPromptBuilder,
     StructuredOutputMapper,
 )
 from ai_purchase_workflow.infrastructure.models import FakePurchaseRequestModel
-from tests.application.purchase_requests.fakes.prompt import FakePromptTemplateReader
 
 
 def build_extractor(response: ModelResponse) -> ExtractPurchaseRequest:
