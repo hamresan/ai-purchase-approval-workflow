@@ -6,12 +6,8 @@ from ai_purchase_workflow.application.purchase_requests.trusted_tools import (
     CreateDraftOrder,
     FindVendor,
 )
-from ai_purchase_workflow.domain.purchase_requests import (
-    AuditEntry,
-    PurchaseRequest,
-    PurchaseRequestDomainError,
-    RequestStatus,
-)
+from ai_purchase_workflow.domain.purchase_requests import AuditEntry, PurchaseRequest, RequestStatus
+from ai_purchase_workflow.domain.purchase_requests.errors import PurchaseRequestDomainError
 
 
 class PurchaseRequestPreparationError(Exception):
