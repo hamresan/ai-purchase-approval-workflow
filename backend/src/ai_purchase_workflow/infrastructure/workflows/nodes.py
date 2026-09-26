@@ -1,7 +1,6 @@
 from langgraph.types import interrupt
 
 from ai_purchase_workflow.application.observability import WorkflowObservation, WorkflowObserver
-
 from ai_purchase_workflow.application.purchase_requests.extracted_preparation import (
     PrepareExtractedPurchaseRequest,
     PurchaseRequestPreparationError,

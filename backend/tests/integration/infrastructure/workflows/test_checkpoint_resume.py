@@ -1,11 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from tests.application.purchase_requests.fakes.prompt import FakePromptTemplateReader
-from tests.unit.infrastructure.workflows.fakes.observer import FakeWorkflowObserver
 from tests.application.purchase_requests.fakes.trusted_tools import (
     FakeBudgetReader,
     FakeCatalogReader,
     FakeOrderGateway,
 )
+from tests.unit.infrastructure.workflows.fakes.observer import FakeWorkflowObserver
 
 from ai_purchase_workflow.application.purchase_requests.approval import ApprovePurchaseRequest
 from ai_purchase_workflow.application.purchase_requests.extracted_preparation import (
