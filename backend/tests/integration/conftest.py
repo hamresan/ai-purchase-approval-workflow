@@ -21,6 +21,11 @@ def migrate_database() -> None:
     command.upgrade(config, "head")
 
 
+@pytest.fixture(scope="session")
+def test_database_url() -> str:
+    return TEST_DATABASE_URL
+
+
 @pytest.fixture
 async def session_factory() -> AsyncIterator[async_sessionmaker[AsyncSession]]:
     engine = create_async_engine(TEST_DATABASE_URL)
@@ -28,7 +33,7 @@ async def session_factory() -> AsyncIterator[async_sessionmaker[AsyncSession]]:
     async with factory() as session:
         await session.execute(
             text(
-                "TRUNCATE audit_entries, approval_decisions, draft_orders, "
+                "TRUNCATE workflow_threads, audit_entries, approval_decisions, draft_orders, "
                 "purchase_requests RESTART IDENTITY CASCADE"
             )
         )

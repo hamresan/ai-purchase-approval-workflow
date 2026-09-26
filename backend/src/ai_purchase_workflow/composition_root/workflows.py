@@ -21,8 +21,8 @@ def build_resume_purchase_request_workflow(
     checkpointer: CheckpointSaver,
 ) -> PurchaseRequestWorkflow:
     return PurchaseRequestWorkflow(
-        extract_node=ResumeOnlyExtractNode(),  # type: ignore[arg-type]
-        prepare_node=ResumeOnlyPrepareNode(),  # type: ignore[arg-type]
+        extract_node=ResumeOnlyExtractNode(),
+        prepare_node=ResumeOnlyPrepareNode(),
         await_approval_node=AwaitApprovalNode(),
         submit_node=SubmitPurchaseRequestNode(build_submit_purchase_request(repository)),
         checkpointer=checkpointer,

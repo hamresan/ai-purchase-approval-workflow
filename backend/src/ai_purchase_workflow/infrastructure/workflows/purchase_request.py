@@ -5,12 +5,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command
 
 from ai_purchase_workflow.infrastructure.workflows.checkpoint_types import CheckpointSaver
-from ai_purchase_workflow.infrastructure.workflows.nodes import (
-    AwaitApprovalNode,
-    ExtractPurchaseRequestNode,
-    PreparePurchaseRequestNode,
-    SubmitPurchaseRequestNode,
-)
+from ai_purchase_workflow.infrastructure.workflows.contracts import WorkflowNode
 from ai_purchase_workflow.infrastructure.workflows.routing import (
     route_after_approval,
     route_after_extraction,
@@ -22,10 +17,10 @@ from ai_purchase_workflow.infrastructure.workflows.state import PurchaseRequestW
 class PurchaseRequestWorkflow:
     def __init__(
         self,
-        extract_node: ExtractPurchaseRequestNode,
-        prepare_node: PreparePurchaseRequestNode,
-        await_approval_node: AwaitApprovalNode,
-        submit_node: SubmitPurchaseRequestNode,
+        extract_node: WorkflowNode,
+        prepare_node: WorkflowNode,
+        await_approval_node: WorkflowNode,
+        submit_node: WorkflowNode,
         checkpointer: CheckpointSaver,
     ) -> None:
         builder = StateGraph(PurchaseRequestWorkflowState)
