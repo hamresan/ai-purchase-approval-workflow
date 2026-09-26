@@ -14,6 +14,7 @@ from ai_purchase_workflow.infrastructure.workflows.nodes import (
 from ai_purchase_workflow.infrastructure.workflows.routing import (
     route_after_approval,
     route_after_extraction,
+    route_after_preparation,
 )
 from ai_purchase_workflow.infrastructure.workflows.state import PurchaseRequestWorkflowState
 
@@ -38,7 +39,11 @@ class PurchaseRequestWorkflow:
             route_after_extraction,
             {"prepare": "prepare", "human_review": END},
         )
-        builder.add_edge("prepare", "await_approval")
+        builder.add_conditional_edges(
+            "prepare",
+            route_after_preparation,
+            {"await_approval": "await_approval", "human_review": END},
+        )
         builder.add_conditional_edges(
             "await_approval",
             route_after_approval,
