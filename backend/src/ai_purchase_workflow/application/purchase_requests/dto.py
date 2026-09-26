@@ -18,7 +18,7 @@ class CreatePurchaseItem:
 @dataclass(frozen=True, slots=True)
 class CreatePurchaseRequestCommand:
     requester_name: str | None
-    items: tuple[PurchaseItemView, ...]
+    items: tuple[CreatePurchaseItem, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,7 +42,7 @@ class PurchaseItemView:
 class PurchaseRequestView:
     id: UUID
     requester_name: str | None
-    items: tuple[CreatePurchaseItem, ...]
+    items: tuple[PurchaseItemView, ...]
     status: RequestStatus
     created_at: datetime
     updated_at: datetime

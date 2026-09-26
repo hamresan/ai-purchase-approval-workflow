@@ -6,8 +6,12 @@ from ai_purchase_workflow.application.purchase_requests.dto import (
     PurchaseRequestPage,
     PurchaseRequestView,
 )
-from ai_purchase_workflow.application.purchase_requests.idempotency import IdempotentPurchaseRequestCreator
-from ai_purchase_workflow.application.purchase_requests.repository import PurchaseRequestRepository
+from ai_purchase_workflow.application.purchase_requests.idempotency import (
+    IdempotentPurchaseRequestCreator,
+)
+from ai_purchase_workflow.application.purchase_requests.repository import (
+    PurchaseRequestRepository,
+)
 from ai_purchase_workflow.domain.purchase_requests import Money, PurchaseItem, PurchaseRequest
 
 

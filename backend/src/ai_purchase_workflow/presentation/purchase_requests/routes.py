@@ -61,7 +61,10 @@ RequestStatusQuery = Annotated[RequestStatus | None, Query(alias="status")]
 LimitQuery = Annotated[int, Query(ge=1, le=100)]
 OffsetQuery = Annotated[int, Query(ge=0)]
 OrderQuery = Annotated[Literal["asc", "desc"], Query()]
-IdempotencyKeyHeader = Annotated[str | None, Header(alias="Idempotency-Key", min_length=1, max_length=200)]
+IdempotencyKeyHeader = Annotated[
+    str | None,
+    Header(alias="Idempotency-Key", min_length=1, max_length=200),
+]
 
 
 @router.post("", response_model=PurchaseRequestResponse, status_code=201)
