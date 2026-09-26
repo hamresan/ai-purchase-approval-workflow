@@ -43,11 +43,20 @@ class PrepareExtractedPurchaseRequest:
 
         request.draft_order = draft
         request.audit_entries = (
-            *request.audit_entries,
             AuditEntry.create(
                 request.id,
-                "purchase_request_prepared",
-                "AI-extracted request validated with trusted data and draft order created.",
+                "request_extracted",
+                "Structured purchase request extracted from the model response.",
+            ),
+            AuditEntry.create(
+                request.id,
+                "trusted_data_validated",
+                "Vendor availability, draft order, and budget policy checks passed.",
+            ),
+            AuditEntry.create(
+                request.id,
+                "approval_paused",
+                "Workflow paused pending a human approval decision.",
             ),
         )
         request.transition_to(RequestStatus.PENDING_APPROVAL)

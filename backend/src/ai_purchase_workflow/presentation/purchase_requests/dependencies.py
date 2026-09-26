@@ -12,11 +12,24 @@ from ai_purchase_workflow.application.purchase_requests import (
     SubmitPurchaseRequest,
 )
 from ai_purchase_workflow.composition_root.purchase_requests import (
+    build_approve_purchase_request,
+    build_edit_purchase_request,
     build_prepare_purchase_request,
+    build_reject_purchase_request,
     build_submit_purchase_request,
 )
+from ai_purchase_workflow.composition_root.workflows import build_workflow_gateway
 from ai_purchase_workflow.infrastructure.persistence.purchase_requests import (
     SqlAlchemyPurchaseRequestRepository,
+)
+from ai_purchase_workflow.infrastructure.persistence.workflow_threads import (
+    SqlAlchemyWorkflowThreadRepository,
+)
+from ai_purchase_workflow.presentation.purchase_requests.approval_dispatcher import (
+    ApprovalActionDispatcher,
+    ApproveActionHandler,
+    EditActionHandler,
+    RejectActionHandler,
 )
 
 
@@ -49,3 +62,21 @@ def get_prepare_purchase_request(session: SessionDependency) -> PreparePurchaseR
 def get_submit_purchase_request(session: SessionDependency) -> SubmitPurchaseRequest:
     repository = SqlAlchemyPurchaseRequestRepository(session)
     return build_submit_purchase_request(repository)
+
+
+def get_approval_dispatcher(
+    request: Request,
+    session: SessionDependency,
+) -> ApprovalActionDispatcher:
+    repository = SqlAlchemyPurchaseRequestRepository(session)
+    threads = SqlAlchemyWorkflowThreadRepository(session)
+    workflow = build_workflow_gateway(
+        repository,
+        threads,
+        request.app.state.checkpointer,
+    )
+    return ApprovalActionDispatcher(
+        ApproveActionHandler(build_approve_purchase_request(repository, workflow)),
+        RejectActionHandler(build_reject_purchase_request(repository, workflow)),
+        EditActionHandler(build_edit_purchase_request(repository)),
+    )

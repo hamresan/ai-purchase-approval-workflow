@@ -127,6 +127,12 @@ class PurchaseRequestRelatedRecordMapper:
             created_at=draft.created_at,
         )
 
+    def update_draft_model(self, model: DraftOrderModel, draft: DraftOrder) -> None:
+        model.items = [self._item_mapper.to_record(item) for item in draft.items]
+        model.total_amount = draft.total.amount
+        model.currency = draft.total.currency
+        model.created_at = draft.created_at
+
     @staticmethod
     def to_decision_model(decision: ApprovalDecision) -> ApprovalDecisionModel:
         return ApprovalDecisionModel(

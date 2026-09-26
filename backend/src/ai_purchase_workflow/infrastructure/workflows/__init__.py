@@ -1,6 +1,15 @@
+from ai_purchase_workflow.infrastructure.workflows.checkpoints import (
+    postgres_checkpointer,
+    to_psycopg_dsn,
+)
+from ai_purchase_workflow.infrastructure.workflows.gateway import (
+    LangGraphPurchaseRequestWorkflowGateway,
+)
 from ai_purchase_workflow.infrastructure.workflows.nodes import (
+    AwaitApprovalNode,
     ExtractPurchaseRequestNode,
     PreparePurchaseRequestNode,
+    SubmitPurchaseRequestNode,
 )
 from ai_purchase_workflow.infrastructure.workflows.purchase_request import (
     PurchaseRequestWorkflow,
@@ -19,11 +28,16 @@ from ai_purchase_workflow.infrastructure.workflows.state_factory import (
 )
 
 __all__ = [
+    "AwaitApprovalNode",
     "ExtractPurchaseRequestNode",
+    "LangGraphPurchaseRequestWorkflowGateway",
     "PreparePurchaseRequestNode",
     "PurchaseRequestWorkflow",
     "PurchaseRequestWorkflowResult",
     "PurchaseRequestWorkflowResultMapper",
     "PurchaseRequestWorkflowRunner",
     "PurchaseRequestWorkflowStateFactory",
+    "SubmitPurchaseRequestNode",
+    "postgres_checkpointer",
+    "to_psycopg_dsn",
 ]

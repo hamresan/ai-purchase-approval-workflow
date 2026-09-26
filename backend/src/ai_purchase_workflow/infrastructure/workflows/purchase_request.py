@@ -2,33 +2,71 @@
 from typing import cast
 
 from langgraph.graph import END, START, StateGraph
+from langgraph.types import Command
 
-from ai_purchase_workflow.infrastructure.workflows.nodes import (
-    ExtractPurchaseRequestNode,
-    PreparePurchaseRequestNode,
+from ai_purchase_workflow.infrastructure.workflows.checkpoint_types import CheckpointSaver
+from ai_purchase_workflow.infrastructure.workflows.contracts import WorkflowNode
+from ai_purchase_workflow.infrastructure.workflows.routing import (
+    route_after_approval,
+    route_after_extraction,
+    route_after_preparation,
 )
-from ai_purchase_workflow.infrastructure.workflows.routing import route_after_extraction
 from ai_purchase_workflow.infrastructure.workflows.state import PurchaseRequestWorkflowState
 
 
 class PurchaseRequestWorkflow:
     def __init__(
         self,
-        extract_node: ExtractPurchaseRequestNode,
-        prepare_node: PreparePurchaseRequestNode,
+        extract_node: WorkflowNode,
+        prepare_node: WorkflowNode,
+        await_approval_node: WorkflowNode,
+        submit_node: WorkflowNode,
+        checkpointer: CheckpointSaver,
     ) -> None:
         builder = StateGraph(PurchaseRequestWorkflowState)
         builder.add_node("extract", extract_node)
         builder.add_node("prepare", prepare_node)
+        builder.add_node("await_approval", await_approval_node)
+        builder.add_node("submit", submit_node)
         builder.add_edge(START, "extract")
         builder.add_conditional_edges(
             "extract",
             route_after_extraction,
             {"prepare": "prepare", "human_review": END},
         )
-        builder.add_edge("prepare", END)
-        self.graph = builder.compile()
+        builder.add_conditional_edges(
+            "prepare",
+            route_after_preparation,
+            {"await_approval": "await_approval", "human_review": END},
+        )
+        builder.add_conditional_edges(
+            "await_approval",
+            route_after_approval,
+            {"submit": "submit", "rejected": END, "human_review": END},
+        )
+        builder.add_edge("submit", END)
+        self.graph = builder.compile(checkpointer=checkpointer)
 
-    async def execute(self, state: PurchaseRequestWorkflowState) -> PurchaseRequestWorkflowState:
-        raw_state = await self.graph.ainvoke(state)
+    async def execute(
+        self,
+        state: PurchaseRequestWorkflowState,
+        *,
+        thread_id: str,
+    ) -> PurchaseRequestWorkflowState:
+        raw_state = await self.graph.ainvoke(
+            state,
+            config={"configurable": {"thread_id": thread_id}},
+        )
+        return cast(PurchaseRequestWorkflowState, raw_state)
+
+    async def resume(
+        self,
+        *,
+        thread_id: str,
+        action: str,
+    ) -> PurchaseRequestWorkflowState:
+        raw_state = await self.graph.ainvoke(
+            Command(resume={"action": action}),
+            config={"configurable": {"thread_id": thread_id}},
+        )
         return cast(PurchaseRequestWorkflowState, raw_state)

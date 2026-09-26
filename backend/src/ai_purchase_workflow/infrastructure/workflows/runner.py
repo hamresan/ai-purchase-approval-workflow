@@ -28,5 +28,8 @@ class PurchaseRequestWorkflowRunner:
         checkpoint_id: str | None = None,
     ) -> PurchaseRequestWorkflowResult:
         state = self._state_factory.create(free_text, checkpoint_id=checkpoint_id)
-        completed_state = await self._workflow.execute(state)
+        completed_state = await self._workflow.execute(
+            state,
+            thread_id=state["workflow_id"],
+        )
         return self._result_mapper.map(completed_state)

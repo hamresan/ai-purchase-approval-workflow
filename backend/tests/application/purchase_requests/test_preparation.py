@@ -63,7 +63,10 @@ async def test_prepare_purchase_request_builds_trusted_draft_and_moves_to_pendin
     assert stored.draft_order is not None
     assert stored.draft_order.items[0].vendor == "Trusted Vendor"
     assert stored.draft_order.total.amount == Decimal("50.00")
-    assert stored.audit_entries[0].event_type == "purchase_request_prepared"
+    assert [entry.event_type for entry in stored.audit_entries] == [
+        "trusted_data_validated",
+        "approval_paused",
+    ]
 
 
 async def test_prepare_purchase_request_rejects_missing_budget_data(
@@ -133,3 +136,4 @@ async def test_submit_purchase_request_submits_approved_draft_and_marks_request_
     stored = await repository.get(request.id)
     assert stored is not None
     assert stored.status is RequestStatus.SUBMITTED
+    assert stored.audit_entries[-1].event_type == "order_submitted"

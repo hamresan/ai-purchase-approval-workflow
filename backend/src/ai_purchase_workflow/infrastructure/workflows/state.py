@@ -6,7 +6,19 @@ from ai_purchase_workflow.application.purchase_requests.extraction import (
     ExtractedPurchaseRequest,
 )
 
-WorkflowStatus = Literal["started", "extracted", "human_review", "pending_approval"]
+WorkflowStatus = Literal[
+    "started",
+    "extracted",
+    "human_review",
+    "pending_approval",
+    "approved",
+    "rejected",
+    "submitted",
+]
+
+
+class ApprovalResume(TypedDict):
+    action: Literal["approved", "rejected"]
 
 
 class PurchaseRequestWorkflowState(TypedDict):
@@ -18,6 +30,7 @@ class PurchaseRequestWorkflowState(TypedDict):
     extracted_request: NotRequired[ExtractedPurchaseRequest]
     purchase_request_id: NotRequired[UUID]
     review_reason: NotRequired[str]
+    approval_action: NotRequired[Literal["approved", "rejected"]]
 
 
 @dataclass(frozen=True, slots=True)
