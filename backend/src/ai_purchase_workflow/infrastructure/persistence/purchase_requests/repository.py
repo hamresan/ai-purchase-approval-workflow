@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ai_purchase_workflow.application.purchase_requests.repository import (
@@ -73,14 +73,18 @@ class SqlAlchemyPurchaseRequestRepository(PurchaseRequestRepository):
         offset: int,
         descending: bool,
     ) -> PurchaseRequestPageResult:
-        filters = []
+        filters: list[ColumnElement[bool]] = []
         if status is not None:
             filters.append(PurchaseRequestModel.status == status.value)
 
         count_statement = select(func.count()).select_from(PurchaseRequestModel).where(*filters)
         total = int((await self._session.scalar(count_statement)) or 0)
 
-        order = PurchaseRequestModel.created_at.desc() if descending else PurchaseRequestModel.created_at
+        order = (
+            PurchaseRequestModel.created_at.desc()
+            if descending
+            else PurchaseRequestModel.created_at.asc()
+        )
         statement = (
             select(PurchaseRequestModel)
             .where(*filters)

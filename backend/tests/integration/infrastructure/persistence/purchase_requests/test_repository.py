@@ -31,9 +31,15 @@ async def test_repository_persists_gets_and_filters_requests(db_session: AsyncSe
     await repository.add(pending)
 
     loaded = await repository.get(drafting.id)
-    filtered = await repository.list(RequestStatus.PENDING_APPROVAL)
+    filtered = await repository.list_page(
+        status=RequestStatus.PENDING_APPROVAL,
+        limit=20,
+        offset=0,
+        descending=False,
+    )
 
     assert loaded is not None
     assert loaded.id == drafting.id
     assert loaded.items == drafting.items
-    assert [request.id for request in filtered] == [pending.id]
+    assert [request.id for request in filtered.items] == [pending.id]
+    assert filtered.total == 1

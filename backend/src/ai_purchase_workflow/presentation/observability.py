@@ -1,15 +1,19 @@
 import logging
+from collections.abc import Awaitable, Callable
 from time import perf_counter
 from uuid import uuid4
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 
 logger = logging.getLogger("ai_purchase_workflow.http")
 
 
 def register_http_observability(app: FastAPI) -> None:
     @app.middleware("http")
-    async def observe_request(request: Request, call_next):
+    async def observe_request(
+        request: Request,
+        call_next: Callable[[Request], Awaitable[Response]],
+    ) -> Response:
         request_id = request.headers.get("X-Request-ID") or str(uuid4())
         started = perf_counter()
         try:
