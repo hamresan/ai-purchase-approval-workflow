@@ -25,6 +25,9 @@ from ai_purchase_workflow.infrastructure.persistence.purchase_requests import (
 from ai_purchase_workflow.infrastructure.persistence.purchase_requests.idempotency import (
     SqlAlchemyIdempotentPurchaseRequestCreator,
 )
+from ai_purchase_workflow.infrastructure.persistence.purchase_requests.idempotency_reader import (
+    IdempotentPurchaseRequestReader,
+)
 from ai_purchase_workflow.infrastructure.persistence.purchase_requests.loader import (
     PurchaseRequestAggregateLoader,
 )
@@ -59,7 +62,8 @@ def get_create_purchase_request(session: SessionDependency) -> CreatePurchaseReq
     writer = PurchaseRequestRelatedRecordWriter()
     loader = PurchaseRequestAggregateLoader(session, mapper)
     repository = SqlAlchemyPurchaseRequestRepository(session, mapper, writer, loader)
-    creator = SqlAlchemyIdempotentPurchaseRequestCreator(session, mapper, writer, loader)
+    reader = IdempotentPurchaseRequestReader(session, loader)
+    creator = SqlAlchemyIdempotentPurchaseRequestCreator(session, mapper, writer, reader)
     return CreatePurchaseRequest(repository, creator)
 
 
