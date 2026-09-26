@@ -1,7 +1,7 @@
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Header, Query
 
 from ai_purchase_workflow.application.purchase_requests import (
     CreatePurchaseRequest,
@@ -61,14 +61,19 @@ RequestStatusQuery = Annotated[RequestStatus | None, Query(alias="status")]
 LimitQuery = Annotated[int, Query(ge=1, le=100)]
 OffsetQuery = Annotated[int, Query(ge=0)]
 OrderQuery = Annotated[Literal["asc", "desc"], Query()]
+IdempotencyKeyHeader = Annotated[str | None, Header(alias="Idempotency-Key", min_length=1, max_length=200)]
 
 
 @router.post("", response_model=PurchaseRequestResponse, status_code=201)
 async def create_purchase_request(
     body: CreatePurchaseRequestBody,
     use_case: CreatePurchaseRequestDependency,
+    idempotency_key: IdempotencyKeyHeader = None,
 ) -> PurchaseRequestResponse:
-    view = await use_case.execute(PurchaseRequestCommandMapper.from_body(body))
+    view = await use_case.execute(
+        PurchaseRequestCommandMapper.from_body(body),
+        idempotency_key=idempotency_key,
+    )
     return PurchaseRequestResponse.from_view(view)
 
 

@@ -22,6 +22,18 @@ from ai_purchase_workflow.composition_root.workflows import build_workflow_gatew
 from ai_purchase_workflow.infrastructure.persistence.purchase_requests import (
     SqlAlchemyPurchaseRequestRepository,
 )
+from ai_purchase_workflow.infrastructure.persistence.purchase_requests.idempotency import (
+    SqlAlchemyIdempotentPurchaseRequestCreator,
+)
+from ai_purchase_workflow.infrastructure.persistence.purchase_requests.loader import (
+    PurchaseRequestAggregateLoader,
+)
+from ai_purchase_workflow.infrastructure.persistence.purchase_requests.mapper import (
+    PurchaseRequestPersistenceMapper,
+)
+from ai_purchase_workflow.infrastructure.persistence.purchase_requests.writer import (
+    PurchaseRequestRelatedRecordWriter,
+)
 from ai_purchase_workflow.infrastructure.persistence.workflow_threads import (
     SqlAlchemyWorkflowThreadRepository,
 )
@@ -43,7 +55,12 @@ SessionDependency = Annotated[AsyncSession, Depends(get_session)]
 
 
 def get_create_purchase_request(session: SessionDependency) -> CreatePurchaseRequest:
-    return CreatePurchaseRequest(SqlAlchemyPurchaseRequestRepository(session))
+    mapper = PurchaseRequestPersistenceMapper()
+    writer = PurchaseRequestRelatedRecordWriter()
+    loader = PurchaseRequestAggregateLoader(session, mapper)
+    repository = SqlAlchemyPurchaseRequestRepository(session, mapper, writer, loader)
+    creator = SqlAlchemyIdempotentPurchaseRequestCreator(session, mapper, writer, loader)
+    return CreatePurchaseRequest(repository, creator)
 
 
 def get_purchase_request(session: SessionDependency) -> GetPurchaseRequest:

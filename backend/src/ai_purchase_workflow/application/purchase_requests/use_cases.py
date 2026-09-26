@@ -6,6 +6,7 @@ from ai_purchase_workflow.application.purchase_requests.dto import (
     PurchaseRequestPage,
     PurchaseRequestView,
 )
+from ai_purchase_workflow.application.purchase_requests.idempotency import IdempotentPurchaseRequestCreator
 from ai_purchase_workflow.application.purchase_requests.repository import PurchaseRequestRepository
 from ai_purchase_workflow.domain.purchase_requests import Money, PurchaseItem, PurchaseRequest
 
@@ -16,10 +17,19 @@ class PurchaseRequestNotFoundError(LookupError):
 
 
 class CreatePurchaseRequest:
-    def __init__(self, repository: PurchaseRequestRepository) -> None:
+    def __init__(
+        self,
+        repository: PurchaseRequestRepository,
+        idempotent_creator: IdempotentPurchaseRequestCreator,
+    ) -> None:
         self._repository = repository
+        self._idempotent_creator = idempotent_creator
 
-    async def execute(self, command: CreatePurchaseRequestCommand) -> PurchaseRequestView:
+    async def execute(
+        self,
+        command: CreatePurchaseRequestCommand,
+        idempotency_key: str | None = None,
+    ) -> PurchaseRequestView:
         items = tuple(
             PurchaseItem(
                 description=item.description,
@@ -30,8 +40,12 @@ class CreatePurchaseRequest:
             for item in command.items
         )
         request = PurchaseRequest.create(items=items, requester_name=command.requester_name)
-        await self._repository.add(request)
-        return PurchaseRequestView.from_domain(request)
+        if idempotency_key is None:
+            await self._repository.add(request)
+            persisted = request
+        else:
+            persisted = await self._idempotent_creator.create(idempotency_key, request)
+        return PurchaseRequestView.from_domain(persisted)
 
 
 class GetPurchaseRequest:
