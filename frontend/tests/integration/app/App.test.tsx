@@ -3,11 +3,10 @@ import { render, screen } from "@testing-library/react";
 import { App } from "@/app/App";
 
 describe("App", () => {
-  it("renders the accessible application shell", () => {
+  it("renders the purchase request application shell", () => {
+    window.history.replaceState({}, "", "/requests/new");
     render(<App />);
-
-    expect(
-      screen.getByRole("heading", { name: "Purchase Approval" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "New Purchase Request", level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Primary navigation" })).toBeInTheDocument();
   });
 });
