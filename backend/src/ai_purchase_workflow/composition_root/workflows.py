@@ -3,6 +3,7 @@ from ai_purchase_workflow.application.workflows import WorkflowThreadRepository
 from ai_purchase_workflow.composition_root.purchase_requests import (
     build_submit_purchase_request,
 )
+from ai_purchase_workflow.infrastructure.observability import LoggingWorkflowObserver
 from ai_purchase_workflow.infrastructure.workflows import (
     AwaitApprovalNode,
     LangGraphPurchaseRequestWorkflowGateway,
@@ -20,11 +21,15 @@ def build_resume_purchase_request_workflow(
     repository: PurchaseRequestRepository,
     checkpointer: CheckpointSaver,
 ) -> PurchaseRequestWorkflow:
+    observer = LoggingWorkflowObserver()
     return PurchaseRequestWorkflow(
         extract_node=ResumeOnlyExtractNode(),
         prepare_node=ResumeOnlyPrepareNode(),
         await_approval_node=AwaitApprovalNode(),
-        submit_node=SubmitPurchaseRequestNode(build_submit_purchase_request(repository)),
+        submit_node=SubmitPurchaseRequestNode(
+            build_submit_purchase_request(repository),
+            observer,
+        ),
         checkpointer=checkpointer,
     )
 

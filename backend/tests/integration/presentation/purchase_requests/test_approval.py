@@ -96,3 +96,31 @@ async def test_concurrent_approvals_resume_workflow_once(
 
     await asyncio.gather(approve("manager-a"), approve("manager-b"))
     assert gateway.approved_request_ids == [request_id]
+
+
+async def test_approval_conflict_returns_safe_409(
+    approval_api_client: AsyncClient,
+) -> None:
+    created = await approval_api_client.post(
+        "/api/purchase-requests",
+        json={
+            "requester_name": "Dana",
+            "items": [
+                {
+                    "description": "Laptop stand",
+                    "quantity": 1,
+                    "unit_price_amount": "35.00",
+                    "currency": "USD",
+                }
+            ],
+        },
+    )
+    request_id = created.json()["id"]
+
+    response = await approval_api_client.post(
+        f"/api/purchase-requests/{request_id}/approval",
+        json={"action": "approve", "decided_by": "manager"},
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Only pending requests can be approved."}

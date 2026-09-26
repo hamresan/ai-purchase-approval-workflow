@@ -5,6 +5,7 @@ from tests.application.purchase_requests.fakes.trusted_tools import (
     FakeCatalogReader,
     FakeOrderGateway,
 )
+from tests.unit.infrastructure.workflows.fakes.observer import FakeWorkflowObserver
 
 from ai_purchase_workflow.application.purchase_requests.approval import ApprovePurchaseRequest
 from ai_purchase_workflow.application.purchase_requests.extracted_preparation import (
@@ -62,6 +63,7 @@ async def test_postgres_checkpoint_survives_connection_and_resumes_approved_requ
 ) -> None:
     thread_id = "integration-persisted-approval"
     order_gateway = FakeOrderGateway()
+    observer = FakeWorkflowObserver()
 
     async with session_factory() as session:
         repository = SqlAlchemyPurchaseRequestRepository(session)
@@ -94,15 +96,16 @@ async def test_postgres_checkpoint_survives_connection_and_resumes_approved_requ
         async with postgres_checkpointer(test_database_url) as checkpointer:
             workflow = PurchaseRequestWorkflow(
                 ExtractPurchaseRequestNode(extractor),
-                PreparePurchaseRequestNode(preparer, threads),
+                PreparePurchaseRequestNode(preparer, threads, observer),
                 AwaitApprovalNode(),
-                SubmitPurchaseRequestNode(submitter),
+                SubmitPurchaseRequestNode(submitter, observer),
                 checkpointer,
             )
             runner = PurchaseRequestWorkflowRunner(
                 workflow,
                 PurchaseRequestWorkflowStateFactory(),
                 PurchaseRequestWorkflowResultMapper(),
+                observer,
             )
             paused = await runner.execute(
                 "Dana needs a laptop stand",
@@ -127,7 +130,7 @@ async def test_postgres_checkpoint_survives_connection_and_resumes_approved_requ
                 ResumeOnlyExtractNode(),
                 ResumeOnlyPrepareNode(),
                 AwaitApprovalNode(),
-                SubmitPurchaseRequestNode(submitter),
+                SubmitPurchaseRequestNode(submitter, observer),
                 checkpointer,
             )
             approval = ApprovePurchaseRequest(

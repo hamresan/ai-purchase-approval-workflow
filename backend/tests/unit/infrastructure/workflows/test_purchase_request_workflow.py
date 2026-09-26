@@ -12,6 +12,7 @@ from tests.application.purchase_requests.fakes.trusted_tools import (
     FakeOrderGateway,
 )
 from tests.unit.infrastructure.workflows.fakes import InMemoryWorkflowThreadRepository
+from tests.unit.infrastructure.workflows.fakes.observer import FakeWorkflowObserver
 
 from ai_purchase_workflow.application.purchase_requests.extracted_preparation import (
     PrepareExtractedPurchaseRequest,
@@ -75,6 +76,7 @@ def build_workflow(
         mapper=StructuredOutputMapper(),
         validator=ExtractedRequestValidator(),
     )
+    observer = FakeWorkflowObserver()
     preparer = PrepareExtractedPurchaseRequest(
         repository=repository,
         find_vendor=FindVendor(catalog or FakeCatalogReader(), VendorPolicy()),
@@ -87,9 +89,9 @@ def build_workflow(
     )
     workflow = PurchaseRequestWorkflow(
         ExtractPurchaseRequestNode(extractor),
-        PreparePurchaseRequestNode(preparer, threads),
+        PreparePurchaseRequestNode(preparer, threads, observer),
         AwaitApprovalNode(),
-        SubmitPurchaseRequestNode(submitter),
+        SubmitPurchaseRequestNode(submitter, observer),
         InMemorySaver(),
     )
     return (
@@ -97,6 +99,7 @@ def build_workflow(
             workflow,
             PurchaseRequestWorkflowStateFactory(),
             PurchaseRequestWorkflowResultMapper(),
+            observer,
         ),
         workflow,
         repository,

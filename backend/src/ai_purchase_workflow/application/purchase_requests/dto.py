@@ -17,8 +17,16 @@ class CreatePurchaseItem:
 
 @dataclass(frozen=True, slots=True)
 class CreatePurchaseRequestCommand:
+    requester_name: str | None
     items: tuple[CreatePurchaseItem, ...]
-    requester_name: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class PurchaseRequestListQuery:
+    status: RequestStatus | None = None
+    limit: int = 20
+    offset: int = 0
+    descending: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,3 +66,11 @@ class PurchaseRequestView:
             created_at=request.created_at,
             updated_at=request.updated_at,
         )
+
+
+@dataclass(frozen=True, slots=True)
+class PurchaseRequestPage:
+    items: tuple[PurchaseRequestView, ...]
+    total: int
+    limit: int
+    offset: int

@@ -1,9 +1,12 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ai_purchase_workflow.application.purchase_requests.repository import PurchaseRequestRepository
+from ai_purchase_workflow.application.purchase_requests.repository import (
+    PurchaseRequestPageResult,
+    PurchaseRequestRepository,
+)
 from ai_purchase_workflow.domain.purchase_requests import PurchaseRequest, RequestStatus
 from ai_purchase_workflow.infrastructure.persistence.models import PurchaseRequestModel
 from ai_purchase_workflow.infrastructure.persistence.purchase_requests.loader import (
@@ -62,10 +65,35 @@ class SqlAlchemyPurchaseRequestRepository(PurchaseRequestRepository):
             return None
         return await self._loader.load_one(model)
 
-    async def list(self, status: RequestStatus | None = None) -> tuple[PurchaseRequest, ...]:
-        statement = select(PurchaseRequestModel)
+    async def list_page(
+        self,
+        *,
+        status: RequestStatus | None,
+        limit: int,
+        offset: int,
+        descending: bool,
+    ) -> PurchaseRequestPageResult:
+        filters: list[ColumnElement[bool]] = []
         if status is not None:
-            statement = statement.where(PurchaseRequestModel.status == status.value)
-        statement = statement.order_by(PurchaseRequestModel.created_at, PurchaseRequestModel.id)
+            filters.append(PurchaseRequestModel.status == status.value)
+
+        count_statement = select(func.count()).select_from(PurchaseRequestModel).where(*filters)
+        total = int((await self._session.scalar(count_statement)) or 0)
+
+        order = (
+            PurchaseRequestModel.created_at.desc()
+            if descending
+            else PurchaseRequestModel.created_at.asc()
+        )
+        statement = (
+            select(PurchaseRequestModel)
+            .where(*filters)
+            .order_by(order, PurchaseRequestModel.id)
+            .limit(limit)
+            .offset(offset)
+        )
         models = tuple((await self._session.scalars(statement)).all())
-        return await self._loader.load_many(models)
+        return PurchaseRequestPageResult(
+            items=await self._loader.load_many(models),
+            total=total,
+        )

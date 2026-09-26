@@ -1,5 +1,6 @@
 from langgraph.types import interrupt
 
+from ai_purchase_workflow.application.observability import WorkflowObservation, WorkflowObserver
 from ai_purchase_workflow.application.purchase_requests.extracted_preparation import (
     PrepareExtractedPurchaseRequest,
     PurchaseRequestPreparationError,
@@ -42,9 +43,11 @@ class PreparePurchaseRequestNode:
         self,
         preparer: PrepareExtractedPurchaseRequest,
         workflow_threads: WorkflowThreadRepository,
+        observer: WorkflowObserver,
     ) -> None:
         self._preparer = preparer
         self._workflow_threads = workflow_threads
+        self._observer = observer
 
     async def __call__(
         self,
@@ -64,6 +67,15 @@ class PreparePurchaseRequestNode:
             updated["status"] = "human_review"
             updated["review_reason"] = f"Trusted tool execution failed: {error}"
             updated["tool_results"] = ("prepare_failed",)
+            self._observer.record(
+                WorkflowObservation(
+                    event="workflow_fallback",
+                    workflow_thread_id=state["workflow_id"],
+                    state_transition="human_review",
+                    tool_name="prepare_purchase_request",
+                    fallback_occurred=True,
+                )
+            )
             return updated
 
         await self._workflow_threads.bind(request.id, state["workflow_id"])
@@ -76,6 +88,16 @@ class PreparePurchaseRequestNode:
             "budget_checked",
             "approval_paused",
         )
+        for tool_name in ("find_vendor", "create_draft_order", "check_budget"):
+            self._observer.record(
+                WorkflowObservation(
+                    event="workflow_tool_completed",
+                    workflow_thread_id=state["workflow_id"],
+                    purchase_request_id=request.id,
+                    state_transition="pending_approval",
+                    tool_name=tool_name,
+                )
+            )
         return updated
 
 
@@ -105,8 +127,13 @@ class AwaitApprovalNode:
 
 
 class SubmitPurchaseRequestNode:
-    def __init__(self, submitter: SubmitPurchaseRequest) -> None:
+    def __init__(
+        self,
+        submitter: SubmitPurchaseRequest,
+        observer: WorkflowObserver,
+    ) -> None:
         self._submitter = submitter
+        self._observer = observer
 
     async def __call__(
         self,
@@ -120,6 +147,15 @@ class SubmitPurchaseRequestNode:
             return updated
 
         await self._submitter.execute(request_id)
+        self._observer.record(
+            WorkflowObservation(
+                event="workflow_tool_completed",
+                workflow_thread_id=state["workflow_id"],
+                purchase_request_id=request_id,
+                state_transition="submitted",
+                tool_name="submit_order",
+            )
+        )
         updated = state.copy()
         updated["status"] = "submitted"
         updated["tool_results"] = (*state["tool_results"], "order_submitted")
