@@ -18,13 +18,16 @@ from ai_purchase_workflow.application.purchase_requests.use_cases import (
     PurchaseRequestNotFoundError,
 )
 from ai_purchase_workflow.domain.purchase_requests import RequestStatus
+from tests.application.purchase_requests.fakes.idempotency import (
+    InMemoryIdempotentPurchaseRequestCreator,
+)
 
 
 @pytest.mark.asyncio
 async def test_create_get_and_list_purchase_requests(
     repository: PurchaseRequestRepository,
 ) -> None:
-    create = CreatePurchaseRequest(repository)
+    create = CreatePurchaseRequest(repository, InMemoryIdempotentPurchaseRequestCreator())
     get = GetPurchaseRequest(repository)
     list_requests = ListPurchaseRequests(repository)
     command = CreatePurchaseRequestCommand(
