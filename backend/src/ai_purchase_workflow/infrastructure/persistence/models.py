@@ -77,3 +77,15 @@ class WorkflowThreadModel(Base):
     )
     thread_id: Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class PurchaseRequestIdempotencyModel(Base):
+    __tablename__ = "purchase_request_idempotency"
+
+    key: Mapped[str] = mapped_column(String(200), primary_key=True)
+    request_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("purchase_requests.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
