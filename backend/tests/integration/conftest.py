@@ -7,7 +7,6 @@ from alembic.config import Config
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-
 from tests.application.purchase_requests.fakes.workflow import FakePurchaseRequestWorkflowGateway
 
 from ai_purchase_workflow.composition_root.purchase_requests import (
