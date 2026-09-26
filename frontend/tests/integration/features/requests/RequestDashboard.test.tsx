@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
 import type { PurchaseRequestApi } from "@/api/purchaseRequests";
 import { RequestDashboard } from "@/features/requests/RequestDashboard";
@@ -27,8 +27,11 @@ describe("RequestDashboard", () => {
     const emptyApi: PurchaseRequestApi = { list: vi.fn().mockResolvedValue({ ...page, total: 0, items: [] }) };
     const onNewRequest = vi.fn();
     const { unmount } = render(<RequestDashboard api={emptyApi} onNewRequest={onNewRequest} />);
-    expect(await screen.findByText("No purchase requests yet")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /New Purchase Request/ }));
+    const emptyHeading = await screen.findByText("No purchase requests yet");
+    expect(emptyHeading).toBeInTheDocument();
+    const emptyState = emptyHeading.closest(".state-panel");
+    expect(emptyState).not.toBeNull();
+    fireEvent.click(within(emptyState as HTMLElement).getByRole("button", { name: /New Purchase Request/ }));
     expect(onNewRequest).toHaveBeenCalled();
     unmount();
 
