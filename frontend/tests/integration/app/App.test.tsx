@@ -7,6 +7,6 @@ describe("App", () => {
     window.history.replaceState({}, "", "/requests/new");
     render(<App />);
     expect(screen.getByRole("heading", { name: "New Purchase Request", level: 1 })).toBeInTheDocument();
-    expect(screen.getByRole("navigation", { name: "Primary navigation" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Back to requests/ })).toBeInTheDocument();
   });
 });

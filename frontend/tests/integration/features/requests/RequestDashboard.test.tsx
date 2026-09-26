@@ -17,7 +17,7 @@ describe("RequestDashboard", () => {
     const list = vi.fn().mockResolvedValue(page);
     render(<RequestDashboard api={{ list }} onNewRequest={vi.fn()} />);
     expect(screen.getByLabelText("Loading purchase requests")).toBeInTheDocument();
-    expect(await screen.findByText("Laptop stand")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getAllByText("Laptop stand")).toHaveLength(2));
 
     fireEvent.click(screen.getByRole("button", { name: "Approved" }));
     await waitFor(() => expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ status: "approved" })));
