@@ -49,9 +49,7 @@ class ApprovePurchaseRequest:
         if request.status is RequestStatus.SUBMITTED:
             return PurchaseRequestView.from_domain(request)
         if request.status is RequestStatus.APPROVED:
-            await self._workflow.resume_approved(request.id)
-            refreshed = await self._repository.get(request.id)
-            return PurchaseRequestView.from_domain(refreshed or request)
+            return PurchaseRequestView.from_domain(request)
         if request.status is not RequestStatus.PENDING_APPROVAL:
             raise PurchaseRequestApprovalError("Only pending requests can be approved.")
 

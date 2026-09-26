@@ -64,7 +64,7 @@ async def test_approve_records_decision_and_resumes_workflow() -> None:
 
 
 @pytest.mark.asyncio
-async def test_approved_request_retries_workflow_resume() -> None:
+async def test_duplicate_approval_does_not_resume_workflow_twice() -> None:
     repository = InMemoryPurchaseRequestRepository()
     workflow = FakePurchaseRequestWorkflowGateway()
     request = await make_pending_request(repository)
@@ -73,7 +73,7 @@ async def test_approved_request_retries_workflow_resume() -> None:
     await use_case.execute(request.id, decided_by="Manager")
     await use_case.execute(request.id, decided_by="Manager")
 
-    assert workflow.approved_request_ids == [request.id, request.id]
+    assert workflow.approved_request_ids == [request.id]
 
 
 @pytest.mark.asyncio
