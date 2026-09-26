@@ -43,8 +43,13 @@ class PreparePurchaseRequest:
             *request.audit_entries,
             AuditEntry.create(
                 request.id,
-                "purchase_request_prepared",
-                "Trusted purchase data validated and draft order created.",
+                "trusted_data_validated",
+                "Vendor availability, draft order, and budget policy checks passed.",
+            ),
+            AuditEntry.create(
+                request.id,
+                "approval_paused",
+                "Workflow paused pending a human approval decision.",
             ),
         )
         request.transition_to(RequestStatus.PENDING_APPROVAL)
@@ -63,6 +68,14 @@ class SubmitPurchaseRequest:
             raise PurchaseRequestNotFoundError(request_id)
 
         await self._submit_order.execute(request)
+        request.audit_entries = (
+            *request.audit_entries,
+            AuditEntry.create(
+                request.id,
+                "order_submitted",
+                "Approved purchase request submitted successfully.",
+            ),
+        )
         request.transition_to(RequestStatus.SUBMITTED)
         await self._repository.save(request)
         return PurchaseRequestView.from_domain(request)

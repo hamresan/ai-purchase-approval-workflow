@@ -143,3 +143,10 @@ async def test_postgres_checkpoint_survives_connection_and_resumes_approved_requ
         assert persisted is not None
         assert persisted.status is RequestStatus.SUBMITTED
         assert persisted.approval_decision is not None
+        assert [entry.event_type for entry in persisted.audit_entries] == [
+            "request_extracted",
+            "trusted_data_validated",
+            "approval_paused",
+            "approval_approved",
+            "order_submitted",
+        ]
