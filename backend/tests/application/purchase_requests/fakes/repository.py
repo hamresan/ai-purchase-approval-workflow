@@ -1,6 +1,9 @@
 from uuid import UUID
 
-from ai_purchase_workflow.application.purchase_requests.repository import PurchaseRequestRepository
+from ai_purchase_workflow.application.purchase_requests.repository import (
+    PurchaseRequestPageResult,
+    PurchaseRequestRepository,
+)
 from ai_purchase_workflow.domain.purchase_requests import PurchaseRequest, RequestStatus
 
 
@@ -20,11 +23,25 @@ class InMemoryPurchaseRequestRepository(PurchaseRequestRepository):
     async def get_for_update(self, request_id: UUID) -> PurchaseRequest | None:
         return self.requests.get(request_id)
 
-    async def list(
+    async def list_page(
         self,
-        status: RequestStatus | None = None,
-    ) -> tuple[PurchaseRequest, ...]:
-        values = tuple(sorted(self.requests.values(), key=lambda request: request.created_at))
-        if status is None:
-            return values
-        return tuple(request for request in values if request.status is status)
+        *,
+        status: RequestStatus | None,
+        limit: int,
+        offset: int,
+        descending: bool,
+    ) -> PurchaseRequestPageResult:
+        values = tuple(
+            sorted(
+                self.requests.values(),
+                key=lambda request: (request.created_at, request.id),
+                reverse=descending,
+            )
+        )
+        filtered = values if status is None else tuple(
+            request for request in values if request.status is status
+        )
+        return PurchaseRequestPageResult(
+            items=filtered[offset : offset + limit],
+            total=len(filtered),
+        )

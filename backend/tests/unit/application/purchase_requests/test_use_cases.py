@@ -9,6 +9,7 @@ from ai_purchase_workflow.application.purchase_requests import (
     CreatePurchaseRequestCommand,
     GetPurchaseRequest,
     ListPurchaseRequests,
+    PurchaseRequestListQuery,
 )
 from ai_purchase_workflow.application.purchase_requests.repository import (
     PurchaseRequestRepository,
@@ -33,10 +34,11 @@ async def test_create_get_and_list_purchase_requests(
 
     created = await create.execute(command)
     retrieved = await get.execute(created.id)
-    listed = await list_requests.execute(RequestStatus.DRAFTING)
+    listed = await list_requests.execute(PurchaseRequestListQuery(status=RequestStatus.DRAFTING))
 
     assert retrieved == created
-    assert listed == (created,)
+    assert listed.items == (created,)
+    assert listed.total == 1
 
 
 @pytest.mark.asyncio
