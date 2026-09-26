@@ -28,7 +28,11 @@ async def test_create_retrieve_and_filter_purchase_requests(api_client: AsyncCli
 
     list_response = await api_client.get("/api/purchase-requests", params={"status": "drafting"})
     assert list_response.status_code == 200
-    assert [item["id"] for item in list_response.json()] == [created["id"]]
+    payload = list_response.json()
+    assert [item["id"] for item in payload["items"]] == [created["id"]]
+    assert payload["total"] == 1
+    assert payload["limit"] == 20
+    assert payload["offset"] == 0
 
 
 async def test_get_unknown_purchase_request_returns_safe_404(api_client: AsyncClient) -> None:
@@ -200,3 +204,76 @@ async def test_prepare_rejects_missing_budget_data(api_client: AsyncClient) -> N
 
     assert response.status_code == 422
     assert "No trusted budget data" in response.json()["detail"]
+
+
+async def test_list_validates_pagination_and_order(api_client: AsyncClient) -> None:
+    invalid_limit = await api_client.get("/api/purchase-requests", params={"limit": 0})
+    invalid_offset = await api_client.get("/api/purchase-requests", params={"offset": -1})
+    invalid_order = await api_client.get("/api/purchase-requests", params={"order": "newest"})
+
+    assert invalid_limit.status_code == 422
+    assert invalid_offset.status_code == 422
+    assert invalid_order.status_code == 422
+
+
+async def test_create_is_idempotent_for_same_key(api_client: AsyncClient) -> None:
+    payload = {
+        "requester_name": "Dana",
+        "items": [
+            {
+                "description": "Laptop stand",
+                "quantity": 1,
+                "unit_price_amount": "35.00",
+                "currency": "USD",
+            }
+        ],
+    }
+    headers = {"Idempotency-Key": "create-dana-stand"}
+
+    first = await api_client.post("/api/purchase-requests", json=payload, headers=headers)
+    second = await api_client.post("/api/purchase-requests", json=payload, headers=headers)
+    listed = await api_client.get("/api/purchase-requests")
+
+    assert first.status_code == 201
+    assert second.status_code == 201
+    assert second.json()["id"] == first.json()["id"]
+    assert listed.json()["total"] == 1
+
+
+async def test_list_supports_pagination(api_client: AsyncClient) -> None:
+    for description in ("First", "Second", "Third"):
+        response = await api_client.post(
+            "/api/purchase-requests",
+            json={
+                "items": [
+                    {
+                        "description": description,
+                        "quantity": 1,
+                        "unit_price_amount": "1.00",
+                        "currency": "USD",
+                    }
+                ]
+            },
+        )
+        assert response.status_code == 201
+
+    response = await api_client.get(
+        "/api/purchase-requests",
+        params={"limit": 2, "offset": 1, "order": "asc"},
+    )
+    payload = response.json()
+
+    assert response.status_code == 200
+    assert payload["total"] == 3
+    assert payload["limit"] == 2
+    assert payload["offset"] == 1
+    assert len(payload["items"]) == 2
+
+
+async def test_response_contains_request_id_header(api_client: AsyncClient) -> None:
+    response = await api_client.get(
+        "/api/purchase-requests/00000000-0000-0000-0000-000000000000",
+        headers={"X-Request-ID": "trace-123"},
+    )
+
+    assert response.headers["X-Request-ID"] == "trace-123"
