@@ -107,6 +107,7 @@ async def test_edit_revalidates_against_trusted_sources_and_stays_pending() -> N
     view = await use_case.execute(
         request.id,
         items=(EditPurchaseItem("Monitor", 1),),
+        decided_by="Manager",
     )
 
     assert view.status is RequestStatus.PENDING_APPROVAL
@@ -117,3 +118,4 @@ async def test_edit_revalidates_against_trusted_sources_and_stays_pending() -> N
     assert stored.items[0].unit_price.amount == Decimal("25.00")
     assert stored.draft_order is not None
     assert stored.audit_entries[-1].event_type == "approval_edited"
+    assert "Manager" in stored.audit_entries[-1].message
