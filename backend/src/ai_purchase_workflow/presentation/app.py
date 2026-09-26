@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from ai_purchase_workflow.composition_root.settings import Settings, get_settings
 from ai_purchase_workflow.infrastructure.persistence import create_session_factory
 from ai_purchase_workflow.infrastructure.workflows import postgres_checkpointer
+from ai_purchase_workflow.presentation.observability import register_http_observability
 from ai_purchase_workflow.presentation.purchase_requests import router as purchase_requests_router
 from ai_purchase_workflow.presentation.purchase_requests.error_handlers import (
     register_purchase_request_error_handlers,
@@ -25,6 +26,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(title="AI Purchase Approval Workflow", lifespan=lifespan)
     app.state.settings = resolved_settings
     app.state.session_factory = create_session_factory(resolved_settings.database_url)
+    register_http_observability(app)
     register_purchase_request_error_handlers(app)
     app.include_router(health_router)
     app.include_router(purchase_requests_router)
