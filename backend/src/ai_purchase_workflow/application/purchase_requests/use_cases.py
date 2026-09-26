@@ -2,15 +2,12 @@ from uuid import UUID
 
 from ai_purchase_workflow.application.purchase_requests.dto import (
     CreatePurchaseRequestCommand,
+    PurchaseRequestListQuery,
+    PurchaseRequestPage,
     PurchaseRequestView,
 )
 from ai_purchase_workflow.application.purchase_requests.repository import PurchaseRequestRepository
-from ai_purchase_workflow.domain.purchase_requests import (
-    Money,
-    PurchaseItem,
-    PurchaseRequest,
-    RequestStatus,
-)
+from ai_purchase_workflow.domain.purchase_requests import Money, PurchaseItem, PurchaseRequest
 
 
 class PurchaseRequestNotFoundError(LookupError):
@@ -52,6 +49,16 @@ class ListPurchaseRequests:
     def __init__(self, repository: PurchaseRequestRepository) -> None:
         self._repository = repository
 
-    async def execute(self, status: RequestStatus | None = None) -> tuple[PurchaseRequestView, ...]:
-        requests = await self._repository.list(status=status)
-        return tuple(PurchaseRequestView.from_domain(request) for request in requests)
+    async def execute(self, query: PurchaseRequestListQuery) -> PurchaseRequestPage:
+        page = await self._repository.list_page(
+            status=query.status,
+            limit=query.limit,
+            offset=query.offset,
+            descending=query.descending,
+        )
+        return PurchaseRequestPage(
+            items=tuple(PurchaseRequestView.from_domain(request) for request in page.items),
+            total=page.total,
+            limit=query.limit,
+            offset=query.offset,
+        )

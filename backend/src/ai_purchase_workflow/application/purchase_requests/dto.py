@@ -17,24 +17,23 @@ class CreatePurchaseItem:
 
 @dataclass(frozen=True, slots=True)
 class CreatePurchaseRequestCommand:
+    requester_name: str | None
     items: tuple[CreatePurchaseItem, ...]
-    requester_name: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
-class PurchaseItemView:
-    description: str
-    quantity: int
-    unit_price_amount: Decimal
-    currency: str
-    vendor: str | None
+class PurchaseRequestListQuery:
+    status: RequestStatus | None = None
+    limit: int = 20
+    offset: int = 0
+    descending: bool = True
 
 
 @dataclass(frozen=True, slots=True)
 class PurchaseRequestView:
     id: UUID
     requester_name: str | None
-    items: tuple[PurchaseItemView, ...]
+    items: tuple[CreatePurchaseItem, ...]
     status: RequestStatus
     created_at: datetime
     updated_at: datetime
@@ -45,7 +44,7 @@ class PurchaseRequestView:
             id=request.id,
             requester_name=request.requester_name,
             items=tuple(
-                PurchaseItemView(
+                CreatePurchaseItem(
                     description=item.description,
                     quantity=item.quantity,
                     unit_price_amount=item.unit_price.amount,
@@ -58,3 +57,11 @@ class PurchaseRequestView:
             created_at=request.created_at,
             updated_at=request.updated_at,
         )
+
+
+@dataclass(frozen=True, slots=True)
+class PurchaseRequestPage:
+    items: tuple[PurchaseRequestView, ...]
+    total: int
+    limit: int
+    offset: int
