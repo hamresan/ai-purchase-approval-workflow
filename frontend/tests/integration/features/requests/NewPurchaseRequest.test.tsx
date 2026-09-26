@@ -9,6 +9,14 @@ function renderForm(api: PurchaseRequestSubmissionApi = { submit: vi.fn() }) {
 }
 
 describe("NewPurchaseRequest", () => {
+  it("exposes an accessible collapsible next-steps control", () => {
+    renderForm();
+    const toggle = screen.getByRole("button", { name: "What happens next?" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+  });
+
   it("validates plain-language request text", () => {
     renderForm();
     fireEvent.change(screen.getByLabelText("What do you want to purchase?"), { target: { value: "laptop" } });

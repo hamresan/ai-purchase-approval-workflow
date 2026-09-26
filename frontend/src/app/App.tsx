@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { HttpPurchaseRequestApi } from "@/api/purchaseRequests";
 import { HttpPurchaseRequestSubmissionApi } from "@/api/purchaseRequestSubmission";
@@ -12,6 +12,12 @@ export function App() {
   const [route, setRoute] = useState<AppRoute>(() => routeFromPath(window.location.pathname));
   const requestApi = useMemo(() => new HttpPurchaseRequestApi(), []);
   const submissionApi = useMemo(() => new HttpPurchaseRequestSubmissionApi(), []);
+
+  useEffect(() => {
+    const syncRoute = () => setRoute(routeFromPath(window.location.pathname));
+    window.addEventListener("popstate", syncRoute);
+    return () => window.removeEventListener("popstate", syncRoute);
+  }, []);
 
   const navigate = useCallback((nextRoute: AppRoute) => {
     window.history.pushState({}, "", pathForRoute(nextRoute));

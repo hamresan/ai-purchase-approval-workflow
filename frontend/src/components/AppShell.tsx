@@ -21,7 +21,7 @@ export function AppShell({ route, onNavigate, children }: AppShellProps) {
       <div className="app-content">
         <header className="topbar">
           <div className="mobile-brand"><span>🛒</span><strong>AI Purchase Approval</strong></div>
-          <div className="profile"><span className="avatar">JD</span><span>John Doe</span><span>⌄</span></div>
+          <span className="app-context">Purchase workspace</span>
         </header>
         <main>{children}</main>
       </div>

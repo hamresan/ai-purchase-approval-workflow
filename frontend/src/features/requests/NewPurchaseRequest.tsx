@@ -13,6 +13,7 @@ export function NewPurchaseRequest({ api, onBack }: Props) {
   const [requesterName, setRequesterName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [state, setState] = useState<"editing" | "submitting" | "success">("editing");
+  const [showNextSteps, setShowNextSteps] = useState(false);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -60,7 +61,18 @@ export function NewPurchaseRequest({ api, onBack }: Props) {
           {state === "submitting" && <div className="submission-progress" role="status"><div className="spinner" /><div><strong>Submitting your request…</strong><span>Preparing the workflow and waiting for approval.</span></div></div>}
           <div className="form-actions"><button type="button" className="secondary-button" disabled={state === "submitting"} onClick={onBack}>Cancel</button><button className="primary-button" disabled={state === "submitting"} type="submit">{state === "submitting" ? "Submitting…" : "Submit Request →"}</button></div>
         </form>
-        <aside className="next-panel"><h2>What happens next?</h2><NextItem icon="▤" title="We review your request">We validate your request and find the best options from our trusted suppliers.</NextItem><NextItem icon="🛒" title="A draft order is prepared">We'll create a draft order with item details, pricing, and supplier information.</NextItem><NextItem icon="◉" title="Approval is required">An approver will review the request before it can be placed.</NextItem><NextItem icon="▥" title="You can track progress here">You can check the status of your request on the Purchase Requests page.</NextItem></aside>
+        <aside className={showNextSteps ? "next-panel expanded" : "next-panel"}>
+          <button type="button" className="next-panel-toggle" aria-expanded={showNextSteps} aria-controls="next-steps" onClick={() => setShowNextSteps((value) => !value)}>
+            <span>What happens next?</span><span aria-hidden="true">{showNextSteps ? "−" : "+"}</span>
+          </button>
+          <h2 className="next-panel-heading">What happens next?</h2>
+          <div id="next-steps" className="next-steps">
+            <NextItem icon="▤" title="We review your request">We validate your request and find the best options from our trusted suppliers.</NextItem>
+            <NextItem icon="🛒" title="A draft order is prepared">We'll create a draft order with item details, pricing, and supplier information.</NextItem>
+            <NextItem icon="◉" title="Approval is required">An approver will review the request before it can be placed.</NextItem>
+            <NextItem icon="▥" title="You can track progress here">You can check the status of your request on the Purchase Requests page.</NextItem>
+          </div>
+        </aside>
       </div>
     </section>
   );

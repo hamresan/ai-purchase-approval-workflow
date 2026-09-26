@@ -87,7 +87,7 @@ export function RequestDashboard({ api, onNewRequest }: Props) {
         <>
           <div className="request-table-wrap">
             <table className="request-table">
-              <thead><tr><th>Request</th><th>Requester</th><th>Amount (Est.)</th><th>Status</th><th>Submitted</th><th>Last Updated</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Request</th><th>Requester</th><th>Amount (Est.)</th><th>Status</th><th>Submitted</th><th>Last Updated</th></tr></thead>
               <tbody>{visibleItems.map((request) => <RequestRow key={request.id} request={request} />)}</tbody>
             </table>
           </div>
@@ -111,7 +111,6 @@ function RequestRow({ request }: { request: PurchaseRequest }) {
     <td><strong>{requestTitle(request)}</strong><small>{requestSummary(request)}</small></td>
     <td>{request.requester_name ?? "—"}</td><td><strong>{requestAmount(request)}</strong></td>
     <td><RequestStatusBadge status={request.status} /></td><td>{formatDate(request.created_at)}</td><td>{formatDate(request.updated_at)}</td>
-    <td><button className="secondary-button">View</button></td>
   </tr>;
 }
 
