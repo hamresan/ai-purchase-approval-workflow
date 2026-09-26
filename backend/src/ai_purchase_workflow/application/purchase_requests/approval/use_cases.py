@@ -159,7 +159,8 @@ class EditPurchaseRequest:
             AuditEntry.create(
                 request.id,
                 "approval_edited",
-                f"Purchase request edited by {decided_by}, revalidated, and returned to approval review.",
+                f"Purchase request edited by {decided_by}, "
+                "revalidated, and returned to approval review.",
             ),
         )
         await self._repository.save(request)
