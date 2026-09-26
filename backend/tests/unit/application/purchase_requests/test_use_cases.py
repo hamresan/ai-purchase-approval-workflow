@@ -2,6 +2,9 @@ from decimal import Decimal
 from uuid import uuid4
 
 import pytest
+from tests.application.purchase_requests.fakes.idempotency import (
+    InMemoryIdempotentPurchaseRequestCreator,
+)
 
 from ai_purchase_workflow.application.purchase_requests import (
     CreatePurchaseItem,
@@ -18,9 +21,6 @@ from ai_purchase_workflow.application.purchase_requests.use_cases import (
     PurchaseRequestNotFoundError,
 )
 from ai_purchase_workflow.domain.purchase_requests import RequestStatus
-from tests.application.purchase_requests.fakes.idempotency import (
-    InMemoryIdempotentPurchaseRequestCreator,
-)
 
 
 @pytest.mark.asyncio

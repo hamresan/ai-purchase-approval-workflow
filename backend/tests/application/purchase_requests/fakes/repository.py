@@ -38,8 +38,10 @@ class InMemoryPurchaseRequestRepository(PurchaseRequestRepository):
                 reverse=descending,
             )
         )
-        filtered = values if status is None else tuple(
-            request for request in values if request.status is status
+        filtered = (
+            values
+            if status is None
+            else tuple(request for request in values if request.status is status)
         )
         return PurchaseRequestPageResult(
             items=filtered[offset : offset + limit],
