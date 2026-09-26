@@ -136,6 +136,7 @@ class EditPurchaseRequest:
         request_id: UUID,
         *,
         items: tuple[EditPurchaseItem, ...],
+        decided_by: str,
     ) -> PurchaseRequestView:
         request = await self._repository.get_for_update(request_id)
         if request is None:
@@ -158,7 +159,7 @@ class EditPurchaseRequest:
             AuditEntry.create(
                 request.id,
                 "approval_edited",
-                "Purchase request edited, revalidated, and returned to approval review.",
+                f"Purchase request edited by {decided_by}, revalidated, and returned to approval review.",
             ),
         )
         await self._repository.save(request)

@@ -47,6 +47,7 @@ class EditActionHandler(ApprovalActionHandler):
         return await self._use_case.execute(
             request_id,
             items=ApprovalCommandMapper.edit_items(body),
+            decided_by=body.decided_by,
         )
 
 
