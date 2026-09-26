@@ -77,3 +77,10 @@ class PurchaseRequestResponse(BaseModel):
             created_at=view.created_at,
             updated_at=view.updated_at,
         )
+
+
+class PurchaseRequestListResponse(BaseModel):
+    items: list[PurchaseRequestResponse]
+    total: int
+    limit: int
+    offset: int

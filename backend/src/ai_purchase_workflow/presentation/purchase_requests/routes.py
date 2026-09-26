@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -8,6 +8,7 @@ from ai_purchase_workflow.application.purchase_requests import (
     GetPurchaseRequest,
     ListPurchaseRequests,
     PreparePurchaseRequest,
+    PurchaseRequestListQuery,
     SubmitPurchaseRequest,
 )
 from ai_purchase_workflow.domain.purchase_requests import RequestStatus
@@ -26,6 +27,7 @@ from ai_purchase_workflow.presentation.purchase_requests.mappers import Purchase
 from ai_purchase_workflow.presentation.purchase_requests.schemas import (
     ApprovalBody,
     CreatePurchaseRequestBody,
+    PurchaseRequestListResponse,
     PurchaseRequestResponse,
 )
 
@@ -56,6 +58,9 @@ ApprovalDispatcherDependency = Annotated[
     Depends(get_approval_dispatcher),
 ]
 RequestStatusQuery = Annotated[RequestStatus | None, Query(alias="status")]
+LimitQuery = Annotated[int, Query(ge=1, le=100)]
+OffsetQuery = Annotated[int, Query(ge=0)]
+OrderQuery = Annotated[Literal["asc", "desc"], Query()]
 
 
 @router.post("", response_model=PurchaseRequestResponse, status_code=201)
@@ -76,13 +81,28 @@ async def get_purchase_request_by_id(
     return PurchaseRequestResponse.from_view(view)
 
 
-@router.get("", response_model=list[PurchaseRequestResponse])
+@router.get("", response_model=PurchaseRequestListResponse)
 async def list_purchase_requests(
     use_case: ListPurchaseRequestsDependency,
     request_status: RequestStatusQuery = None,
-) -> list[PurchaseRequestResponse]:
-    views = await use_case.execute(status=request_status)
-    return [PurchaseRequestResponse.from_view(view) for view in views]
+    limit: LimitQuery = 20,
+    offset: OffsetQuery = 0,
+    order: OrderQuery = "desc",
+) -> PurchaseRequestListResponse:
+    page = await use_case.execute(
+        PurchaseRequestListQuery(
+            status=request_status,
+            limit=limit,
+            offset=offset,
+            descending=order == "desc",
+        )
+    )
+    return PurchaseRequestListResponse(
+        items=[PurchaseRequestResponse.from_view(view) for view in page.items],
+        total=page.total,
+        limit=page.limit,
+        offset=page.offset,
+    )
 
 
 @router.post("/{request_id}/prepare", response_model=PurchaseRequestResponse)
