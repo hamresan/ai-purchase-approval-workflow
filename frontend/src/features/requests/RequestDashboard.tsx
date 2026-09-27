@@ -17,9 +17,10 @@ const filters: Array<{ label: string; value?: RequestStatus }> = [
 interface Props {
   api: PurchaseRequestApi;
   onNewRequest: () => void;
+  onOpenRequest: (requestId: string) => void;
 }
 
-export function RequestDashboard({ api, onNewRequest }: Props) {
+export function RequestDashboard({ api, onNewRequest, onOpenRequest }: Props) {
   const [status, setStatus] = useState<RequestStatus | undefined>();
   const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [offset, setOffset] = useState(0);
@@ -88,10 +89,10 @@ export function RequestDashboard({ api, onNewRequest }: Props) {
           <div className="request-table-wrap">
             <table className="request-table">
               <thead><tr><th>Request</th><th>Requester</th><th>Amount (Est.)</th><th>Status</th><th>Submitted</th><th>Last Updated</th></tr></thead>
-              <tbody>{visibleItems.map((request) => <RequestRow key={request.id} request={request} />)}</tbody>
+              <tbody>{visibleItems.map((request) => <RequestRow key={request.id} request={request} onOpen={() => onOpenRequest(request.id)} />)}</tbody>
             </table>
           </div>
-          <div className="request-cards">{visibleItems.map((request) => <RequestCard key={request.id} request={request} />)}</div>
+          <div className="request-cards">{visibleItems.map((request) => <RequestCard key={request.id} request={request} onOpen={() => onOpenRequest(request.id)} />)}</div>
           {visibleItems.length === 0 && <div className="inline-empty">No requests match your search on this page.</div>}
           <div className="pagination">
             <span>Showing {offset + 1}–{Math.min(offset + pageSize, total)} of {total} requests</span>
@@ -106,16 +107,16 @@ export function RequestDashboard({ api, onNewRequest }: Props) {
   );
 }
 
-function RequestRow({ request }: { request: PurchaseRequest }) {
-  return <tr>
+function RequestRow({ request, onOpen }: { request: PurchaseRequest; onOpen: () => void }) {
+  return <tr className="clickable-request" tabIndex={0} onClick={onOpen} onKeyDown={(event) => { if (event.key === "Enter") onOpen(); }}>
     <td><strong>{requestTitle(request)}</strong><small>{requestSummary(request)}</small></td>
     <td>{request.requester_name ?? "—"}</td><td><strong>{requestAmount(request)}</strong></td>
     <td><RequestStatusBadge status={request.status} /></td><td>{formatDate(request.created_at)}</td><td>{formatDate(request.updated_at)}</td>
   </tr>;
 }
 
-function RequestCard({ request }: { request: PurchaseRequest }) {
-  return <article className="request-card"><div><strong>{requestTitle(request)}</strong><small>{requestSummary(request)}</small></div><RequestStatusBadge status={request.status} /><div className="card-meta"><strong>{requestAmount(request)}</strong><span>{formatDate(request.created_at)}</span></div></article>;
+function RequestCard({ request, onOpen }: { request: PurchaseRequest; onOpen: () => void }) {
+  return <article className="request-card clickable-request" tabIndex={0} onClick={onOpen} onKeyDown={(event) => { if (event.key === "Enter") onOpen(); }}><div><strong>{requestTitle(request)}</strong><small>{requestSummary(request)}</small></div><RequestStatusBadge status={request.status} /><div className="card-meta"><strong>{requestAmount(request)}</strong><span>{formatDate(request.created_at)}</span></div></article>;
 }
 
 function LoadingState() {
