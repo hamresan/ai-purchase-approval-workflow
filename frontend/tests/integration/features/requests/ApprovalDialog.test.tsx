@@ -31,6 +31,21 @@ describe("ApprovalDialog", () => {
     expect(completed).toHaveBeenCalled();
   });
 
+
+  it("disables dialog actions while an approval is pending", async () => {
+    let resolveDecision: ((value: PurchaseRequestDetail) => void) | undefined;
+    const decide = vi.fn().mockImplementation(
+      () => new Promise<PurchaseRequestDetail>((resolve) => { resolveDecision = resolve; }),
+    );
+    render(<ApprovalDialog action="approve" request={request} api={{ decide }} onClose={vi.fn()} onCompleted={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText("Reviewer name"), { target: { value: "Dana Reviewer" } });
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+    expect(screen.getByRole("button", { name: "Saving…" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+    resolveDecision?.(request);
+    await waitFor(() => expect(decide).toHaveBeenCalledTimes(1));
+  });
+
   it("requires a rejection reason before calling the API", async () => {
     const decide = vi.fn();
     render(<ApprovalDialog action="reject" request={request} api={{ decide }} onClose={vi.fn()} onCompleted={vi.fn()} />);
