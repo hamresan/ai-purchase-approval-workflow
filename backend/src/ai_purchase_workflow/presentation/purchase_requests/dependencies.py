@@ -19,7 +19,10 @@ from ai_purchase_workflow.composition_root.purchase_requests import (
     build_reject_purchase_request,
     build_submit_purchase_request,
 )
-from ai_purchase_workflow.composition_root.workflows import build_workflow_gateway
+from ai_purchase_workflow.composition_root.workflows import (
+    build_start_purchase_request_workflow,
+    build_workflow_gateway,
+)
 from ai_purchase_workflow.infrastructure.persistence.purchase_requests import (
     SqlAlchemyPurchaseRequestRepository,
 )
@@ -41,6 +44,7 @@ from ai_purchase_workflow.infrastructure.persistence.purchase_requests.writer im
 from ai_purchase_workflow.infrastructure.persistence.workflow_threads import (
     SqlAlchemyWorkflowThreadRepository,
 )
+from ai_purchase_workflow.infrastructure.workflows import PurchaseRequestWorkflowRunner
 from ai_purchase_workflow.presentation.purchase_requests.approval_dispatcher import (
     ApprovalActionDispatcher,
     ApproveActionHandler,
@@ -66,6 +70,20 @@ def get_create_purchase_request(session: SessionDependency) -> CreatePurchaseReq
     reader = IdempotentPurchaseRequestReader(session, loader)
     creator = SqlAlchemyIdempotentPurchaseRequestCreator(session, mapper, writer, reader)
     return CreatePurchaseRequest(repository, creator)
+
+
+def get_start_purchase_request_workflow(
+    request: Request,
+    session: SessionDependency,
+) -> PurchaseRequestWorkflowRunner:
+    repository = SqlAlchemyPurchaseRequestRepository(session)
+    threads = SqlAlchemyWorkflowThreadRepository(session)
+    return build_start_purchase_request_workflow(
+        repository,
+        threads,
+        request.app.state.checkpointer,
+        request.app.state.settings,
+    )
 
 
 def get_purchase_request(session: SessionDependency) -> GetPurchaseRequest:

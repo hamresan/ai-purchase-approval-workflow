@@ -25,6 +25,11 @@ class CreatePurchaseRequestBody(BaseModel):
     items: list[CreatePurchaseItemRequest] = Field(min_length=1)
 
 
+class FreeTextPurchaseRequestBody(BaseModel):
+    request_text: str = Field(min_length=10, max_length=500)
+    requester_name: str | None = Field(default=None, max_length=200)
+
+
 class EditPurchaseItemBody(BaseModel):
     description: str
     quantity: int = Field(gt=0)

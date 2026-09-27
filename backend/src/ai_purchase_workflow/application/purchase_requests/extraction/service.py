@@ -46,8 +46,8 @@ class ExtractPurchaseRequest:
 
     async def execute(self, free_text: str) -> ExtractionOutcome:
         request = self._prompt_builder.build(free_text)
-        response = await self._model.generate(request)
         try:
+            response = await self._model.generate(request)
             extracted = self._mapper.map(response)
             self._validator.validate(extracted)
         except ExtractionError as error:

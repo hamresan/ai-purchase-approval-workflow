@@ -1,10 +1,11 @@
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 
 from ai_purchase_workflow.application.purchase_requests import (
     CreatePurchaseRequest,
+    GetPurchaseRequest,
     GetPurchaseRequestDetail,
     ListPurchaseRequests,
     PreparePurchaseRequest,
@@ -12,6 +13,7 @@ from ai_purchase_workflow.application.purchase_requests import (
     SubmitPurchaseRequest,
 )
 from ai_purchase_workflow.domain.purchase_requests import RequestStatus
+from ai_purchase_workflow.infrastructure.workflows import PurchaseRequestWorkflowRunner
 from ai_purchase_workflow.presentation.purchase_requests.approval_dispatcher import (
     ApprovalActionDispatcher,
 )
@@ -20,13 +22,16 @@ from ai_purchase_workflow.presentation.purchase_requests.dependencies import (
     get_create_purchase_request,
     get_list_purchase_requests,
     get_prepare_purchase_request,
+    get_purchase_request,
     get_purchase_request_detail,
+    get_start_purchase_request_workflow,
     get_submit_purchase_request,
 )
 from ai_purchase_workflow.presentation.purchase_requests.mappers import PurchaseRequestCommandMapper
 from ai_purchase_workflow.presentation.purchase_requests.schemas import (
     ApprovalBody,
     CreatePurchaseRequestBody,
+    FreeTextPurchaseRequestBody,
     PurchaseRequestDetailResponse,
     PurchaseRequestListResponse,
     PurchaseRequestResponse,
@@ -37,6 +42,14 @@ router = APIRouter(prefix="/api/purchase-requests", tags=["purchase-requests"])
 CreatePurchaseRequestDependency = Annotated[
     CreatePurchaseRequest,
     Depends(get_create_purchase_request),
+]
+GetPurchaseRequestDependency = Annotated[
+    GetPurchaseRequest,
+    Depends(get_purchase_request),
+]
+StartPurchaseRequestWorkflowDependency = Annotated[
+    PurchaseRequestWorkflowRunner,
+    Depends(get_start_purchase_request_workflow),
 ]
 GetPurchaseRequestDetailDependency = Annotated[
     GetPurchaseRequestDetail,
@@ -70,14 +83,28 @@ IdempotencyKeyHeader = Annotated[
 
 @router.post("", response_model=PurchaseRequestResponse, status_code=201)
 async def create_purchase_request(
-    body: CreatePurchaseRequestBody,
+    body: CreatePurchaseRequestBody | FreeTextPurchaseRequestBody,
     use_case: CreatePurchaseRequestDependency,
+    workflow: StartPurchaseRequestWorkflowDependency,
+    get_request: GetPurchaseRequestDependency,
     idempotency_key: IdempotencyKeyHeader = None,
 ) -> PurchaseRequestResponse:
-    view = await use_case.execute(
-        PurchaseRequestCommandMapper.from_body(body),
-        idempotency_key=idempotency_key,
-    )
+    if isinstance(body, CreatePurchaseRequestBody):
+        view = await use_case.execute(
+            PurchaseRequestCommandMapper.from_body(body),
+            idempotency_key=idempotency_key,
+        )
+        return PurchaseRequestResponse.from_view(view)
+
+    free_text = body.request_text
+    if body.requester_name:
+        free_text = f"Requester: {body.requester_name}\\nRequest: {body.request_text}"
+    result = await workflow.execute(free_text)
+    if result.purchase_request_id is None:
+        fallback_detail = "The request needs more information before it can continue."
+        detail = result.review_reason or fallback_detail
+        raise HTTPException(status_code=422, detail=detail)
+    view = await get_request.execute(result.purchase_request_id)
     return PurchaseRequestResponse.from_view(view)
 
 

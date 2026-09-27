@@ -282,3 +282,19 @@ async def test_response_contains_request_id_header(api_client: AsyncClient) -> N
     )
 
     assert response.headers["X-Request-ID"] == "trace-123"
+
+
+async def test_free_text_create_runs_workflow_to_pending_approval(
+    api_client: AsyncClient,
+) -> None:
+    response = await api_client.post(
+        "/api/purchase-requests",
+        json={"request_text": "Dana needs one laptop stand", "requester_name": "Dana"},
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["status"] == "pending_approval"
+    assert payload["requester_name"] == "Dana"
+    assert payload["items"][0]["description"] == "Laptop stand"
+    assert payload["items"][0]["vendor"] == "Acme"
