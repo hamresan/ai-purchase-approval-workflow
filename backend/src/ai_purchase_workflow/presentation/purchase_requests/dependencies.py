@@ -41,10 +41,10 @@ from ai_purchase_workflow.infrastructure.persistence.purchase_requests.mapper im
 from ai_purchase_workflow.infrastructure.persistence.purchase_requests.writer import (
     PurchaseRequestRelatedRecordWriter,
 )
-from ai_purchase_workflow.infrastructure.workflows import PurchaseRequestWorkflowRunner
 from ai_purchase_workflow.infrastructure.persistence.workflow_threads import (
     SqlAlchemyWorkflowThreadRepository,
 )
+from ai_purchase_workflow.infrastructure.workflows import PurchaseRequestWorkflowRunner
 from ai_purchase_workflow.presentation.purchase_requests.approval_dispatcher import (
     ApprovalActionDispatcher,
     ApproveActionHandler,
