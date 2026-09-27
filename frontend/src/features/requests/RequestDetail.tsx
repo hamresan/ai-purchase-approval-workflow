@@ -82,7 +82,7 @@ export function RequestDetail({ api, requestId, onBack, approvalApi }: Props) {
                   <div className="timeline-entry" key={`${entry.event_type}-${entry.occurred_at}-${index}`}>
                     <span className="timeline-dot">✓</span>
                     <div><strong>{timelineTitle(entry.event_type)}</strong><small>{formatDate(entry.occurred_at)}</small></div>
-                    <p>{timelineMessage(entry.event_type, entry.message)}</p>
+                    <p>{timelineMessage(entry.event_type)}</p>
                   </div>
                 ))}
             </div>
@@ -138,7 +138,7 @@ function timelineTitle(eventType: string) {
   return titles[eventType] ?? "Request updated";
 }
 
-function timelineMessage(eventType: string, _fallback: string) {
+function timelineMessage(eventType: string) {
   const messages: Record<string, string> = {
     request_extracted: "Request details were prepared for review.",
     trusted_data_validated: "Budget and vendor checks passed and a draft order was prepared.",
