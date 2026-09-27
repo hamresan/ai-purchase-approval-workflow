@@ -71,6 +71,15 @@ jobs:
         run: cd frontend && npm run test:e2e
         env:
           E2E_EXTERNAL_SERVER: "true"
+      - name: Print Docker E2E logs on failure
+        if: failure()
+        run: docker compose logs --no-color backend frontend
+        env:
+          POSTGRES_DB: ai_purchase_workflow
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_PORT: 5632
+          POSTGRES_CONTAINER_PORT: 5432
       - name: Stop Docker E2E stack
         if: always()
         run: docker compose down -v
