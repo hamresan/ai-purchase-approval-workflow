@@ -1,5 +1,5 @@
-from pydantic import ValidationError
 import pytest
+from pydantic import ValidationError
 
 from ai_purchase_workflow.presentation.purchase_requests.schemas import ApprovalBody
 
