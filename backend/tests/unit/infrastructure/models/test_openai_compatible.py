@@ -4,7 +4,9 @@ import httpx
 import pytest
 
 from ai_purchase_workflow.application.purchase_requests.extraction import ModelRequest
-from ai_purchase_workflow.application.purchase_requests.extraction.errors import ModelUnavailableError
+from ai_purchase_workflow.application.purchase_requests.extraction.errors import (
+    ModelUnavailableError,
+)
 from ai_purchase_workflow.infrastructure.models import (
     OpenAICompatibleModelConfig,
     OpenAICompatiblePurchaseRequestModel,
