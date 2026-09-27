@@ -4,7 +4,13 @@ import pytest
 
 from ai_purchase_workflow.application.purchase_requests import GetPurchaseRequestDetail
 from ai_purchase_workflow.application.purchase_requests.repository import PurchaseRequestRepository
-from ai_purchase_workflow.domain.purchase_requests import AuditEntry, DraftOrder, Money, PurchaseItem, PurchaseRequest
+from ai_purchase_workflow.domain.purchase_requests import (
+    AuditEntry,
+    DraftOrder,
+    Money,
+    PurchaseItem,
+    PurchaseRequest,
+)
 
 
 @pytest.mark.asyncio

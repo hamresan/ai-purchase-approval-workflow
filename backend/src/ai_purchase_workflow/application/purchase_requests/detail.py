@@ -6,7 +6,9 @@ from uuid import UUID
 
 from ai_purchase_workflow.application.purchase_requests.dto import PurchaseItemView
 from ai_purchase_workflow.application.purchase_requests.repository import PurchaseRequestRepository
-from ai_purchase_workflow.application.purchase_requests.use_cases import PurchaseRequestNotFoundError
+from ai_purchase_workflow.application.purchase_requests.use_cases import (
+    PurchaseRequestNotFoundError,
+)
 from ai_purchase_workflow.domain.purchase_requests import PurchaseRequest, RequestStatus
 
 

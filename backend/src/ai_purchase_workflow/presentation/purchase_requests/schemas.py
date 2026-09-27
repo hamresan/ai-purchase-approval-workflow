@@ -117,9 +117,7 @@ class PurchaseRequestDetailResponse(PurchaseRequestResponse):
     audit_entries: list[AuditEntryResponse]
 
     @classmethod
-    def from_detail_view(
-        cls, view: PurchaseRequestDetailView
-    ) -> "PurchaseRequestDetailResponse":
+    def from_detail_view(cls, view: PurchaseRequestDetailView) -> "PurchaseRequestDetailResponse":
         base = PurchaseRequestResponse.from_view(
             PurchaseRequestView(
                 id=view.id,
