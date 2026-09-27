@@ -18,6 +18,8 @@ __all__ = ["ModelConfigurationError", "build_purchase_request_model"]
 
 def build_purchase_request_model(settings: Settings) -> PurchaseRequestModel:
     if settings.workflow_model_provider is ModelProvider.FAKE:
+        if settings.app_env.strip().lower() in {"production", "prod"}:
+            raise ModelConfigurationError("Fake model provider is not allowed in production.")
         return FakePurchaseRequestModel(
             ModelResponse(
                 {

@@ -20,6 +20,9 @@ from ai_purchase_workflow.infrastructure.workflows.result_mapper import (
 from ai_purchase_workflow.infrastructure.workflows.runner import (
     PurchaseRequestWorkflowRunner,
 )
+from ai_purchase_workflow.infrastructure.workflows.starter import (
+    LangGraphPurchaseRequestWorkflowStarter,
+)
 from ai_purchase_workflow.infrastructure.workflows.state import (
     PurchaseRequestWorkflowResult,
 )
@@ -31,6 +34,7 @@ __all__ = [
     "AwaitApprovalNode",
     "ExtractPurchaseRequestNode",
     "LangGraphPurchaseRequestWorkflowGateway",
+    "LangGraphPurchaseRequestWorkflowStarter",
     "PreparePurchaseRequestNode",
     "PurchaseRequestWorkflow",
     "PurchaseRequestWorkflowResult",

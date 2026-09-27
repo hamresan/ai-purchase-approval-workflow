@@ -39,6 +39,13 @@ from ai_purchase_workflow.application.purchase_requests.use_cases import (
     ListPurchaseRequests,
     PurchaseRequestNotFoundError,
 )
+from ai_purchase_workflow.application.purchase_requests.workflow_submission import (
+    PurchaseRequestWorkflowReviewRequiredError,
+    PurchaseRequestWorkflowStarter,
+    PurchaseRequestWorkflowStartResult,
+    SubmitFreeTextPurchaseRequest,
+    SubmitFreeTextPurchaseRequestCommand,
+)
 
 __all__ = [
     "ApprovalAction",
@@ -67,7 +74,12 @@ __all__ = [
     "PurchaseRequestRepository",
     "PurchaseRequestView",
     "PurchaseRequestWorkflowGateway",
+    "PurchaseRequestWorkflowReviewRequiredError",
+    "PurchaseRequestWorkflowStartResult",
+    "PurchaseRequestWorkflowStarter",
     "RejectPurchaseRequest",
+    "SubmitFreeTextPurchaseRequest",
+    "SubmitFreeTextPurchaseRequestCommand",
     "SubmitOrder",
     "SubmitPurchaseRequest",
 ]

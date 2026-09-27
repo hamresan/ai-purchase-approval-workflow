@@ -1,137 +1,131 @@
 # AI Purchase Approval Workflow
 
-A human-approved purchase-request workflow built with FastAPI, LangChain/LangGraph, PostgreSQL, and a simple React user interface.
+[![quality](https://github.com/hamresan/ai-purchase-approval-workflow/actions/workflows/quality.yml/badge.svg)](https://github.com/hamresan/ai-purchase-approval-workflow/actions/workflows/quality.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **Status:** Under active development. This README defines the public interface for the first release. Installation commands, API endpoints, and UI screens below will work once the corresponding implementation stages are complete.
+A human-approved purchase-request workflow built with FastAPI, LangGraph, PostgreSQL, and React.
 
-## The problem
+The project demonstrates how an LLM can interpret a free-text request without becoming the source of truth for purchasing decisions. Trusted application services resolve catalog, vendor, budget, and order data, while an irreversible submission always requires an explicit human approval.
 
-Purchase requests often arrive as unstructured messages such as: “We need 15 monitors for the design team next week.” Someone then has to find the vendor, check the budget, create a draft order, and obtain approval before money is committed.
-
-This project turns that process into a controlled workflow:
+## Workflow
 
 ```text
-Request → structured extraction → budget/vendor checks → draft order
-→ human approval pause → approve, reject, or edit → submit order
+Free-text request
+    ↓
+Structured extraction (untrusted model output)
+    ↓
+Validation + trusted catalog/vendor/budget checks
+    ↓
+Persisted draft order
+    ↓
+LangGraph checkpoint + human approval pause
+    ├── Reject → rejected
+    ├── Edit → trusted revalidation → pending approval
+    └── Approve → resume checkpoint → approval-gated submission
 ```
 
-The AI helps understand a request and choose safe read-only tools. It **cannot submit an order by itself**. Submitting an order always requires explicit human approval.
-
-## What it demonstrates
-
-- Stateful, multi-step workflow orchestration with LangChain/LangGraph
-- Tool calling with application services as the source of truth
-- PostgreSQL-backed checkpoints so a paused workflow can be resumed
-- Human-in-the-loop approval, rejection, and editing
-- Policy-based budget controls and deterministic validation
-- A non-technical React UI, not only Swagger/API endpoints
-- Provider-agnostic LLM support for Fake, Ollama, OpenAI, and OpenRouter
-
-## Planned features
-
-### Workflow
-
-- Convert free-text requests into a structured purchase request
-- Look up vendor options and available budget using tools
-- Create a draft purchase order
-- Pause before the irreversible `submit_order` action
-- Let an approver approve, reject, or edit the draft
-- Resume the same workflow using its persisted thread/checkpoint
-- Keep an audit timeline of workflow steps, decisions, and tool results
-
-### User interface
-
-- Dashboard of pending, approved, rejected, and submitted requests
-- Guided form for creating a purchase request without technical knowledge
-- Request-detail page showing the extracted request, budget check, vendor, and draft order
-- Clear Approve, Reject, and Edit actions
-- Readable timeline rather than raw agent messages or JSON
-
-### API
-
-- `POST /api/purchase-requests` — create a request and start the workflow
-- `GET /api/purchase-requests` — list requests by status
-- `GET /api/purchase-requests/{request_id}` — retrieve request, draft, and audit timeline
-- `POST /api/purchase-requests/{request_id}/approval` — approve, reject, or edit a paused draft
+The browser UI supports request creation, dashboard review, request details, audit timeline, and Approve / Reject / Edit decisions.
 
 ## Architecture
 
 ```text
-frontend/                         # React + Vite user interface
-backend/
-├── src/ai_purchase_workflow/
-│   ├── domain/                   # requests, drafts, policies, workflow states
-│   ├── application/              # use cases and explicit ports/contracts
-│   ├── infrastructure/           # PostgreSQL, LangChain/LangGraph, Ollama adapters
-│   ├── presentation/             # FastAPI routes and HTTP mapping
-│   └── composition_root/         # settings and dependency wiring
-└── tests/                        # mirrored backend tests
+Browser (React/Vite)
+        │ HTTP
+        ▼
+Presentation (FastAPI)
+        │
+        ▼
+Application ──────► Domain policies/entities
+        │ contracts
+        ▼
+Infrastructure
+  ├── PostgreSQL repositories
+  ├── LangGraph workflow/checkpoints
+  ├── trusted fixture adapters
+  └── model adapters
+        ├── Fake
+        ├── Ollama
+        ├── OpenAI
+        └── OpenRouter
 ```
 
-The backend follows Clean Architecture: FastAPI, LangChain/LangGraph, database, and model-provider types stay outside the domain and application layers. The frontend communicates only through the documented API.
+Dependency direction stays inward: domain/application code does not depend on FastAPI, SQLAlchemy, LangGraph, or provider SDK types. Provider selection happens in the composition root. PostgreSQL business records are authoritative; LangGraph checkpoints preserve execution state.
 
 ## Requirements
 
-- Python 3.12+ and [uv](https://docs.astral.sh/uv/)
-- Node.js 22+ and npm
-- Docker and Docker Compose
-- PostgreSQL (provided by Docker Compose for local development)
-- An LLM provider is optional: Fake is deterministic, Ollama is local/offline, and OpenAI/OpenRouter are external options
+For Docker usage:
 
-## Quick start with Docker
+- Docker with Docker Compose
 
-After implementation, the simplest way to run the full application will be:
+For local development:
+
+- Python 3.12+
+- [uv](https://docs.astral.sh/uv/)
+- Node.js 22+
+- npm
+
+## Quick start — clean clone with deterministic Fake provider
 
 ```bash
 git clone https://github.com/hamresan/ai-purchase-approval-workflow.git
 cd ai-purchase-approval-workflow
 cp .env.example .env
-docker compose up --build
+
+docker compose up -d postgres
+docker compose build backend frontend
+docker compose run --rm backend uv run alembic upgrade head
+docker compose up -d backend frontend
 ```
 
 Open:
 
-- User interface: `http://localhost:5173`
-- API documentation: `http://localhost:8000/docs`
+- UI: http://localhost:5173
+- API docs: http://localhost:8000/docs
+- Health: http://localhost:8000/health
 
-Stop the application:
+The default `.env.example` uses `WORKFLOW_MODEL_PROVIDER=fake`. This deterministic provider requires no external network or API key and is intended for development, demonstration, and CI. It produces the fixture-backed Laptop stand workflow so the complete approval journey can be exercised reliably.
+
+To stop and remove the local stack:
 
 ```bash
 docker compose down
 ```
 
-## Local development
+## Use the web interface
 
-### Backend
+1. Open http://localhost:5173.
+2. Select **New Purchase Request**.
+3. Enter a request of at least 10 characters and optionally a requester name.
+4. Submit it. With the default Fake provider, the deterministic extracted request is a Laptop stand for Dana.
+5. Open the request and inspect its trusted vendor, price, budget result, draft order, and timeline.
+6. Choose **Approve**, **Reject**, or **Edit**.
+7. Approve resumes the persisted workflow and submits through the approval gate; Reject records the reason; Edit revalidates trusted data and returns the request to approval review.
 
-```bash
-cd backend
-uv sync --all-groups
-cp .env.example .env
-uv run uvicorn ai_purchase_workflow.presentation.app:create_app --factory --reload
-```
+Reviewer identity is entered explicitly in the approval dialog. Authentication/authorization is intentionally not part of this v1 demonstration.
 
-### Frontend
+## Model providers
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-## Configure the model provider
-
-The workflow depends only on the provider-agnostic model contract. Select the concrete provider at the composition boundary:
+Common settings:
 
 ```dotenv
 WORKFLOW_MODEL_PROVIDER=fake
 WORKFLOW_MODEL_NAME=qwen3:8b
 WORKFLOW_MODEL_TIMEOUT_SECONDS=30
+WORKFLOW_MODEL_BASE_URL=
 ```
 
-The deterministic `fake` provider is the default for tests and CI and requires no network access.
+### Fake
 
-For local/offline Ollama:
+```dotenv
+APP_ENV=development
+WORKFLOW_MODEL_PROVIDER=fake
+```
+
+Fake is deterministic and used by tests/CI. The application rejects Fake when `APP_ENV=production`.
+
+### Ollama — local/offline
+
+Run an OpenAI-compatible Ollama endpoint and configure:
 
 ```dotenv
 WORKFLOW_MODEL_PROVIDER=ollama
@@ -139,15 +133,17 @@ WORKFLOW_MODEL_NAME=qwen3:8b
 WORKFLOW_MODEL_BASE_URL=http://localhost:11434/v1
 ```
 
-For OpenAI:
+If the backend itself runs inside Docker, `localhost` refers to the backend container. Configure a base URL reachable from that container or run the backend locally.
+
+### OpenAI
 
 ```dotenv
 WORKFLOW_MODEL_PROVIDER=openai
-WORKFLOW_MODEL_NAME=<model-name>
+WORKFLOW_MODEL_NAME=<supported-model>
 OPENAI_API_KEY=<secret>
 ```
 
-For OpenRouter:
+### OpenRouter
 
 ```dotenv
 WORKFLOW_MODEL_PROVIDER=openrouter
@@ -155,91 +151,164 @@ WORKFLOW_MODEL_NAME=<provider/model>
 OPENROUTER_API_KEY=<secret>
 ```
 
-Ollama, OpenAI, and OpenRouter are accessed through the shared OpenAI-compatible adapter. Provider credentials and transport details remain outside application and workflow code. Model output is always treated as untrusted and passes through the existing structured mapper and validator before business state changes.
+Ollama, OpenAI, and OpenRouter use the focused OpenAI-compatible infrastructure adapter. Credentials remain outside application/workflow code. Provider output is untrusted until it passes the structured mapper and validator.
 
-## Use the web interface
+## API
 
-1. Open the dashboard in a browser.
-2. Select **New Purchase Request**.
-3. Enter a plain-language request, for example: `15 monitors for the design team, maximum budget $4,500`.
-4. Review the extracted details, budget result, vendor choice, and draft order.
-5. Select **Approve**, **Reject**, or **Edit**.
-6. On approval, the workflow resumes from its saved checkpoint and submits the order.
+The interactive OpenAPI document at `/docs` is the canonical field-level reference.
 
-
-## API example
-
-Create a purchase request:
+Create and start a free-text workflow:
 
 ```bash
 curl -X POST http://localhost:8000/api/purchase-requests \
   -H "Content-Type: application/json" \
   -d '{
-    "requester_name": "Ava Chen",
-    "request_text": "Please buy 15 monitors for the design team. Keep the total under 4500 USD."
+    "request_text": "Dana needs one laptop stand",
+    "requester_name": "Dana"
   }'
 ```
 
-Example response:
+The response is a purchase-request representation with a UUID `id`, requester, items, status, and timestamps. A successful workflow normally reaches `pending_approval`.
 
-```json
-{
-  "request_id": "pr_01HXYZ",
-  "workflow_thread_id": "workflow_pr_01HXYZ",
-  "status": "pending_approval",
-  "draft_order": {
-    "vendor_name": "Example Office Supply",
-    "total_amount": "4200.00",
-    "currency": "USD"
-  },
-  "next_action": "human_approval_required"
-}
-```
-
-Approve a paused request:
+List requests:
 
 ```bash
-curl -X POST http://localhost:8000/api/purchase-requests/pr_01HXYZ/approval \
+curl "http://localhost:8000/api/purchase-requests?status=pending_approval&limit=20&offset=0&order=desc"
+```
+
+Read details and audit history:
+
+```bash
+curl http://localhost:8000/api/purchase-requests/<request-uuid>
+```
+
+Approve:
+
+```bash
+curl -X POST http://localhost:8000/api/purchase-requests/<request-uuid>/approval \
   -H "Content-Type: application/json" \
-  -d '{ "decision": "approve", "comment": "Within budget." }'
+  -d '{
+    "action": "approve",
+    "decided_by": "Reviewer Name",
+    "reason": "Within budget"
+  }'
 ```
 
-## Safety and reliability rules
+Reject uses `"action": "reject"` and requires a non-empty `reason`. Edit uses `"action": "edit"`, explicit `decided_by`, and an `items` array containing `description` and positive `quantity`; trusted vendor and price are resolved again by the backend.
 
-- Vendor, catalog, budget, and submission data come from tools/services, never from model memory.
-- The workflow may use read-only tools and create a draft; `submit_order` is always an approval-gated action.
-- Every approval decision is tied to a persisted request and workflow thread.
-- An LLM failure, timeout, or malformed tool request must not submit, duplicate, or corrupt an order.
-- User-facing UI never exposes raw model prompts, secrets, database errors, or provider credentials.
+## Supported behavior
 
-## Testing and quality
+- Free-text purchase-request extraction through a provider-neutral model contract.
+- Trusted fixture-backed catalog, vendor, budget, and order adapters.
+- PostgreSQL business persistence and LangGraph PostgreSQL checkpoints.
+- Human Approve / Reject / Edit flows.
+- Approval-gated order submission.
+- Audit timeline and safe user-facing errors.
+- Idempotent structured request creation support.
+- Fake, Ollama, OpenAI, and OpenRouter model configuration.
+- Responsive React dashboard, creation form, request detail, and approval dialogs.
 
-Backend tests mirror production modules and use real FastAPI routes, real PostgreSQL/SQLite test persistence where appropriate, and deterministic model/tool fakes. Frontend tests cover the request form, approval actions, status rendering, and API error states.
+## Safety and reliability
+
+- Model output is never a trusted source for vendor, price, budget, or submission state.
+- Trusted business state lives in PostgreSQL; workflow checkpoints are execution state.
+- `submit_order` requires an approved persisted decision.
+- Duplicate/concurrent approval protection prevents multiple workflow resumes for the same decision path.
+- Provider timeout, unavailable-provider, and malformed-output paths fail safely.
+- API responses and UI do not expose raw prompts, credentials, database errors, or provider internals.
+- Secrets belong in environment variables; `.env` is ignored by Git.
+
+See [SECURITY.md](SECURITY.md) for the security boundary and reporting guidance.
+
+## Limitations
+
+This repository is a focused workflow demonstration, not a production procurement platform.
+
+- No authentication, authorization, roles, or multi-tenancy.
+- Reviewer identity is manually entered and is not cryptographically verified.
+- Catalog, vendor, budget, and order integrations are deterministic fixture adapters rather than ERP/procurement systems.
+- No payment or money movement.
+- No email/notification system.
+- No autonomous purchasing; human approval remains mandatory.
+- No generic chat interface.
+- External model-provider behavior depends on the selected provider/model and is not required by CI.
+- A production deployment would require Auth/AuthZ, real trusted commerce integrations, operational secret management, deployment hardening, and recovery design appropriate to its environment.
+
+## Development
+
+Backend:
 
 ```bash
-# backend
 cd backend
-uv run ruff check src tests
-uv run ruff format --check src tests
-uv run pyright src tests
-uv run pytest
-
-# frontend
-cd frontend
-npm run lint
-npm run test
+uv sync --all-groups
+uv run uvicorn ai_purchase_workflow.presentation.app:create_app --factory --reload
 ```
 
-## Roadmap
+Frontend:
 
-- [ ] Backend foundation, database, and health endpoint
-- [ ] Request/draft domain model and deterministic workflow policies
-- [ ] LangChain/LangGraph tools, state, checkpointing, and pause/resume
-- [ ] Human approval API and audit timeline
-- [ ] React/Vite dashboard and approval interface
-- [x] Provider-agnostic Fake/Ollama/OpenAI/OpenRouter adapter infrastructure and cross-stack resilience
-- [ ] Release hardening and public repository polish
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+For local backend execution, set `DATABASE_URL` to a PostgreSQL address reachable from the host rather than the Docker service hostname.
+
+## Tests and quality gates
+
+Run all non-E2E quality gates:
+
+```bash
+make check
+```
+
+This runs Ruff, Ruff format check, strict Pyright, backend pytest with branch coverage, ESLint, TypeScript typecheck, and Vitest coverage.
+
+Playwright E2E exercises the real Dockerized frontend/backend/PostgreSQL/workflow stack with deterministic model behavior. GitHub Actions runs the quality gates, migrations, Docker stack, and browser journeys on stage branches, pull requests, and `main`.
+
+Coverage floors:
+
+- backend total branch coverage: 85%+
+- domain/application: 90%+
+- frontend total branch coverage: 85%+
+- workflow-critical request/approval frontend: 90%+
+
+Release verification is documented in [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md). Accessibility review notes are in [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md).
+
+## Repository structure
+
+```text
+backend/
+├── src/ai_purchase_workflow/
+│   ├── domain/
+│   ├── application/
+│   ├── infrastructure/
+│   ├── presentation/
+│   └── composition_root/
+└── tests/
+
+frontend/
+├── src/
+│   ├── api/
+│   ├── app/
+│   ├── components/
+│   └── features/
+└── tests/
+    ├── unit/
+    ├── integration/
+    └── e2e/
+
+docs/
+├── ACCESSIBILITY.md
+└── RELEASE_CHECKLIST.md
+```
+
+## Release status
+
+Stages 0–8 of the implementation roadmap are complete. Stage 9 is release hardening: documentation, clean-clone verification, repository/security/accessibility review, and final quality validation.
+
+Verified UI screenshots/GIFs should be captured from the final release build only and must not contain private request data. They are intentionally not represented by mock images.
 
 ## License
 
-This project will be released under the MIT License.
+MIT — see [LICENSE](LICENSE).

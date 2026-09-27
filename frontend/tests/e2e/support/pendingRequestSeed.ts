@@ -1,26 +1,24 @@
-import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { expect, type Page } from "@playwright/test";
 
-function testDatabaseUrl(): string {
-  if (process.env.TEST_DATABASE_URL) return process.env.TEST_DATABASE_URL;
-  const envFile = readFileSync(resolve(process.cwd(), "../.env"), "utf8");
-  const line = envFile.split(/\r?\n/).find((entry) => entry.startsWith("TEST_DATABASE_URL="));
-  if (!line) throw new Error("TEST_DATABASE_URL must be configured for E2E tests.");
-  return line.slice("TEST_DATABASE_URL=".length).trim();
+interface CreatedPurchaseRequest {
+  id?: unknown;
 }
 
-export function seedPendingRequest(): string {
-  const environment = Object.fromEntries(
-    Object.entries(process.env).filter(([name]) => name !== "VIRTUAL_ENV"),
-  );
-  environment.TEST_DATABASE_URL = testDatabaseUrl();
+export async function seedPendingRequest(page: Page): Promise<string> {
+  const response = await page.request.post("/api/purchase-requests", {
+    data: {
+      request_text: "Dana needs one laptop stand",
+      requester_name: "Dana",
+    },
+  });
 
-  const output = execFileSync(
-    "uv",
-    ["run", "--directory", "../backend", "python", "tests/e2e/support/seed_pending_request.py"],
-    { encoding: "utf8", env: environment },
-  );
+  if (!response.ok()) {
+    throw new Error(
+      `Unable to seed pending request through API: ${response.status()} ${await response.text()}`,
+    );
+  }
 
-  return output.trim().split(/\r?\n/).at(-1) ?? "";
+  const payload = (await response.json()) as CreatedPurchaseRequest;
+  expect(typeof payload.id).toBe("string");
+  return payload.id as string;
 }

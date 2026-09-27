@@ -9,7 +9,7 @@ async function openPendingRequest(page: Page, requestId: string): Promise<void> 
 }
 
 test("approve submits the order and updates the timeline", async ({ page }) => {
-  const requestId = seedPendingRequest();
+  const requestId = await seedPendingRequest(page);
   await openPendingRequest(page, requestId);
   await page.getByRole("button", { name: /Approve/ }).click();
   await page.getByLabel("Reviewer name").fill("E2E Reviewer");
@@ -20,7 +20,7 @@ test("approve submits the order and updates the timeline", async ({ page }) => {
 });
 
 test("reject records the reason and updates the timeline", async ({ page }) => {
-  const requestId = seedPendingRequest();
+  const requestId = await seedPendingRequest(page);
   await openPendingRequest(page, requestId);
   await page.getByRole("button", { name: /Reject/ }).click();
   await page.getByLabel("Reviewer name").fill("E2E Reviewer");
@@ -31,7 +31,7 @@ test("reject records the reason and updates the timeline", async ({ page }) => {
 });
 
 test("edit revalidates the draft and returns to approval review", async ({ page }) => {
-  const requestId = seedPendingRequest();
+  const requestId = await seedPendingRequest(page);
   await openPendingRequest(page, requestId);
   await page.getByRole("button", { name: /Edit/ }).click();
   await page.getByLabel("Reviewer name").fill("E2E Reviewer");

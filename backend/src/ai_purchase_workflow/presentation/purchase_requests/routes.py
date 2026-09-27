@@ -10,10 +10,12 @@ from ai_purchase_workflow.application.purchase_requests import (
     ListPurchaseRequests,
     PreparePurchaseRequest,
     PurchaseRequestListQuery,
+    PurchaseRequestWorkflowReviewRequiredError,
+    SubmitFreeTextPurchaseRequest,
+    SubmitFreeTextPurchaseRequestCommand,
     SubmitPurchaseRequest,
 )
 from ai_purchase_workflow.domain.purchase_requests import RequestStatus
-from ai_purchase_workflow.infrastructure.workflows import PurchaseRequestWorkflowRunner
 from ai_purchase_workflow.presentation.purchase_requests.approval_dispatcher import (
     ApprovalActionDispatcher,
 )
@@ -24,7 +26,7 @@ from ai_purchase_workflow.presentation.purchase_requests.dependencies import (
     get_prepare_purchase_request,
     get_purchase_request,
     get_purchase_request_detail,
-    get_start_purchase_request_workflow,
+    get_submit_free_text_purchase_request,
     get_submit_purchase_request,
 )
 from ai_purchase_workflow.presentation.purchase_requests.mappers import PurchaseRequestCommandMapper
@@ -47,9 +49,9 @@ GetPurchaseRequestDependency = Annotated[
     GetPurchaseRequest,
     Depends(get_purchase_request),
 ]
-StartPurchaseRequestWorkflowDependency = Annotated[
-    PurchaseRequestWorkflowRunner,
-    Depends(get_start_purchase_request_workflow),
+SubmitFreeTextPurchaseRequestDependency = Annotated[
+    SubmitFreeTextPurchaseRequest,
+    Depends(get_submit_free_text_purchase_request),
 ]
 GetPurchaseRequestDetailDependency = Annotated[
     GetPurchaseRequestDetail,
@@ -85,8 +87,7 @@ IdempotencyKeyHeader = Annotated[
 async def create_purchase_request(
     body: CreatePurchaseRequestBody | FreeTextPurchaseRequestBody,
     use_case: CreatePurchaseRequestDependency,
-    workflow: StartPurchaseRequestWorkflowDependency,
-    get_request: GetPurchaseRequestDependency,
+    free_text_use_case: SubmitFreeTextPurchaseRequestDependency,
     idempotency_key: IdempotencyKeyHeader = None,
 ) -> PurchaseRequestResponse:
     if isinstance(body, CreatePurchaseRequestBody):
@@ -96,15 +97,15 @@ async def create_purchase_request(
         )
         return PurchaseRequestResponse.from_view(view)
 
-    free_text = body.request_text
-    if body.requester_name:
-        free_text = f"Requester: {body.requester_name}\\nRequest: {body.request_text}"
-    result = await workflow.execute(free_text)
-    if result.purchase_request_id is None:
-        fallback_detail = "The request needs more information before it can continue."
-        detail = result.review_reason or fallback_detail
-        raise HTTPException(status_code=422, detail=detail)
-    view = await get_request.execute(result.purchase_request_id)
+    try:
+        view = await free_text_use_case.execute(
+            SubmitFreeTextPurchaseRequestCommand(
+                request_text=body.request_text,
+                requester_name=body.requester_name,
+            )
+        )
+    except PurchaseRequestWorkflowReviewRequiredError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
     return PurchaseRequestResponse.from_view(view)
 
 
