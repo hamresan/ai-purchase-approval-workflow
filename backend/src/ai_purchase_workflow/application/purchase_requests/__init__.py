@@ -33,6 +33,13 @@ from ai_purchase_workflow.application.purchase_requests.trusted_tools import (
     FindVendor,
     SubmitOrder,
 )
+from ai_purchase_workflow.application.purchase_requests.workflow_submission import (
+    PurchaseRequestWorkflowReviewRequiredError,
+    PurchaseRequestWorkflowStarter,
+    PurchaseRequestWorkflowStartResult,
+    SubmitFreeTextPurchaseRequest,
+    SubmitFreeTextPurchaseRequestCommand,
+)
 from ai_purchase_workflow.application.purchase_requests.use_cases import (
     CreatePurchaseRequest,
     GetPurchaseRequest,
@@ -67,7 +74,12 @@ __all__ = [
     "PurchaseRequestRepository",
     "PurchaseRequestView",
     "PurchaseRequestWorkflowGateway",
+    "PurchaseRequestWorkflowReviewRequiredError",
+    "PurchaseRequestWorkflowStarter",
+    "PurchaseRequestWorkflowStartResult",
     "RejectPurchaseRequest",
+    "SubmitFreeTextPurchaseRequest",
+    "SubmitFreeTextPurchaseRequestCommand",
     "SubmitOrder",
     "SubmitPurchaseRequest",
 ]
