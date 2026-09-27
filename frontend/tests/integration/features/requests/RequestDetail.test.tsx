@@ -35,6 +35,15 @@ describe("RequestDetail", () => {
     expect(screen.queryByText(/workflow paused/i)).not.toBeInTheDocument();
   });
 
+  it("opens and closes approval actions for pending requests", async () => {
+    render(<RequestDetail api={api} approvalApi={{ decide: vi.fn() }} requestId={detail.id} onBack={vi.fn()} />);
+    await screen.findByRole("heading", { name: "Laptop stand" });
+    fireEvent.click(screen.getByRole("button", { name: /Approve/ }));
+    expect(screen.getByRole("dialog", { name: "Approve request" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
   it("retries after a safe loading error", async () => {
     const get = vi.fn().mockRejectedValueOnce(new Error("database secret")).mockResolvedValueOnce(detail);
     render(<RequestDetail api={{ list: vi.fn(), get }} approvalApi={{ decide: vi.fn() }} requestId={detail.id} onBack={vi.fn()} />);

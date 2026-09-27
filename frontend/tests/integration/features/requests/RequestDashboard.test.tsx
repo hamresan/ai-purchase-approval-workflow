@@ -33,6 +33,20 @@ describe("RequestDashboard", () => {
     await waitFor(() => expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ offset: 0 })));
   });
 
+  it("opens a request from the desktop and mobile presentations", async () => {
+    const openRequest = vi.fn();
+    render(<RequestDashboard api={{ list: vi.fn().mockResolvedValue(page), get: vi.fn() }} onNewRequest={vi.fn()} onOpenRequest={openRequest} />);
+    await waitFor(() => expect(screen.getAllByText("Laptop stand")).toHaveLength(2));
+    const row = screen.getAllByText("Laptop stand")[0].closest("tr");
+    expect(row).not.toBeNull();
+    fireEvent.keyDown(row as HTMLElement, { key: "Enter" });
+    expect(openRequest).toHaveBeenCalledWith("1");
+    const card = screen.getAllByText("Laptop stand")[1].closest("article");
+    expect(card).not.toBeNull();
+    fireEvent.click(card as HTMLElement);
+    expect(openRequest).toHaveBeenCalledTimes(2);
+  });
+
   it("shows empty and error states with actionable controls", async () => {
     const emptyApi: PurchaseRequestApi = { list: vi.fn().mockResolvedValue({ ...page, total: 0, items: [] }), get: vi.fn() };
     const onNewRequest = vi.fn();

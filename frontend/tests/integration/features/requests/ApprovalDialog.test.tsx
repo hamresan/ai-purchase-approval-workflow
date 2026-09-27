@@ -30,6 +30,25 @@ describe("ApprovalDialog", () => {
     expect(decide).not.toHaveBeenCalled();
   });
 
+  it("shows safe API errors and allows closing the dialog", async () => {
+    const close = vi.fn();
+    const decide = vi.fn().mockRejectedValue(new Error("Unable to update this request."));
+    render(<ApprovalDialog action="approve" request={request} api={{ decide }} onClose={close} onCompleted={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Unable to update this request.");
+    fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+    expect(close).toHaveBeenCalled();
+  });
+
+  it("validates edited item descriptions before submission", () => {
+    const decide = vi.fn();
+    render(<ApprovalDialog action="edit" request={request} api={{ decide }} onClose={vi.fn()} onCompleted={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText("Item 1 description"), { target: { value: "   " } });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Each item needs a description");
+    expect(decide).not.toHaveBeenCalled();
+  });
+
   it("edits items and sends only editable trusted inputs", async () => {
     const decide = vi.fn().mockResolvedValue(request);
     render(<ApprovalDialog action="edit" request={request} api={{ decide } as PurchaseRequestApprovalApi} onClose={vi.fn()} onCompleted={vi.fn()} />);
