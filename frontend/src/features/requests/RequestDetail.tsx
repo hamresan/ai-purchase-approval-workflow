@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
+import type { PurchaseRequestApprovalApi, ApprovalAction } from "@/api/purchaseRequestApproval";
 import type { PurchaseRequestApi, PurchaseRequestDetail as RequestDetailModel } from "@/api/purchaseRequests";
+import { ApprovalDialog } from "@/features/requests/ApprovalDialog";
 import { RequestStatusBadge } from "@/features/requests/RequestStatusBadge";
 import { formatDate, requestAmount, requestTitle } from "@/features/requests/requestPresentation";
 
@@ -8,12 +10,14 @@ interface Props {
   api: PurchaseRequestApi;
   requestId: string;
   onBack: () => void;
+  approvalApi: PurchaseRequestApprovalApi;
 }
 
-export function RequestDetail({ api, requestId, onBack }: Props) {
+export function RequestDetail({ api, requestId, onBack, approvalApi }: Props) {
   const [request, setRequest] = useState<RequestDetailModel | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
   const [reloadKey, setReloadKey] = useState(0);
+  const [dialog, setDialog] = useState<ApprovalAction | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -44,6 +48,11 @@ export function RequestDetail({ api, requestId, onBack }: Props) {
           <div className="detail-title"><h1>{requestTitle(request)}</h1><RequestStatusBadge status={request.status} /></div>
           <p>{shortId(request.id)} · Submitted on {formatDate(request.created_at)}</p>
         </div>
+        {request.status === "pending_approval" && <div className="approval-actions">
+          <button className="primary-button" onClick={() => setDialog("approve")}>✓ Approve</button>
+          <button className="secondary-button" onClick={() => setDialog("reject")}>× Reject</button>
+          <button className="secondary-button" onClick={() => setDialog("edit")}>✎ Edit</button>
+        </div>}
       </div>
 
       <div className="detail-grid">
@@ -99,6 +108,7 @@ export function RequestDetail({ api, requestId, onBack }: Props) {
           </article>
         </aside>
       </div>
+      {dialog && <ApprovalDialog action={dialog} request={request} api={approvalApi} onClose={() => setDialog(null)} onCompleted={() => { setDialog(null); setReloadKey((value) => value + 1); }} />}
     </section>
   );
 }

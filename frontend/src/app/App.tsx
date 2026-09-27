@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { HttpPurchaseRequestApi } from "@/api/purchaseRequests";
+import { HttpPurchaseRequestApprovalApi } from "@/api/purchaseRequestApproval";
 import { HttpPurchaseRequestSubmissionApi } from "@/api/purchaseRequestSubmission";
 import { pathForRequestDetail, pathForRoute, requestIdFromPath, routeFromPath, type AppRoute } from "@/app/navigation";
 import { AppShell } from "@/components/AppShell";
@@ -14,6 +15,7 @@ export function App() {
   const [requestId, setRequestId] = useState<string | null>(() => requestIdFromPath(window.location.pathname));
   const requestApi = useMemo(() => new HttpPurchaseRequestApi(), []);
   const submissionApi = useMemo(() => new HttpPurchaseRequestSubmissionApi(), []);
+  const approvalApi = useMemo(() => new HttpPurchaseRequestApprovalApi(), []);
 
   useEffect(() => {
     const syncRoute = () => {
@@ -39,7 +41,7 @@ export function App() {
   return (
     <AppShell route={route} onNavigate={navigate}>
       {route === "new-request" && <NewPurchaseRequest api={submissionApi} onBack={() => navigate("requests")} />}
-      {route === "request-detail" && requestId && <RequestDetail api={requestApi} requestId={requestId} onBack={() => navigate("requests")} />}
+      {route === "request-detail" && requestId && <RequestDetail api={requestApi} approvalApi={approvalApi} requestId={requestId} onBack={() => navigate("requests")} />}
       {route === "requests" && <RequestDashboard api={requestApi} onNewRequest={() => navigate("new-request")} onOpenRequest={openRequest} />}
     </AppShell>
   );

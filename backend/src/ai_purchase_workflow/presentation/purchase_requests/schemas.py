@@ -38,6 +38,8 @@ class ApprovalBody(BaseModel):
 
     @model_validator(mode="after")
     def validate_action_payload(self) -> "ApprovalBody":
+        if self.action == "reject" and (self.reason is None or not self.reason.strip()):
+            raise ValueError("Rejected approval requests require a reason.")
         if self.action == "edit" and not self.items:
             raise ValueError("Edited approval requests require at least one item.")
         if self.action != "edit" and self.items is not None:
