@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";\n\nimport { seedPendingRequest } from "./support/pendingRequestSeed";
 
 const backendUrl = process.env.E2E_BACKEND_URL ?? "http://127.0.0.1:8000";
 
