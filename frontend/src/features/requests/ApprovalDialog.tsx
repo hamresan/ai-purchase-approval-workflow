@@ -62,7 +62,6 @@ export function ApprovalDialog({ action, request, api, onClose, onCompleted }: P
         </label>
         {action === "edit" ? (
           <div className="edit-items">
-            <div className="dialog-tabs"><strong>Items</strong><span>Vendor & Order</span><span>Attachments</span></div>
             {items.map((item, index) => (
               <div className="edit-item" key={index}>
                 <label>Item description<input aria-label={`Item ${index + 1} description`} value={item.description} onChange={(event) => setItems((current) => current.map((value, itemIndex) => itemIndex === index ? { ...value, description: event.target.value } : value))} /></label>
