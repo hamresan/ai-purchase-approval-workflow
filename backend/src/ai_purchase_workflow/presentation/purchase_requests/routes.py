@@ -20,21 +20,21 @@ from ai_purchase_workflow.presentation.purchase_requests.approval_dispatcher imp
 from ai_purchase_workflow.presentation.purchase_requests.dependencies import (
     get_approval_dispatcher,
     get_create_purchase_request,
-    get_purchase_request,
-    get_start_purchase_request_workflow,
     get_list_purchase_requests,
     get_prepare_purchase_request,
+    get_purchase_request,
     get_purchase_request_detail,
+    get_start_purchase_request_workflow,
     get_submit_purchase_request,
 )
 from ai_purchase_workflow.presentation.purchase_requests.mappers import PurchaseRequestCommandMapper
 from ai_purchase_workflow.presentation.purchase_requests.schemas import (
     ApprovalBody,
     CreatePurchaseRequestBody,
+    FreeTextPurchaseRequestBody,
     PurchaseRequestDetailResponse,
     PurchaseRequestListResponse,
     PurchaseRequestResponse,
-    FreeTextPurchaseRequestBody,
 )
 
 router = APIRouter(prefix="/api/purchase-requests", tags=["purchase-requests"])
@@ -103,7 +103,10 @@ async def create_purchase_request(
     if result.purchase_request_id is None:
         raise HTTPException(
             status_code=422,
-            detail=result.review_reason or "The request needs more information before it can continue.",
+            detail=(
+                result.review_reason
+                or "The request needs more information before it can continue."
+            ),
         )
     view = await get_request.execute(result.purchase_request_id)
     return PurchaseRequestResponse.from_view(view)
