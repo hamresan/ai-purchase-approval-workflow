@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
+from typing import Literal
 from uuid import UUID
 
 from ai_purchase_workflow.application.purchase_requests.dto import PurchaseItemView
@@ -41,7 +42,7 @@ class PurchaseRequestDetailView:
     status: RequestStatus
     created_at: datetime
     updated_at: datetime
-    budget_outcome: str
+    budget_outcome: Literal["passed", "not_checked"]
     draft_order: DraftOrderView | None
     approval_decision: ApprovalDecisionView | None
     audit_entries: tuple[AuditEntryView, ...]
