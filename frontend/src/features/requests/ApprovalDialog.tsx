@@ -13,11 +13,16 @@ interface Props {
 
 export function ApprovalDialog({ action, request, api, onClose, onCompleted }: Props) {
   const [reason, setReason] = useState("");
+  const [reviewer, setReviewer] = useState("");
   const [items, setItems] = useState(request.items.map((item) => ({ description: item.description, quantity: item.quantity })));
   const [state, setState] = useState<"editing" | "saving">("editing");
   const [error, setError] = useState("");
 
   const submit = async () => {
+    if (!reviewer.trim()) {
+      setError("Please enter your name.");
+      return;
+    }
     if (action === "reject" && !reason.trim()) {
       setError("Please provide a reason for rejection.");
       return;
@@ -31,7 +36,7 @@ export function ApprovalDialog({ action, request, api, onClose, onCompleted }: P
     try {
       await api.decide(request.id, {
         action,
-        decidedBy: "Purchase reviewer",
+        decidedBy: reviewer.trim(),
         reason: action === "edit" ? undefined : reason.trim() || undefined,
         items: action === "edit" ? items.map((item) => ({ ...item, description: item.description.trim() })) : undefined,
       });
@@ -52,6 +57,9 @@ export function ApprovalDialog({ action, request, api, onClose, onCompleted }: P
           <button className="dialog-close" aria-label="Close dialog" onClick={onClose}>×</button>
         </div>
 
+        <label className="dialog-field">Reviewer name *
+          <input aria-label="Reviewer name" value={reviewer} onChange={(event) => setReviewer(event.target.value)} placeholder="Enter your name" />
+        </label>
         {action === "edit" ? (
           <div className="edit-items">
             <div className="dialog-tabs"><strong>Items</strong><span>Vendor & Order</span><span>Attachments</span></div>

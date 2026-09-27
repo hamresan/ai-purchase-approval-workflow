@@ -44,6 +44,13 @@ describe("RequestDetail", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  it("does not expose unknown audit messages", async () => {
+    const unknown = { ...detail, audit_entries: [{ event_type: "provider_internal", message: "secret provider payload", occurred_at: "2026-09-27T08:07:00Z" }] };
+    render(<RequestDetail api={{ list: vi.fn(), get: vi.fn().mockResolvedValue(unknown) }} approvalApi={{ decide: vi.fn() }} requestId={detail.id} onBack={vi.fn()} />);
+    expect(await screen.findByText("Request status was updated.")).toBeInTheDocument();
+    expect(screen.queryByText("secret provider payload")).not.toBeInTheDocument();
+  });
+
   it("retries after a safe loading error", async () => {
     const get = vi.fn().mockRejectedValueOnce(new Error("database secret")).mockResolvedValueOnce(detail);
     render(<RequestDetail api={{ list: vi.fn(), get }} approvalApi={{ decide: vi.fn() }} requestId={detail.id} onBack={vi.fn()} />);

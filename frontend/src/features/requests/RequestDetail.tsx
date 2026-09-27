@@ -102,10 +102,6 @@ export function RequestDetail({ api, requestId, onBack, approvalApi }: Props) {
               <div><dt>Draft order</dt><dd>{draft ? money(draft.total_amount, draft.currency) : "Not prepared yet"}</dd></div>
             </dl>
           </article>
-          <article className="detail-card documents-card">
-            <h2><span className="section-icon">⌕</span> Documents</h2>
-            <p>No documents attached</p>
-          </article>
         </aside>
       </div>
       {dialog && <ApprovalDialog action={dialog} request={request} api={approvalApi} onClose={() => setDialog(null)} onCompleted={() => { setDialog(null); setReloadKey((value) => value + 1); }} />}
@@ -142,7 +138,7 @@ function timelineTitle(eventType: string) {
   return titles[eventType] ?? "Request updated";
 }
 
-function timelineMessage(eventType: string, fallback: string) {
+function timelineMessage(eventType: string, _fallback: string) {
   const messages: Record<string, string> = {
     request_extracted: "Request details were prepared for review.",
     trusted_data_validated: "Budget and vendor checks passed and a draft order was prepared.",
@@ -151,5 +147,5 @@ function timelineMessage(eventType: string, fallback: string) {
     approval_rejected: "The request was rejected by a reviewer.",
     order_submitted: "The approved order was submitted successfully.",
   };
-  return messages[eventType] ?? fallback;
+  return messages[eventType] ?? "Request status was updated.";
 }
