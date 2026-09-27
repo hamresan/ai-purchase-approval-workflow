@@ -47,6 +47,19 @@ def test_factory_builds_ollama_without_external_credentials() -> None:
 
 
 @pytest.mark.parametrize("provider", [ModelProvider.OPENAI, ModelProvider.OPENROUTER])
-def test_factory_requires_external_provider_credentials(provider: ModelProvider) -> None:
+def test_factory_requires_external_provider_credentials(
+    provider: ModelProvider,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+
+    settings = Settings(
+        workflow_model_provider=provider,
+        openai_api_key=None,
+        openrouter_api_key=None,
+        _env_file=None,
+    )
+
     with pytest.raises(ModelConfigurationError, match="API_KEY"):
-        build_purchase_request_model(Settings(workflow_model_provider=provider))
+        build_purchase_request_model(settings)
