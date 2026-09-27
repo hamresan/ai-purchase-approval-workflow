@@ -78,3 +78,14 @@ async def test_generate_rejects_malformed_provider_payload() -> None:
 
     with pytest.raises(ModelUnavailableError, match="invalid response"):
         await model.generate(ModelRequest("system", "user"))
+
+
+@pytest.mark.asyncio
+async def test_generate_maps_timeout_to_safe_provider_error() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ReadTimeout("timed out", request=request)
+
+    model = build_model(httpx.MockTransport(handler))
+
+    with pytest.raises(ModelUnavailableError, match="temporarily unavailable"):
+        await model.generate(ModelRequest("system", "user"))
