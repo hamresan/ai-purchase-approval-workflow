@@ -7,6 +7,13 @@ from ai_purchase_workflow.application.purchase_requests.approval import (
     PurchaseRequestWorkflowGateway,
     RejectPurchaseRequest,
 )
+from ai_purchase_workflow.application.purchase_requests.detail import (
+    ApprovalDecisionView,
+    AuditEntryView,
+    DraftOrderView,
+    GetPurchaseRequestDetail,
+    PurchaseRequestDetailView,
+)
 from ai_purchase_workflow.application.purchase_requests.dto import (
     CreatePurchaseItem,
     CreatePurchaseRequestCommand,
@@ -35,20 +42,25 @@ from ai_purchase_workflow.application.purchase_requests.use_cases import (
 
 __all__ = [
     "ApprovalAction",
+    "ApprovalDecisionView",
     "ApprovePurchaseRequest",
+    "AuditEntryView",
     "CheckBudget",
     "CreateDraftOrder",
     "CreatePurchaseItem",
     "CreatePurchaseRequest",
     "CreatePurchaseRequestCommand",
+    "DraftOrderView",
     "EditPurchaseItem",
     "EditPurchaseRequest",
     "FindVendor",
     "GetPurchaseRequest",
+    "GetPurchaseRequestDetail",
     "ListPurchaseRequests",
     "PreparePurchaseRequest",
     "PurchaseItemView",
     "PurchaseRequestApprovalError",
+    "PurchaseRequestDetailView",
     "PurchaseRequestListQuery",
     "PurchaseRequestNotFoundError",
     "PurchaseRequestPage",

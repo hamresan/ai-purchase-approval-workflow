@@ -31,3 +31,30 @@ jobs:
       - run: cd backend && uv sync --frozen --all-groups
       - run: cd frontend && npm ci
       - run: make check
+      - run: cd backend && uv run alembic upgrade head
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/ai_purchase_workflow
+      - run: cd frontend && npx playwright install --with-deps chromium
+      - name: Start backend
+        run: |
+          cd backend
+          nohup uv run uvicorn ai_purchase_workflow.presentation.app:create_app --factory \
+            --host 127.0.0.1 --port 8000 > /tmp/backend.log 2>&1 &
+          echo $! > /tmp/backend.pid
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/ai_purchase_workflow
+      - name: Wait for backend
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8000/health > /dev/null; then
+              exit 0
+            fi
+            if ! kill -0 "$(cat /tmp/backend.pid)" 2>/dev/null; then
+              cat /tmp/backend.log
+              exit 1
+            fi
+            sleep 1
+          done
+          cat /tmp/backend.log
+          exit 1
+      - run: cd frontend && npm run test:e2e

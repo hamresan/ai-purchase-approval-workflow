@@ -17,6 +17,34 @@ export interface PurchaseRequest {
   updated_at: string;
 }
 
+export interface DraftOrder {
+  id: string;
+  items: PurchaseItem[];
+  total_amount: string;
+  currency: string;
+  created_at: string;
+}
+
+export interface ApprovalDecision {
+  outcome: "approved" | "rejected";
+  decided_by: string;
+  reason: string | null;
+  decided_at: string;
+}
+
+export interface AuditEntry {
+  event_type: string;
+  message: string;
+  occurred_at: string;
+}
+
+export interface PurchaseRequestDetail extends PurchaseRequest {
+  budget_outcome: "passed" | "not_checked";
+  draft_order: DraftOrder | null;
+  approval_decision: ApprovalDecision | null;
+  audit_entries: AuditEntry[];
+}
+
 export interface PurchaseRequestPage {
   items: PurchaseRequest[];
   total: number;
@@ -39,6 +67,7 @@ export class ApiError extends Error {
 
 export interface PurchaseRequestApi {
   list(query: ListPurchaseRequestsQuery): Promise<PurchaseRequestPage>;
+  get(requestId: string): Promise<PurchaseRequestDetail>;
 }
 
 export class HttpPurchaseRequestApi implements PurchaseRequestApi {
@@ -57,6 +86,14 @@ export class HttpPurchaseRequestApi implements PurchaseRequestApi {
       throw new ApiError(response.status, await readErrorMessage(response));
     }
     return response.json() as Promise<PurchaseRequestPage>;
+  }
+
+  async get(requestId: string): Promise<PurchaseRequestDetail> {
+    const response = await fetch(`${this.baseUrl}/api/purchase-requests/${encodeURIComponent(requestId)}`);
+    if (!response.ok) {
+      throw new ApiError(response.status, await readErrorMessage(response));
+    }
+    return response.json() as Promise<PurchaseRequestDetail>;
   }
 }
 

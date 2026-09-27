@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Header, Query
 
 from ai_purchase_workflow.application.purchase_requests import (
     CreatePurchaseRequest,
-    GetPurchaseRequest,
+    GetPurchaseRequestDetail,
     ListPurchaseRequests,
     PreparePurchaseRequest,
     PurchaseRequestListQuery,
@@ -20,13 +20,14 @@ from ai_purchase_workflow.presentation.purchase_requests.dependencies import (
     get_create_purchase_request,
     get_list_purchase_requests,
     get_prepare_purchase_request,
-    get_purchase_request,
+    get_purchase_request_detail,
     get_submit_purchase_request,
 )
 from ai_purchase_workflow.presentation.purchase_requests.mappers import PurchaseRequestCommandMapper
 from ai_purchase_workflow.presentation.purchase_requests.schemas import (
     ApprovalBody,
     CreatePurchaseRequestBody,
+    PurchaseRequestDetailResponse,
     PurchaseRequestListResponse,
     PurchaseRequestResponse,
 )
@@ -37,9 +38,9 @@ CreatePurchaseRequestDependency = Annotated[
     CreatePurchaseRequest,
     Depends(get_create_purchase_request),
 ]
-GetPurchaseRequestDependency = Annotated[
-    GetPurchaseRequest,
-    Depends(get_purchase_request),
+GetPurchaseRequestDetailDependency = Annotated[
+    GetPurchaseRequestDetail,
+    Depends(get_purchase_request_detail),
 ]
 ListPurchaseRequestsDependency = Annotated[
     ListPurchaseRequests,
@@ -80,13 +81,13 @@ async def create_purchase_request(
     return PurchaseRequestResponse.from_view(view)
 
 
-@router.get("/{request_id}", response_model=PurchaseRequestResponse)
+@router.get("/{request_id}", response_model=PurchaseRequestDetailResponse)
 async def get_purchase_request_by_id(
     request_id: UUID,
-    use_case: GetPurchaseRequestDependency,
-) -> PurchaseRequestResponse:
+    use_case: GetPurchaseRequestDetailDependency,
+) -> PurchaseRequestDetailResponse:
     view = await use_case.execute(request_id)
-    return PurchaseRequestResponse.from_view(view)
+    return PurchaseRequestDetailResponse.from_detail_view(view)
 
 
 @router.get("", response_model=PurchaseRequestListResponse)

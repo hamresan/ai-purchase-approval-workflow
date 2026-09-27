@@ -24,7 +24,12 @@ async def test_create_retrieve_and_filter_purchase_requests(api_client: AsyncCli
 
     get_response = await api_client.get(f"/api/purchase-requests/{created['id']}")
     assert get_response.status_code == 200
-    assert get_response.json() == created
+    retrieved = get_response.json()
+    assert {key: retrieved[key] for key in created} == created
+    assert retrieved["budget_outcome"] == "not_checked"
+    assert retrieved["draft_order"] is None
+    assert retrieved["approval_decision"] is None
+    assert retrieved["audit_entries"] == []
 
     list_response = await api_client.get("/api/purchase-requests", params={"status": "drafting"})
     assert list_response.status_code == 200

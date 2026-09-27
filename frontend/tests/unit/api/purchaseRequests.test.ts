@@ -12,6 +12,16 @@ describe("HttpPurchaseRequestApi", () => {
     expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/purchase-requests?limit=7&offset=0&order=desc&status=approved");
   });
 
+  it("gets a request detail by encoded id", async () => {
+    const detail = { id: "request id", items: [], status: "drafting" };
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(detail), { status: 200, headers: { "Content-Type": "application/json" } }));
+    vi.stubGlobal("fetch", fetchMock);
+    const api = new HttpPurchaseRequestApi("http://api.test");
+
+    await expect(api.get("request id")).resolves.toEqual(detail);
+    expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/purchase-requests/request%20id");
+  });
+
   it("omits the optional status filter", async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ items: [], total: 0, limit: 7, offset: 7 }), { status: 200, headers: { "Content-Type": "application/json" } }));
     vi.stubGlobal("fetch", fetchMock);
