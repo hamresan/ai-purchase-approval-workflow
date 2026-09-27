@@ -38,7 +38,7 @@ jobs:
       - name: Start backend
         run: |
           cd backend
-          nohup uv run uvicorn ai_purchase_workflow.presentation.app:app \
+          nohup uv run uvicorn ai_purchase_workflow.presentation.app:create_app --factory \
             --host 127.0.0.1 --port 8000 > /tmp/backend.log 2>&1 &
           echo $! > /tmp/backend.pid
         env:
