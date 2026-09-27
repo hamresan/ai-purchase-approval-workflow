@@ -72,8 +72,9 @@ async def api_client(
 ) -> AsyncIterator[AsyncClient]:
     app = create_app(Settings(database_url=TEST_DATABASE_URL))
     app.state.session_factory = session_factory
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        yield client
+    async with app.router.lifespan_context(app):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            yield client
 
 
 @pytest.fixture
