@@ -72,9 +72,7 @@ async def seed() -> None:
                         {
                             "schema_version": "1.0",
                             "requester_name": "Dana",
-                            "items": [
-                                {"description": "Laptop stand", "quantity": 1}
-                            ],
+                            "items": [{"description": "Laptop stand", "quantity": 1}],
                         }
                     )
                 ),
@@ -113,9 +111,7 @@ async def seed() -> None:
                 )
 
             if result.status != "pending_approval" or result.purchase_request_id is None:
-                raise RuntimeError(
-                    f"E2E seed did not reach approval: {result.status}"
-                )
+                raise RuntimeError(f"E2E seed did not reach approval: {result.status}")
             print(result.purchase_request_id)
     finally:
         await engine.dispose()
