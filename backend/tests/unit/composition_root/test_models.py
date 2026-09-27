@@ -62,3 +62,10 @@ def test_factory_requires_external_provider_credentials(
 
     with pytest.raises(ModelConfigurationError, match="API_KEY"):
         build_purchase_request_model(settings)
+
+
+def test_factory_rejects_fake_provider_in_production() -> None:
+    settings = Settings(app_env="production", workflow_model_provider=ModelProvider.FAKE)
+
+    with pytest.raises(ModelConfigurationError, match="not allowed in production"):
+        build_purchase_request_model(settings)
