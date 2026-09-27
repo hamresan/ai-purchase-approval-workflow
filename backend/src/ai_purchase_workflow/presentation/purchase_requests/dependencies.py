@@ -10,6 +10,7 @@ from ai_purchase_workflow.application.purchase_requests import (
     GetPurchaseRequestDetail,
     ListPurchaseRequests,
     PreparePurchaseRequest,
+    SubmitFreeTextPurchaseRequest,
     SubmitPurchaseRequest,
 )
 from ai_purchase_workflow.composition_root.purchase_requests import (
@@ -44,7 +45,9 @@ from ai_purchase_workflow.infrastructure.persistence.purchase_requests.writer im
 from ai_purchase_workflow.infrastructure.persistence.workflow_threads import (
     SqlAlchemyWorkflowThreadRepository,
 )
-from ai_purchase_workflow.infrastructure.workflows import PurchaseRequestWorkflowRunner
+from ai_purchase_workflow.infrastructure.workflows import (
+    LangGraphPurchaseRequestWorkflowStarter,
+)
 from ai_purchase_workflow.presentation.purchase_requests.approval_dispatcher import (
     ApprovalActionDispatcher,
     ApproveActionHandler,
@@ -72,17 +75,21 @@ def get_create_purchase_request(session: SessionDependency) -> CreatePurchaseReq
     return CreatePurchaseRequest(repository, creator)
 
 
-def get_start_purchase_request_workflow(
+def get_submit_free_text_purchase_request(
     request: Request,
     session: SessionDependency,
-) -> PurchaseRequestWorkflowRunner:
+) -> SubmitFreeTextPurchaseRequest:
     repository = SqlAlchemyPurchaseRequestRepository(session)
     threads = SqlAlchemyWorkflowThreadRepository(session)
-    return build_start_purchase_request_workflow(
+    runner = build_start_purchase_request_workflow(
         repository,
         threads,
         request.app.state.checkpointer,
         request.app.state.settings,
+    )
+    return SubmitFreeTextPurchaseRequest(
+        LangGraphPurchaseRequestWorkflowStarter(runner),
+        GetPurchaseRequest(repository),
     )
 
 
