@@ -5,7 +5,6 @@ from fastapi import APIRouter, Depends, Header, Query
 
 from ai_purchase_workflow.application.purchase_requests import (
     CreatePurchaseRequest,
-    GetPurchaseRequest,
     GetPurchaseRequestDetail,
     ListPurchaseRequests,
     PreparePurchaseRequest,
@@ -21,7 +20,6 @@ from ai_purchase_workflow.presentation.purchase_requests.dependencies import (
     get_create_purchase_request,
     get_list_purchase_requests,
     get_prepare_purchase_request,
-    get_purchase_request,
     get_purchase_request_detail,
     get_submit_purchase_request,
 )
@@ -39,10 +37,6 @@ router = APIRouter(prefix="/api/purchase-requests", tags=["purchase-requests"])
 CreatePurchaseRequestDependency = Annotated[
     CreatePurchaseRequest,
     Depends(get_create_purchase_request),
-]
-GetPurchaseRequestDependency = Annotated[
-    GetPurchaseRequest,
-    Depends(get_purchase_request),
 ]
 GetPurchaseRequestDetailDependency = Annotated[
     GetPurchaseRequestDetail,
