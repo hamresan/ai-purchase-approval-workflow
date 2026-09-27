@@ -82,3 +82,31 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_PORT: 5632
           POSTGRES_CONTAINER_PORT: 5432
+
+  clean-clone-smoke:
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure clean-clone environment
+        run: cp .env.example .env
+      - name: Start clean-clone stack
+        run: |
+          docker compose up -d postgres
+          docker compose build backend frontend
+          docker compose run --rm backend uv run alembic upgrade head
+          docker compose up -d backend frontend
+      - name: Verify clean-clone health
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8000/health > /dev/null && \
+               curl --fail --silent http://127.0.0.1:5173 > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          docker compose logs backend frontend
+          exit 1
+      - name: Stop clean-clone stack
+        if: always()
+        run: docker compose down -v
