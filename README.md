@@ -25,7 +25,7 @@ The AI helps understand a request and choose safe read-only tools. It **cannot s
 - Human-in-the-loop approval, rejection, and editing
 - Policy-based budget controls and deterministic validation
 - A non-technical React UI, not only Swagger/API endpoints
-- Local Ollama support plus deterministic test doubles
+- Provider-agnostic LLM support for Fake, Ollama, OpenAI, and OpenRouter
 
 ## Planned features
 
@@ -76,7 +76,7 @@ The backend follows Clean Architecture: FastAPI, LangChain/LangGraph, database, 
 - Node.js 22+ and npm
 - Docker and Docker Compose
 - PostgreSQL (provided by Docker Compose for local development)
-- Ollama with a local model such as `qwen3:8b` (optional when using the deterministic development provider)
+- An LLM provider is optional: Fake is deterministic, Ollama is local/offline, and OpenAI/OpenRouter are external options
 
 ## Quick start with Docker
 
@@ -119,23 +119,43 @@ npm install
 npm run dev
 ```
 
-## Configure a local model
+## Configure the model provider
 
-For a local Ollama workflow, start Ollama and set:
-
-```dotenv
-WORKFLOW_MODEL_PROVIDER=ollama
-OLLAMA_BASE_URL=http://localhost:11434/v1
-OLLAMA_MODEL=qwen3:8b
-```
-
-For deterministic development and tests, no model is required:
+The workflow depends only on the provider-agnostic model contract. Select the concrete provider at the composition boundary:
 
 ```dotenv
 WORKFLOW_MODEL_PROVIDER=fake
+WORKFLOW_MODEL_NAME=qwen3:8b
+WORKFLOW_MODEL_TIMEOUT_SECONDS=30
 ```
 
-Provider selection, timeouts, and model settings are configured at the composition boundary. The workflow and business policies do not depend on a concrete model SDK.
+The deterministic `fake` provider is the default for tests and CI and requires no network access.
+
+For local/offline Ollama:
+
+```dotenv
+WORKFLOW_MODEL_PROVIDER=ollama
+WORKFLOW_MODEL_NAME=qwen3:8b
+WORKFLOW_MODEL_BASE_URL=http://localhost:11434/v1
+```
+
+For OpenAI:
+
+```dotenv
+WORKFLOW_MODEL_PROVIDER=openai
+WORKFLOW_MODEL_NAME=<model-name>
+OPENAI_API_KEY=<secret>
+```
+
+For OpenRouter:
+
+```dotenv
+WORKFLOW_MODEL_PROVIDER=openrouter
+WORKFLOW_MODEL_NAME=<provider/model>
+OPENROUTER_API_KEY=<secret>
+```
+
+Ollama, OpenAI, and OpenRouter are accessed through the shared OpenAI-compatible adapter. Provider credentials and transport details remain outside application and workflow code. Model output is always treated as untrusted and passes through the existing structured mapper and validator before business state changes.
 
 ## Use the web interface
 
@@ -217,7 +237,8 @@ npm run test
 - [ ] LangChain/LangGraph tools, state, checkpointing, and pause/resume
 - [ ] Human approval API and audit timeline
 - [ ] React/Vite dashboard and approval interface
-- [ ] Ollama adapter, production-style error handling, tests, and release hardening
+- [x] Provider-agnostic Fake/Ollama/OpenAI/OpenRouter adapter infrastructure and cross-stack resilience
+- [ ] Release hardening and public repository polish
 
 ## License
 
