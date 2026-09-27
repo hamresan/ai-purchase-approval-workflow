@@ -2,33 +2,14 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { seedPendingRequest } from "./support/pendingRequestSeed";
 
-async function createPendingRequest(request: APIRequestContext): Promise<string> {
-  const created = await request.post(`${backendUrl}/api/purchase-requests`, {
-    data: {
-      requester_name: "Dana",
-      items: [{
-        description: "Laptop stand",
-        quantity: 1,
-        unit_price_amount: "1.00",
-        currency: "USD",
-      }],
-    },
-  });
-  expect(created.status()).toBe(201);
-  const body = await created.json() as { id: string };
-  const prepared = await request.post(`${backendUrl}/api/purchase-requests/${body.id}/prepare`);
-  expect(prepared.ok()).toBeTruthy();
-  return body.id;
-}
-
 async function openPendingRequest(page: Page, requestId: string): Promise<void> {
   await page.goto(`/requests/${requestId}`);
   await expect(page.getByRole("heading", { name: "Laptop stand" })).toBeVisible();
   await expect(page.getByText("Waiting for approval")).toBeVisible();
 }
 
-test("approve submits the order and updates the timeline", async ({ page, request }) => {
-  const requestId = await createPendingRequest(request);
+test("approve submits the order and updates the timeline", async ({ page }) => {
+  const requestId = seedPendingRequest();
   await openPendingRequest(page, requestId);
   await page.getByRole("button", { name: /Approve/ }).click();
   await page.getByLabel("Reviewer name").fill("E2E Reviewer");
@@ -38,8 +19,8 @@ test("approve submits the order and updates the timeline", async ({ page, reques
   await expect(page.getByText("Submitted", { exact: true })).toBeVisible();
 });
 
-test("reject records the reason and updates the timeline", async ({ page, request }) => {
-  const requestId = await createPendingRequest(request);
+test("reject records the reason and updates the timeline", async ({ page }) => {
+  const requestId = seedPendingRequest();
   await openPendingRequest(page, requestId);
   await page.getByRole("button", { name: /Reject/ }).click();
   await page.getByLabel("Reviewer name").fill("E2E Reviewer");
@@ -49,8 +30,8 @@ test("reject records the reason and updates the timeline", async ({ page, reques
   await expect(page.getByText("Rejected", { exact: true })).toBeVisible();
 });
 
-test("edit revalidates the draft and returns to approval review", async ({ page, request }) => {
-  const requestId = await createPendingRequest(request);
+test("edit revalidates the draft and returns to approval review", async ({ page }) => {
+  const requestId = seedPendingRequest();
   await openPendingRequest(page, requestId);
   await page.getByRole("button", { name: /Edit/ }).click();
   await page.getByLabel("Reviewer name").fill("E2E Reviewer");
