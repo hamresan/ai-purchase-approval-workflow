@@ -11,7 +11,9 @@ function testDatabaseUrl(): string {
 }
 
 export function seedPendingRequest(): string {
-  const { VIRTUAL_ENV: _virtualEnv, ...environment } = process.env;
+  const environment = Object.fromEntries(
+    Object.entries(process.env).filter(([name]) => name !== "VIRTUAL_ENV"),
+  );
   environment.TEST_DATABASE_URL = testDatabaseUrl();
 
   const output = execFileSync(
