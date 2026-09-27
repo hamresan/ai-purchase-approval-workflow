@@ -1,5 +1,6 @@
 from ai_purchase_workflow.application.purchase_requests import (
-    PurchaseRequestWorkflowStarter,\n    PurchaseRequestWorkflowStartResult,
+    PurchaseRequestWorkflowStarter,
+    PurchaseRequestWorkflowStartResult,
 )
 
 
