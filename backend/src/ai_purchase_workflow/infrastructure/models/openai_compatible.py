@@ -11,6 +11,7 @@ from ai_purchase_workflow.application.purchase_requests.extraction.errors import
     ModelUnavailableError,
 )
 from ai_purchase_workflow.infrastructure.models.config import OpenAICompatibleModelConfig
+from ai_purchase_workflow.infrastructure.models.responses import ChatCompletionResponse
 
 
 class OpenAICompatiblePurchaseRequestModel(PurchaseRequestModel):
@@ -42,14 +43,13 @@ class OpenAICompatiblePurchaseRequestModel(PurchaseRequestModel):
                     },
                 )
                 response.raise_for_status()
-                payload = response.json()
-                content = payload["choices"][0]["message"]["content"]
-                if not isinstance(content, str):
+                payload = ChatCompletionResponse.model_validate_json(response.content)
+                if not payload.choices:
                     raise ModelUnavailableError("Model provider returned an invalid response.")
-                return ModelResponse(json.loads(content))
+                return ModelResponse(json.loads(payload.choices[0].message.content))
         except ModelUnavailableError:
             raise
         except (httpx.TimeoutException, httpx.RequestError) as error:
             raise ModelUnavailableError("Model provider is temporarily unavailable.") from error
-        except (httpx.HTTPStatusError, json.JSONDecodeError, KeyError, IndexError, TypeError) as error:
+        except (httpx.HTTPStatusError, json.JSONDecodeError, ValueError) as error:
             raise ModelUnavailableError("Model provider returned an invalid response.") from error
