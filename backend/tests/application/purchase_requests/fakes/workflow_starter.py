@@ -1,9 +1,9 @@
 from ai_purchase_workflow.application.purchase_requests import (
-    PurchaseRequestWorkflowStartResult,
+    PurchaseRequestWorkflowStarter,\n    PurchaseRequestWorkflowStartResult,
 )
 
 
-class FakePurchaseRequestWorkflowStarter:
+class FakePurchaseRequestWorkflowStarter(PurchaseRequestWorkflowStarter):
     def __init__(self, result: PurchaseRequestWorkflowStartResult) -> None:
         self.result = result
         self.free_texts: list[str] = []
