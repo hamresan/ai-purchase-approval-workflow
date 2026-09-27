@@ -31,3 +31,11 @@ jobs:
       - run: cd backend && uv sync --frozen --all-groups
       - run: cd frontend && npm ci
       - run: make check
+      - run: cd backend && uv run alembic upgrade head
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/ai_purchase_workflow
+      - run: cd frontend && npx playwright install --with-deps chromium
+      - run: cd backend && uv run uvicorn ai_purchase_workflow.presentation.app:app --host 127.0.0.1 --port 8000 > /tmp/backend.log 2>&1 &
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/ai_purchase_workflow
+      - run: cd frontend && npm run test:e2e
