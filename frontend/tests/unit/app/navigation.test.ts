@@ -11,4 +11,4 @@ describe("navigation", () => {
     expect(pathForRoute("new-request")).toBe("/requests/new");
     expect(pathForRequestDetail("abc 123")).toBe("/requests/abc%20123");
   });
-}
+});
