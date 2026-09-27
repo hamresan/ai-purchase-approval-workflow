@@ -72,6 +72,7 @@ jobs:
         env:
           E2E_EXTERNAL_SERVER: "true"
           TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5632/ai_purchase_workflow
+          VIRTUAL_ENV: ""
       - name: Stop Docker E2E stack
         if: always()
         run: docker compose down -v
