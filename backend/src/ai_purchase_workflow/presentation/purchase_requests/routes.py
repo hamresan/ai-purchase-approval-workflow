@@ -101,7 +101,8 @@ async def create_purchase_request(
         free_text = f"Requester: {body.requester_name}\\nRequest: {body.request_text}"
     result = await workflow.execute(free_text)
     if result.purchase_request_id is None:
-        detail = result.review_reason or "The request needs more information before it can continue."
+        fallback_detail = "The request needs more information before it can continue."
+        detail = result.review_reason or fallback_detail
         raise HTTPException(status_code=422, detail=detail)
     view = await get_request.execute(result.purchase_request_id)
     return PurchaseRequestResponse.from_view(view)
