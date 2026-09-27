@@ -16,7 +16,7 @@ test("approve submits the order and updates the timeline", async ({ page }) => {
   await page.getByPlaceholder("Add a comment...").fill("Approved in browser");
   await page.getByRole("button", { name: "Approve", exact: true }).click();
   await expect(page.getByText("Order submitted")).toBeVisible();
-  await expect(page.locator("header").getByText("Submitted", { exact: true })).toBeVisible();
+  await expect(page.locator(".detail-title").getByText("Submitted", { exact: true })).toBeVisible();
 });
 
 test("reject records the reason and updates the timeline", async ({ page }) => {
@@ -27,7 +27,7 @@ test("reject records the reason and updates the timeline", async ({ page }) => {
   await page.getByPlaceholder("Please provide a reason for rejection...").fill("Budget priority changed");
   await page.getByRole("button", { name: "Reject", exact: true }).click();
   await expect(page.getByText("Request rejected")).toBeVisible();
-  await expect(page.locator("header").getByText("Rejected", { exact: true })).toBeVisible();
+  await expect(page.locator(".detail-title").getByText("Rejected", { exact: true })).toBeVisible();
 });
 
 test("edit revalidates the draft and returns to approval review", async ({ page }) => {
