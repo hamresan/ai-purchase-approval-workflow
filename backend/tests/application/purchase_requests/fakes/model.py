@@ -3,7 +3,9 @@ from ai_purchase_workflow.application.purchase_requests.extraction import (
     ModelResponse,
     PurchaseRequestModel,
 )
-from ai_purchase_workflow.application.purchase_requests.extraction.errors import ModelUnavailableError
+from ai_purchase_workflow.application.purchase_requests.extraction.errors import (
+    ModelUnavailableError,
+)
 
 
 class UnavailablePurchaseRequestModel(PurchaseRequestModel):
