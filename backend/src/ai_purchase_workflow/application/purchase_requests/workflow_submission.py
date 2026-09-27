@@ -30,10 +30,7 @@ class SubmitFreeTextPurchaseRequest:
     ) -> PurchaseRequestView:
         free_text = command.request_text
         if command.requester_name:
-            free_text = (
-                f"Requester: {command.requester_name}\n"
-                f"Request: {command.request_text}"
-            )
+            free_text = f"Requester: {command.requester_name}\nRequest: {command.request_text}"
 
         result = await self._workflow.execute(free_text)
         if result.purchase_request_id is None:
