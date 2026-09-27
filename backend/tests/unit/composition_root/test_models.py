@@ -58,7 +58,6 @@ def test_factory_requires_external_provider_credentials(
         workflow_model_provider=provider,
         openai_api_key=None,
         openrouter_api_key=None,
-        _env_file=None,
     )
 
     with pytest.raises(ModelConfigurationError, match="API_KEY"):
