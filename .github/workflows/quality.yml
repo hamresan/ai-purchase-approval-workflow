@@ -35,8 +35,9 @@ jobs:
       - name: Start Docker E2E stack
         run: |
           docker compose up -d postgres
+          docker compose build backend frontend
           docker compose run --rm backend uv run alembic upgrade head
-          docker compose up -d --build backend frontend
+          docker compose up -d backend frontend
         env:
           APP_ENV: test
           POSTGRES_DB: ai_purchase_workflow
