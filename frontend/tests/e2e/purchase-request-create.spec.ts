@@ -9,8 +9,10 @@ test("create request runs the workflow and can be approved from the browser", as
 
   await expect(page.getByRole("heading", { name: "Your request has been submitted" })).toBeVisible();
   await page.getByRole("button", { name: "View Requests" }).click();
-  await expect(page.getByText("Waiting for approval").first()).toBeVisible();
-  await page.getByText("Laptop stand").first().click();
+
+  const requestRow = page.locator("tr.clickable-request").filter({ hasText: "Laptop stand" });
+  await expect(requestRow).toContainText("Pending Approval");
+  await requestRow.click();
 
   await expect(page.getByText("Waiting for approval")).toBeVisible();
   await page.getByRole("button", { name: /Approve/ }).click();
