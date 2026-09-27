@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ai_purchase_workflow.application.purchase_requests import (
     CreatePurchaseRequest,
     GetPurchaseRequest,
+    GetPurchaseRequestDetail,
     ListPurchaseRequests,
     PreparePurchaseRequest,
     SubmitPurchaseRequest,
@@ -69,6 +70,10 @@ def get_create_purchase_request(session: SessionDependency) -> CreatePurchaseReq
 
 def get_purchase_request(session: SessionDependency) -> GetPurchaseRequest:
     return GetPurchaseRequest(SqlAlchemyPurchaseRequestRepository(session))
+
+
+def get_purchase_request_detail(session: SessionDependency) -> GetPurchaseRequestDetail:
+    return GetPurchaseRequestDetail(SqlAlchemyPurchaseRequestRepository(session))
 
 
 def get_list_purchase_requests(session: SessionDependency) -> ListPurchaseRequests:

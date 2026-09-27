@@ -13,7 +13,7 @@ const page = { total: 1, limit: 7, offset: 0, items: [item] };
 describe("RequestDashboard", () => {
   it("loads, filters, sorts, searches, and paginates purchase requests", async () => {
     const list = vi.fn().mockResolvedValue({ ...page, total: 8 });
-    render(<RequestDashboard api={{ list }} onNewRequest={vi.fn()} />);
+    render(<RequestDashboard api={{ list }} onNewRequest={vi.fn()} onOpenRequest={vi.fn()} />);
     expect(screen.getByLabelText("Loading purchase requests")).toBeInTheDocument();
     await waitFor(() => expect(screen.getAllByText("Laptop stand")).toHaveLength(2));
 
@@ -36,7 +36,7 @@ describe("RequestDashboard", () => {
   it("shows empty and error states with actionable controls", async () => {
     const emptyApi: PurchaseRequestApi = { list: vi.fn().mockResolvedValue({ ...page, total: 0, items: [] }) };
     const onNewRequest = vi.fn();
-    const { unmount } = render(<RequestDashboard api={emptyApi} onNewRequest={onNewRequest} />);
+    const { unmount } = render(<RequestDashboard api={emptyApi} onNewRequest={onNewRequest} onOpenRequest={vi.fn()} />);
     const emptyHeading = await screen.findByText("No purchase requests yet");
     const emptyState = emptyHeading.closest(".state-panel");
     expect(emptyState).not.toBeNull();
@@ -45,7 +45,7 @@ describe("RequestDashboard", () => {
     unmount();
 
     const failingApi: PurchaseRequestApi = { list: vi.fn().mockRejectedValue(new Error("offline")) };
-    render(<RequestDashboard api={failingApi} onNewRequest={vi.fn()} />);
+    render(<RequestDashboard api={failingApi} onNewRequest={vi.fn()} onOpenRequest={vi.fn()} />);
     expect(await screen.findByText("Unable to load purchase requests")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Try Again/ }));
     await waitFor(() => expect(failingApi.list).toHaveBeenCalledTimes(2));

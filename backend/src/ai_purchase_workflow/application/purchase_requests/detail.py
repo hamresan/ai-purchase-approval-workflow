@@ -58,7 +58,16 @@ class PurchaseRequestDetailView:
         return cls(
             id=request.id,
             requester_name=request.requester_name,
-            items=tuple(PurchaseItemView.from_domain(item) for item in request.items),
+            items=tuple(
+                PurchaseItemView(
+                    description=item.description,
+                    quantity=item.quantity,
+                    unit_price_amount=item.unit_price.amount,
+                    currency=item.unit_price.currency,
+                    vendor=item.vendor,
+                )
+                for item in request.items
+            ),
             status=request.status,
             created_at=request.created_at,
             updated_at=request.updated_at,
@@ -67,7 +76,16 @@ class PurchaseRequestDetailView:
             if draft is None
             else DraftOrderView(
                 id=draft.id,
-                items=tuple(PurchaseItemView.from_domain(item) for item in draft.items),
+                items=tuple(
+                    PurchaseItemView(
+                        description=item.description,
+                        quantity=item.quantity,
+                        unit_price_amount=item.unit_price.amount,
+                        currency=item.unit_price.currency,
+                        vendor=item.vendor,
+                    )
+                    for item in draft.items
+                ),
                 total_amount=draft.total.amount,
                 currency=draft.total.currency,
                 created_at=draft.created_at,
