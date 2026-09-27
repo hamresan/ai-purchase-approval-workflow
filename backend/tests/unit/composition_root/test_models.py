@@ -18,23 +18,21 @@ def test_factory_builds_fake_provider_by_default() -> None:
 
 
 @pytest.mark.parametrize(
-    ("provider", "api_key_name", "api_key_value"),
+    "settings",
     [
-        (ModelProvider.OPENAI, "openai_api_key", "openai-key"),
-        (ModelProvider.OPENROUTER, "openrouter_api_key", "router-key"),
+        Settings(
+            workflow_model_provider=ModelProvider.OPENAI,
+            workflow_model_name="provider-model",
+            openai_api_key="openai-key",
+        ),
+        Settings(
+            workflow_model_provider=ModelProvider.OPENROUTER,
+            workflow_model_name="provider-model",
+            openrouter_api_key="router-key",
+        ),
     ],
 )
-def test_factory_builds_external_openai_compatible_provider(
-    provider: ModelProvider,
-    api_key_name: str,
-    api_key_value: str,
-) -> None:
-    settings = Settings(
-        workflow_model_provider=provider,
-        workflow_model_name="provider-model",
-        **{api_key_name: api_key_value},
-    )
-
+def test_factory_builds_external_openai_compatible_provider(settings: Settings) -> None:
     model = build_purchase_request_model(settings)
 
     assert isinstance(model, OpenAICompatiblePurchaseRequestModel)
