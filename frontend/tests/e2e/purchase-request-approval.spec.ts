@@ -1,6 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";\n\nimport { seedPendingRequest } from "./support/pendingRequestSeed";
+import { expect, test, type Page } from "@playwright/test";
 
-const backendUrl = process.env.E2E_BACKEND_URL ?? "http://127.0.0.1:8000";
+import { seedPendingRequest } from "./support/pendingRequestSeed";
 
 async function createPendingRequest(request: APIRequestContext): Promise<string> {
   const created = await request.post(`${backendUrl}/api/purchase-requests`, {
