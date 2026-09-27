@@ -5,15 +5,20 @@ import { resolve } from "node:path";
 function testDatabaseUrl(): string {
   if (process.env.TEST_DATABASE_URL) return process.env.TEST_DATABASE_URL;
   const envFile = readFileSync(resolve(process.cwd(), "../.env"), "utf8");
-  const line = envFile.split(/\\r?\\n/).find((entry) => entry.startsWith("TEST_DATABASE_URL="));
+  const line = envFile.split(/\r?\n/).find((entry) => entry.startsWith("TEST_DATABASE_URL="));
   if (!line) throw new Error("TEST_DATABASE_URL must be configured for E2E tests.");
   return line.slice("TEST_DATABASE_URL=".length).trim();
 }
 
 export function seedPendingRequest(): string {
-  return execFileSync(
+  const environment = { ...process.env, TEST_DATABASE_URL: testDatabaseUrl() };
+  delete environment.VIRTUAL_ENV;
+
+  const output = execFileSync(
     "uv",
     ["run", "--directory", "../backend", "python", "tests/e2e/support/seed_pending_request.py"],
-    { encoding: "utf8", env: { ...process.env, TEST_DATABASE_URL: testDatabaseUrl() } },
-  ).trim().split(/\\r?\\n/).at(-1) ?? "";
+    { encoding: "utf8", env: environment },
+  );
+
+  return output.trim().split(/\r?\n/).at(-1) ?? "";
 }
