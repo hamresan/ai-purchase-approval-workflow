@@ -6,6 +6,11 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   plugins: [react()],
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
+  server: {
+    proxy: {
+      "/api": { target: process.env.VITE_BACKEND_URL ?? "http://127.0.0.1:8000" },
+    },
+  },
   test: {
     globals: true,
     environment: "jsdom",
