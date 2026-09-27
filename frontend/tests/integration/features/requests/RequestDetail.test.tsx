@@ -26,7 +26,7 @@ const api: PurchaseRequestApi = {
 
 describe("RequestDetail", () => {
   it("renders trusted request detail with non-technical timeline language", async () => {
-    render(<RequestDetail api={api} requestId={detail.id} onBack={vi.fn()} />);
+    render(<RequestDetail api={api} approvalApi={{ decide: vi.fn() }} requestId={detail.id} onBack={vi.fn()} />);
     expect(screen.getByLabelText("Loading request details")).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Laptop stand" })).toBeInTheDocument();
     expect(screen.getByText("Within budget")).toBeInTheDocument();
@@ -37,7 +37,7 @@ describe("RequestDetail", () => {
 
   it("retries after a safe loading error", async () => {
     const get = vi.fn().mockRejectedValueOnce(new Error("database secret")).mockResolvedValueOnce(detail);
-    render(<RequestDetail api={{ list: vi.fn(), get }} requestId={detail.id} onBack={vi.fn()} />);
+    render(<RequestDetail api={{ list: vi.fn(), get }} approvalApi={{ decide: vi.fn() }} requestId={detail.id} onBack={vi.fn()} />);
     expect(await screen.findByText("Unable to load this request")).toBeInTheDocument();
     expect(screen.queryByText("database secret")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Try Again/ }));
