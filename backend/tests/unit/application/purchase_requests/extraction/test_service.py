@@ -1,4 +1,5 @@
 import pytest
+from tests.application.purchase_requests.fakes.model import UnavailablePurchaseRequestModel
 from tests.application.purchase_requests.fakes.prompt import FakePromptTemplateReader
 
 from ai_purchase_workflow.application.purchase_requests.extraction import (
@@ -69,3 +70,19 @@ async def test_execute_falls_back_to_human_review(content: object, reason: str) 
     assert outcome.extracted_request is None
     assert outcome.needs_human_review is True
     assert reason in (outcome.review_reason or "")
+
+
+@pytest.mark.asyncio
+async def test_execute_routes_provider_failure_to_human_review() -> None:
+    extractor = ExtractPurchaseRequest(
+        model=UnavailablePurchaseRequestModel(),
+        prompt_builder=PurchaseRequestPromptBuilder(FakePromptTemplateReader()),
+        mapper=StructuredOutputMapper(),
+        validator=ExtractedRequestValidator(),
+    )
+
+    outcome = await extractor.execute("Dana needs a laptop stand")
+
+    assert outcome.extracted_request is None
+    assert outcome.needs_human_review is True
+    assert outcome.review_reason == "Model provider is temporarily unavailable."
