@@ -17,14 +17,6 @@ def upgrade() -> None:
         "purchase_requests",
         sa.Column("requester_user_id", postgresql.UUID(as_uuid=True), nullable=True),
     )
-    op.create_foreign_key(
-        "fk_purchase_requests_requester_user_id",
-        "purchase_requests",
-        "identity_users",
-        ["requester_user_id"],
-        ["id"],
-        ondelete="RESTRICT",
-    )
     op.create_index(
         "ix_purchase_requests_requester_user_id",
         "purchase_requests",
@@ -34,9 +26,4 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_index("ix_purchase_requests_requester_user_id", table_name="purchase_requests")
-    op.drop_constraint(
-        "fk_purchase_requests_requester_user_id",
-        "purchase_requests",
-        type_="foreignkey",
-    )
     op.drop_column("purchase_requests", "requester_user_id")
