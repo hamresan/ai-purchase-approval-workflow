@@ -5,6 +5,7 @@ from fastapi import FastAPI
 
 from ai_purchase_workflow.composition_root.identity import build_identity_module
 from ai_purchase_workflow.composition_root.settings import Settings, get_settings
+from ai_purchase_workflow.infrastructure.notifications import InMemoryNotificationQueue
 from ai_purchase_workflow.infrastructure.persistence import create_session_factory
 from ai_purchase_workflow.infrastructure.workflows import postgres_checkpointer
 from ai_purchase_workflow.presentation.observability import register_http_observability
@@ -15,10 +16,18 @@ from ai_purchase_workflow.presentation.purchase_requests.error_handlers import (
 from ai_purchase_workflow.presentation.routes import health_router
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    *,
+    notification_queue: InMemoryNotificationQueue | None = None,
+) -> FastAPI:
     resolved_settings = settings or get_settings()
     session_factory = create_session_factory(resolved_settings.database_url)
-    identity = build_identity_module(resolved_settings, session_factory)
+    identity = build_identity_module(
+        resolved_settings,
+        session_factory,
+        notification_queue=notification_queue,
+    )
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
