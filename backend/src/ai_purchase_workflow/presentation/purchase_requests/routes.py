@@ -17,6 +17,7 @@ from ai_purchase_workflow.application.purchase_requests import (
     SubmitPurchaseRequest,
 )
 from ai_purchase_workflow.domain.purchase_requests import RequestStatus
+from ai_purchase_workflow.presentation.auth import CurrentPrincipalDependency
 from ai_purchase_workflow.presentation.purchase_requests.approval_dispatcher import (
     ApprovalActionDispatcher,
 )
