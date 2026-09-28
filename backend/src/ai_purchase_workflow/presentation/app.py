@@ -1,9 +1,8 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from uuid import UUID
 
 from fastapi import FastAPI
-
-from uuid import UUID
 
 from ai_purchase_workflow.application.access import ApplicationPrincipal, ApplicationRole
 from ai_purchase_workflow.composition_root.identity import build_identity_module
