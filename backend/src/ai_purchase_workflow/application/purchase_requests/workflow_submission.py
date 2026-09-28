@@ -3,6 +3,7 @@ from typing import Protocol
 from uuid import UUID
 
 from ai_purchase_workflow.application.purchase_requests.dto import PurchaseRequestView
+from ai_purchase_workflow.application.purchase_requests.repository import PurchaseRequestRepository
 from ai_purchase_workflow.application.purchase_requests.use_cases import GetPurchaseRequest
 
 
@@ -24,6 +25,7 @@ class PurchaseRequestWorkflowReviewRequiredError(Exception):
 class SubmitFreeTextPurchaseRequestCommand:
     request_text: str
     requester_name: str | None = None
+    requester_user_id: UUID | None = None
 
 
 class SubmitFreeTextPurchaseRequest:
@@ -31,9 +33,11 @@ class SubmitFreeTextPurchaseRequest:
         self,
         workflow: PurchaseRequestWorkflowStarter,
         get_purchase_request: GetPurchaseRequest,
+        repository: PurchaseRequestRepository,
     ) -> None:
         self._workflow = workflow
         self._get_purchase_request = get_purchase_request
+        self._repository = repository
 
     async def execute(
         self,
@@ -49,4 +53,9 @@ class SubmitFreeTextPurchaseRequest:
             raise PurchaseRequestWorkflowReviewRequiredError(
                 result.review_reason or fallback_detail
             )
+        request = await self._repository.get(result.purchase_request_id)
+        if request is not None:
+            request.requester_name = command.requester_name
+            request.requester_user_id = command.requester_user_id
+            await self._repository.save(request)
         return await self._get_purchase_request.execute(result.purchase_request_id)
