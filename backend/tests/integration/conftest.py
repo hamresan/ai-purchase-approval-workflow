@@ -36,6 +36,24 @@ TEST_APPROVER_ID = UUID("22222222-2222-2222-2222-222222222222")
 TEST_SESSION_ID = UUID("33333333-3333-3333-3333-333333333333")
 
 
+async def requester_principal() -> ApplicationPrincipal:
+    return ApplicationPrincipal(
+        user_id=TEST_REQUESTER_ID,
+        session_id=TEST_SESSION_ID,
+        display_name="Dana",
+        roles=frozenset({ApplicationRole.REQUESTER}),
+    )
+
+
+async def approver_principal() -> ApplicationPrincipal:
+    return ApplicationPrincipal(
+        user_id=TEST_APPROVER_ID,
+        session_id=TEST_SESSION_ID,
+        display_name="Manager",
+        roles=frozenset({ApplicationRole.APPROVER}),
+    )
+
+
 
 @pytest.fixture(scope="session", autouse=True)
 def migrate_database() -> None:
