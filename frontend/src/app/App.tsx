@@ -16,9 +16,10 @@ import "@/app/styles.css";
 export function App() {
   const sessionStore = useMemo(() => new BrowserAuthSessionStore(), []);
   const [session, setSession] = useState<AuthSession | null>(() => sessionStore.load());
+  const e2eMode = import.meta.env.VITE_E2E_AUTH_BYPASS === "true";
   const [route, setRoute] = useState<AppRoute>(() => routeFromPath(window.location.pathname));
   const [requestId, setRequestId] = useState<string | null>(() => requestIdFromPath(window.location.pathname));
-  const http = useMemo(() => new AuthorizedHttpClient({ getAccessToken: () => session?.accessToken ?? null }), [session]);
+  const http = useMemo(() => e2eMode ? { fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, init) } : new AuthorizedHttpClient({ getAccessToken: () => session?.accessToken ?? null }), [e2eMode, session]);
   const requestApi = useMemo(() => new HttpPurchaseRequestApi("", http), [http]);
   const submissionApi = useMemo(() => new HttpPurchaseRequestSubmissionApi("", http), [http]);
   const approvalApi = useMemo(() => new HttpPurchaseRequestApprovalApi("", http), [http]);
@@ -39,7 +40,7 @@ export function App() {
   const authenticated = (value: AuthSession) => { sessionStore.save(value); setSession(value); window.history.replaceState({}, "", "/requests"); setRoute("requests"); setRequestId(null); };
   const signOut = () => { sessionStore.clear(); setSession(null); };
 
-  if (!session) return <AuthScreen api={authApi} onAuthenticated={authenticated} />;
+  if (!session && !e2eMode) return <AuthScreen api={authApi} onAuthenticated={authenticated} />;
   return <AppShell route={route} onNavigate={navigate} onSignOut={signOut}>
     {route === "new-request" && <NewPurchaseRequest api={submissionApi} onBack={() => navigate("requests")} />}
     {route === "request-detail" && requestId && <RequestDetail api={requestApi} approvalApi={approvalApi} requestId={requestId} onBack={() => navigate("requests")} />}
