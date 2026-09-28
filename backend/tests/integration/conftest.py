@@ -5,6 +5,7 @@ from collections.abc import AsyncIterator
 import pytest
 from alembic import command
 from alembic.config import Config
+from fastapi import Request
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -97,6 +98,7 @@ async def api_client(
 ) -> AsyncIterator[AsyncClient]:
     app = create_app(Settings(database_url=TEST_DATABASE_URL))
     app.state.session_factory = session_factory
+    app.dependency_overrides[get_current_principal] = requester_principal
     async with (
         app.router.lifespan_context(app),
         AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client,
@@ -122,6 +124,13 @@ async def approval_api_client(
             )
 
     app.dependency_overrides[get_approval_dispatcher] = override_approval_dispatcher
+
+    async def request_aware_principal(request: Request) -> ApplicationPrincipal:
+        if request.url.path.endswith("/approval"):
+            return await approver_principal()
+        return await requester_principal()
+
+    app.dependency_overrides[get_current_principal] = request_aware_principal
     async with (
         app.router.lifespan_context(app),
         AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client,
