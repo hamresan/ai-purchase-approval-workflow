@@ -35,9 +35,7 @@ def build_identity_module(
             yield session
 
     resolved_notification_queue = (
-        notification_queue
-        if notification_queue is not None
-        else InMemoryNotificationQueue()
+        notification_queue if notification_queue is not None else InMemoryNotificationQueue()
     )
     notification = NotificationModule(
         NotificationModuleConfig(

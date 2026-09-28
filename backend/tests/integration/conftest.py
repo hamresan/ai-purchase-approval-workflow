@@ -148,6 +148,3 @@ async def unauthenticated_api_client(
         AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client,
     ):
         yield client
-
-
-
