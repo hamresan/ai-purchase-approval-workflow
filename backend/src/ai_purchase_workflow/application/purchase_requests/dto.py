@@ -28,6 +28,7 @@ class PurchaseRequestListQuery:
     limit: int = 20
     offset: int = 0
     descending: bool = True
+    requester_user_id: UUID | None = None
 
 
 @dataclass(frozen=True, slots=True)
