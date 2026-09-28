@@ -501,7 +501,7 @@ wheels = [
 [[package]]
 name = "hamresan-identity"
 version = "0.2.1"
-source = { git = "https://github.com/hamresan/shared-packages.git?subdirectory=identity&rev=main#e896eb9618f2ea441f661b8a04e6aec5db284e46" }
+source = { git = "https://github.com/hamresan/shared-packages.git?subdirectory=identity&rev=main#eb5496f834dcc5ed40359dd5b2fb9e956e6de90c" }
 dependencies = [
     { name = "fastapi" },
     { name = "hamresan-notification" },
@@ -518,7 +518,7 @@ migrations = [
 [[package]]
 name = "hamresan-notification"
 version = "0.1.0"
-source = { git = "https://github.com/hamresan/shared-packages.git?subdirectory=notification&rev=main#e896eb9618f2ea441f661b8a04e6aec5db284e46" }
+source = { git = "https://github.com/hamresan/shared-packages.git?subdirectory=notification&rev=main#eb5496f834dcc5ed40359dd5b2fb9e956e6de90c" }
 dependencies = [
     { name = "httpx" },
     { name = "jinja2" },
