@@ -33,7 +33,7 @@ class SubmitFreeTextPurchaseRequest:
         self,
         workflow: PurchaseRequestWorkflowStarter,
         get_purchase_request: GetPurchaseRequest,
-        repository: PurchaseRequestRepository,
+        repository: PurchaseRequestRepository | None = None,
     ) -> None:
         self._workflow = workflow
         self._get_purchase_request = get_purchase_request
@@ -53,8 +53,12 @@ class SubmitFreeTextPurchaseRequest:
             raise PurchaseRequestWorkflowReviewRequiredError(
                 result.review_reason or fallback_detail
             )
-        request = await self._repository.get(result.purchase_request_id)
-        if request is not None:
+        request = (
+            None
+            if self._repository is None
+            else await self._repository.get(result.purchase_request_id)
+        )
+        if request is not None and self._repository is not None:
             request.requester_name = command.requester_name
             request.requester_user_id = command.requester_user_id
             await self._repository.save(request)
