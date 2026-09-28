@@ -45,7 +45,7 @@ def create_app(
         app.state.e2e_principal = ApplicationPrincipal(
             user_id=UUID("11111111-1111-1111-1111-111111111111"),
             session_id=UUID("33333333-3333-3333-3333-333333333333"),
-            display_name="E2E User",
+            display_name="Dana",
             roles=frozenset({ApplicationRole.REQUESTER, ApplicationRole.APPROVER}),
         )
     register_http_observability(app)
