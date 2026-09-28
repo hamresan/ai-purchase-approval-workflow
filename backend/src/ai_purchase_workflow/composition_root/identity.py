@@ -11,7 +11,7 @@ from identity.access_tokens import (
     SqlAlchemyUserReader,
     UserStatusPolicy,
 )
-from identity.infrastructure.security.system_clock import SystemClock
+from identity.infrastructure.security import SystemClock
 from notification import NotificationModule, NotificationModuleConfig
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
