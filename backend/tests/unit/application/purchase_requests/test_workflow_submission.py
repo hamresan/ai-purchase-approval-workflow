@@ -1,5 +1,5 @@
 from decimal import Decimal
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from tests.application.purchase_requests.fakes.idempotency import (
@@ -45,6 +45,7 @@ async def test_submit_free_text_builds_context_and_returns_persisted_request() -
         SubmitFreeTextPurchaseRequestCommand(
             request_text="I need one laptop stand",
             requester_name="Dana",
+            requester_user_id=UUID("11111111-1111-1111-1111-111111111111"),
         )
     )
 
