@@ -26,6 +26,8 @@ from ai_purchase_workflow.infrastructure.notifications import (
 def build_identity_module(
     settings: Settings,
     session_factory: async_sessionmaker[AsyncSession],
+    *,
+    notification_queue: InMemoryNotificationQueue | None = None,
 ) -> IdentityModule:
     @asynccontextmanager
     async def identity_session_factory() -> AsyncGenerator[AsyncSession]:
@@ -34,7 +36,7 @@ def build_identity_module(
 
     notification = NotificationModule(
         NotificationModuleConfig(
-            queue=InMemoryNotificationQueue(),
+            queue=notification_queue or InMemoryNotificationQueue(),
             renderer=UnusedNotificationTemplateRenderer(),
             provider_resolver=UnusedNotificationProviderResolver(),
         )
