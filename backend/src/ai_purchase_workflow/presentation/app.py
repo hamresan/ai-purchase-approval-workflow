@@ -46,7 +46,7 @@ def create_app(
             user_id=UUID("22222222-2222-2222-2222-222222222222"),
             session_id=UUID("33333333-3333-3333-3333-333333333333"),
             display_name="Dana",
-            roles=frozenset({ApplicationRole.REQUESTER, ApplicationRole.APPROVER}),
+            roles=frozenset({ApplicationRole.ADMIN}),
         )
     register_http_observability(app)
     register_purchase_request_error_handlers(app)
