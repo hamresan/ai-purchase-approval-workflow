@@ -118,7 +118,7 @@ async def test_workflow_pauses_before_submission_and_binds_thread() -> None:
         }
     )
 
-    result = await runner.execute("Dana needs two laptop stands", checkpoint_id="thread-1")
+    result = await runner.execute(\n        "Dana needs two laptop stands", requester_name="Dana", checkpoint_id="thread-1"\n    )
 
     assert result.checkpoint_id == "thread-1"
     assert result.status == "pending_approval"
@@ -147,7 +147,7 @@ async def test_workflow_resumes_approved_request_and_submits_once() -> None:
             "items": [{"description": "Laptop stand", "quantity": 1}],
         }
     )
-    result = await runner.execute("Dana needs a laptop stand", checkpoint_id="thread-approved")
+    result = await runner.execute(\n        "Dana needs a laptop stand", requester_name="Dana", checkpoint_id="thread-approved"\n    )
     assert result.purchase_request_id is not None
     request = repository.requests[result.purchase_request_id]
     request.approval_decision = ApprovalDecision.create(
@@ -174,7 +174,7 @@ async def test_workflow_resumes_rejected_request_without_submitting() -> None:
             "items": [{"description": "Laptop stand", "quantity": 1}],
         }
     )
-    result = await runner.execute("Dana needs a laptop stand", checkpoint_id="thread-rejected")
+    result = await runner.execute(\n        "Dana needs a laptop stand", requester_name="Dana", checkpoint_id="thread-rejected"\n    )
     assert result.purchase_request_id is not None
     request = repository.requests[result.purchase_request_id]
     request.approval_decision = ApprovalDecision.create(
@@ -230,7 +230,7 @@ async def test_workflow_routes_tool_failure_to_human_review() -> None:
         }
     )
 
-    result = await runner.execute("Dana needs an unknown item")
+    result = await runner.execute("Dana needs an unknown item", requester_name="Dana")
 
     assert result.status == "human_review"
     assert result.needs_human_review is True
@@ -251,7 +251,7 @@ async def test_workflow_persists_over_budget_request_as_business_failure() -> No
         budget=FakeBudgetReader("10.00"),
     )
 
-    result = await runner.execute("Dana needs two laptop stands")
+    result = await runner.execute("Dana needs two laptop stands", requester_name="Dana")
 
     assert result.status == "failed"
     assert result.needs_human_review is False
