@@ -167,7 +167,11 @@ async def list_purchase_requests(
 async def prepare_purchase_request(
     request_id: UUID,
     use_case: PreparePurchaseRequestDependency,
+    detail_use_case: GetPurchaseRequestDetailDependency,
+    principal: CurrentPrincipalDependency,
 ) -> PurchaseRequestResponse:
+    detail = await detail_use_case.execute(request_id)
+    AuthorizationPolicy().require_request_owner(principal, detail.requester_user_id)
     view = await use_case.execute(request_id)
     return PurchaseRequestResponse.from_view(view)
 
@@ -176,7 +180,11 @@ async def prepare_purchase_request(
 async def submit_purchase_request(
     request_id: UUID,
     use_case: SubmitPurchaseRequestDependency,
+    detail_use_case: GetPurchaseRequestDetailDependency,
+    principal: CurrentPrincipalDependency,
 ) -> PurchaseRequestResponse:
+    detail = await detail_use_case.execute(request_id)
+    AuthorizationPolicy().require_request_owner(principal, detail.requester_user_id)
     view = await use_case.execute(request_id)
     return PurchaseRequestResponse.from_view(view)
 
