@@ -43,7 +43,7 @@ def create_app(
     app.state.identity = identity
     if resolved_settings.app_env == "test":
         app.state.e2e_principal = ApplicationPrincipal(
-            user_id=UUID("11111111-1111-1111-1111-111111111111"),
+            user_id=UUID("22222222-2222-2222-2222-222222222222"),
             session_id=UUID("33333333-3333-3333-3333-333333333333"),
             display_name="Dana",
             roles=frozenset({ApplicationRole.REQUESTER, ApplicationRole.APPROVER}),
