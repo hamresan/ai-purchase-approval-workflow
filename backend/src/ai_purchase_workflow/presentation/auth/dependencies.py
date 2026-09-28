@@ -19,11 +19,11 @@ async def get_current_principal(
     session: SessionDependency,
     credentials: BearerCredentials,
 ) -> ApplicationPrincipal:
+    if request.app.state.settings.app_env == "test":
+        test_principal = getattr(request.app.state, "e2e_principal", None)
+        if test_principal is not None:
+            return test_principal
     if credentials is None:
-        if request.app.state.settings.app_env == "test":
-            test_principal = getattr(request.app.state, "e2e_principal", None)
-            if test_principal is not None:
-                return test_principal
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not authenticated")
     try:
         identity_principal = (
