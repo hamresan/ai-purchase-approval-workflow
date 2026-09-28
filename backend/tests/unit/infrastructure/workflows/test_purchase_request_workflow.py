@@ -267,3 +267,26 @@ async def test_workflow_persists_over_budget_request_as_business_failure() -> No
     assert request.draft_order is not None
     assert request.draft_order.total.amount == Decimal("50.00")
     assert request.audit_entries[-1].event_type == "budget_rejected"
+
+
+@pytest.mark.asyncio
+async def test_workflow_uses_authenticated_requester_for_budget_not_model_requester() -> None:
+    budget = FakeBudgetReader()
+    runner, _workflow, repository, _threads, _gateway = build_workflow(
+        {
+            "schema_version": "1.0",
+            "requester_name": "Spoofed User",
+            "items": [{"description": "Laptop stand", "quantity": 1}],
+        },
+        budget=budget,
+    )
+
+    result = await runner.execute(
+        "Please buy one laptop stand",
+        requester_name="Dana",
+    )
+
+    assert result.purchase_request_id is not None
+    request = repository.requests[result.purchase_request_id]
+    assert request.requester_name == "Dana"
+    assert budget.requester_names == ["Dana"]
