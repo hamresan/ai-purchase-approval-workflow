@@ -3,6 +3,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from uuid import UUID
+
+from ai_purchase_workflow.application.access import ApplicationPrincipal, ApplicationRole
 from ai_purchase_workflow.composition_root.identity import build_identity_module
 from ai_purchase_workflow.composition_root.settings import Settings, get_settings
 from ai_purchase_workflow.infrastructure.notifications import InMemoryNotificationQueue
@@ -39,6 +42,13 @@ def create_app(
     app.state.settings = resolved_settings
     app.state.session_factory = session_factory
     app.state.identity = identity
+    if resolved_settings.app_env == "test":
+        app.state.e2e_principal = ApplicationPrincipal(
+            user_id=UUID("11111111-1111-1111-1111-111111111111"),
+            session_id=UUID("33333333-3333-3333-3333-333333333333"),
+            display_name="E2E User",
+            roles=frozenset({ApplicationRole.REQUESTER, ApplicationRole.APPROVER}),
+        )
     register_http_observability(app)
     register_purchase_request_error_handlers(app)
     identity.fastapi.install(app)
