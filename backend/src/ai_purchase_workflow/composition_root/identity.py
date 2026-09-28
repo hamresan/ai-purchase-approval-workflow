@@ -1,6 +1,7 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import timedelta
+from uuid import UUID
 
 from identity import IdentityModule, IdentityModuleConfig
 from identity.access_tokens import (
@@ -15,6 +16,7 @@ from identity.infrastructure.security import SystemClock
 from notification import NotificationModule, NotificationModuleConfig
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from ai_purchase_workflow.application.access import ApplicationRole
 from ai_purchase_workflow.composition_root.settings import Settings
 from ai_purchase_workflow.infrastructure.access import SqlAlchemyRoleWriter
 from ai_purchase_workflow.infrastructure.notifications import (
@@ -72,18 +74,32 @@ def build_identity_module(
         )
     )
 
-    original_verifier = identity.otp_verifier
-
     class SessionScopedRoleWriter:
-        async def ensure_role(self, user_id, role) -> None:
+        async def ensure_role(self, user_id: UUID, role: ApplicationRole) -> None:
             async with session_factory() as session:
                 await SqlAlchemyRoleWriter(session).ensure_role(user_id, role)
 
     provisioner = RegistrationRoleProvisioningOtpVerifier(
-        verifier=original_verifier,
+        verifier=identity.otp_verifier,
         role_writer=SessionScopedRoleWriter(),
     )
-    identity.otp_verifier = provisioner
-    identity.public_api.otp_verifier = provisioner
-    identity.fastapi.otp_verifier = provisioner
+    identity.public_api = type(identity.public_api)(
+        access_token_authenticator=identity.public_api.access_token_authenticator,
+        external_identity_authenticator=identity.public_api.external_identity_authenticator,
+        otp_requester=identity.public_api.otp_requester,
+        otp_verifier=provisioner,
+        session_refresher=identity.public_api.session_refresher,
+        session_revoker=identity.public_api.session_revoker,
+        session_bulk_revoker=identity.public_api.session_bulk_revoker,
+        data_retention_cleaner=identity.public_api.data_retention_cleaner,
+    )
+    identity.fastapi = type(identity.fastapi)(
+        access_token_authenticator=identity.fastapi.access_token_authenticator,
+        otp_requester=identity.fastapi.otp_requester,
+        otp_verifier=provisioner,
+        session_refresher=identity.fastapi.session_refresher,
+        session_revoker=identity.fastapi.session_revoker,
+        session_bulk_revoker=identity.fastapi.session_bulk_revoker,
+        request_metadata_resolver=identity.fastapi.request_metadata_resolver,
+    )
     return identity
