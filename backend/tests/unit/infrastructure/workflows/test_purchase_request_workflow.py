@@ -241,7 +241,7 @@ async def test_workflow_routes_tool_failure_to_human_review() -> None:
 
 
 @pytest.mark.asyncio
-async def test_workflow_does_not_persist_request_when_budget_check_fails() -> None:
+async def test_workflow_persists_over_budget_request_as_business_failure() -> None:
     runner, _workflow, repository, _threads, _gateway = build_workflow(
         {
             "schema_version": "1.0",
@@ -253,8 +253,17 @@ async def test_workflow_does_not_persist_request_when_budget_check_fails() -> No
 
     result = await runner.execute("Dana needs two laptop stands")
 
-    assert result.status == "human_review"
-    assert result.needs_human_review is True
-    assert result.purchase_request_id is None
-    assert result.tool_results == ("prepare_failed",)
-    assert repository.requests == {}
+    assert result.status == "failed"
+    assert result.needs_human_review is False
+    assert result.purchase_request_id is not None
+    assert result.review_reason == "Purchase request exceeds the available budget."
+    assert result.tool_results == (
+        "trusted_data_resolved",
+        "draft_order_created",
+        "budget_rejected",
+    )
+    request = repository.requests[result.purchase_request_id]
+    assert request.status is RequestStatus.FAILED
+    assert request.draft_order is not None
+    assert request.draft_order.total.amount == Decimal("50.00")
+    assert request.audit_entries[-1].event_type == "budget_rejected"
