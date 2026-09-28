@@ -12,17 +12,21 @@ from ai_purchase_workflow.presentation.purchase_requests.schemas import Approval
 
 
 class ApprovalActionHandler(Protocol):
-    async def execute(self, request_id: UUID, body: ApprovalBody) -> PurchaseRequestView: ...
+    async def execute(
+        self, request_id: UUID, body: ApprovalBody, decided_by: str
+    ) -> PurchaseRequestView: ...
 
 
 class ApproveActionHandler(ApprovalActionHandler):
     def __init__(self, use_case: ApprovePurchaseRequest) -> None:
         self._use_case = use_case
 
-    async def execute(self, request_id: UUID, body: ApprovalBody) -> PurchaseRequestView:
+    async def execute(
+        self, request_id: UUID, body: ApprovalBody, decided_by: str
+    ) -> PurchaseRequestView:
         return await self._use_case.execute(
             request_id,
-            decided_by=body.decided_by,
+            decided_by=decided_by,
             reason=body.reason,
         )
 
@@ -31,10 +35,12 @@ class RejectActionHandler(ApprovalActionHandler):
     def __init__(self, use_case: RejectPurchaseRequest) -> None:
         self._use_case = use_case
 
-    async def execute(self, request_id: UUID, body: ApprovalBody) -> PurchaseRequestView:
+    async def execute(
+        self, request_id: UUID, body: ApprovalBody, decided_by: str
+    ) -> PurchaseRequestView:
         return await self._use_case.execute(
             request_id,
-            decided_by=body.decided_by,
+            decided_by=decided_by,
             reason=body.reason,
         )
 
@@ -43,11 +49,13 @@ class EditActionHandler(ApprovalActionHandler):
     def __init__(self, use_case: EditPurchaseRequest) -> None:
         self._use_case = use_case
 
-    async def execute(self, request_id: UUID, body: ApprovalBody) -> PurchaseRequestView:
+    async def execute(
+        self, request_id: UUID, body: ApprovalBody, decided_by: str
+    ) -> PurchaseRequestView:
         return await self._use_case.execute(
             request_id,
             items=ApprovalCommandMapper.edit_items(body),
-            decided_by=body.decided_by,
+            decided_by=decided_by,
         )
 
 
@@ -64,5 +72,7 @@ class ApprovalActionDispatcher:
             "edit": edit,
         }
 
-    async def execute(self, request_id: UUID, body: ApprovalBody) -> PurchaseRequestView:
-        return await self._handlers[body.action].execute(request_id, body)
+    async def execute(
+        self, request_id: UUID, body: ApprovalBody, decided_by: str
+    ) -> PurchaseRequestView:
+        return await self._handlers[body.action].execute(request_id, body, decided_by)
