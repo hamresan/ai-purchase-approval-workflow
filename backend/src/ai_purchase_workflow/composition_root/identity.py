@@ -16,10 +16,14 @@ from notification import NotificationModule, NotificationModuleConfig
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from ai_purchase_workflow.composition_root.settings import Settings
+from ai_purchase_workflow.infrastructure.access import SqlAlchemyRoleWriter
 from ai_purchase_workflow.infrastructure.notifications import (
     InMemoryNotificationQueue,
     UnusedNotificationProviderResolver,
     UnusedNotificationTemplateRenderer,
+)
+from ai_purchase_workflow.presentation.auth.registration_role_provisioning import (
+    RegistrationRoleProvisioningOtpVerifier,
 )
 
 
@@ -58,7 +62,7 @@ def build_identity_module(
         user_status_policy=UserStatusPolicy(),
         clock=clock,
     )
-    return IdentityModule(
+    identity = IdentityModule(
         IdentityModuleConfig(
             session_factory=identity_session_factory,
             notification_sender=notification.sender,
@@ -67,3 +71,19 @@ def build_identity_module(
             signing_secret=settings.identity_signing_secret.encode(),
         )
     )
+
+    original_verifier = identity.otp_verifier
+
+    class SessionScopedRoleWriter:
+        async def ensure_role(self, user_id, role) -> None:
+            async with session_factory() as session:
+                await SqlAlchemyRoleWriter(session).ensure_role(user_id, role)
+
+    provisioner = RegistrationRoleProvisioningOtpVerifier(
+        verifier=original_verifier,
+        role_writer=SessionScopedRoleWriter(),
+    )
+    identity.otp_verifier = provisioner
+    identity.public_api.otp_verifier = provisioner
+    identity.fastapi.otp_verifier = provisioner
+    return identity
