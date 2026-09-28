@@ -11,7 +11,6 @@ async def create_pending_request(client: AsyncClient) -> UUID:
     created_response = await client.post(
         "/api/purchase-requests",
         json={
-            "requester_name": "Dana",
             "items": [
                 {
                     "description": "Laptop stand",
