@@ -77,6 +77,7 @@ class ListPurchaseRequests:
             limit=query.limit,
             offset=query.offset,
             descending=query.descending,
+            requester_user_id=query.requester_user_id,
         )
         return PurchaseRequestPage(
             items=tuple(PurchaseRequestView.from_domain(request) for request in page.items),
