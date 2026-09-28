@@ -12,22 +12,13 @@ const request: PurchaseRequestDetail = {
 };
 
 describe("ApprovalDialog", () => {
-  it("requires an explicit reviewer identity", () => {
-    const decide = vi.fn();
-    render(<ApprovalDialog action="approve" request={request} api={{ decide }} onClose={vi.fn()} onCompleted={vi.fn()} />);
-    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
-    expect(screen.getByRole("alert")).toHaveTextContent("Please enter your name.");
-    expect(decide).not.toHaveBeenCalled();
-  });
-
   it("approves with an optional comment", async () => {
     const decide = vi.fn().mockResolvedValue(request);
     const completed = vi.fn();
     render(<ApprovalDialog action="approve" request={request} api={{ decide }} onClose={vi.fn()} onCompleted={completed} />);
     fireEvent.change(screen.getByPlaceholderText("Add a comment..."), { target: { value: "Within policy" } });
-    fireEvent.change(screen.getByLabelText("Reviewer name"), { target: { value: "Dana Reviewer" } });
     fireEvent.click(screen.getByRole("button", { name: "Approve" }));
-    await waitFor(() => expect(decide).toHaveBeenCalledWith("request-1", expect.objectContaining({ action: "approve", reason: "Within policy", decidedBy: "Dana Reviewer" })));
+    await waitFor(() => expect(decide).toHaveBeenCalledWith("request-1", expect.objectContaining({ action: "approve", reason: "Within policy" })));
     expect(completed).toHaveBeenCalled();
   });
 
@@ -38,7 +29,6 @@ describe("ApprovalDialog", () => {
       () => new Promise<PurchaseRequestDetail>((resolve) => { resolveDecision = resolve; }),
     );
     render(<ApprovalDialog action="approve" request={request} api={{ decide }} onClose={vi.fn()} onCompleted={vi.fn()} />);
-    fireEvent.change(screen.getByLabelText("Reviewer name"), { target: { value: "Dana Reviewer" } });
     fireEvent.click(screen.getByRole("button", { name: "Approve" }));
     expect(screen.getByRole("button", { name: "Saving…" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
@@ -49,7 +39,6 @@ describe("ApprovalDialog", () => {
   it("requires a rejection reason before calling the API", async () => {
     const decide = vi.fn();
     render(<ApprovalDialog action="reject" request={request} api={{ decide }} onClose={vi.fn()} onCompleted={vi.fn()} />);
-    fireEvent.change(screen.getByLabelText("Reviewer name"), { target: { value: "Dana Reviewer" } });
     fireEvent.click(screen.getByRole("button", { name: "Reject" }));
     expect(screen.getByRole("alert")).toHaveTextContent("Please provide a reason");
     expect(decide).not.toHaveBeenCalled();
@@ -59,7 +48,6 @@ describe("ApprovalDialog", () => {
     const close = vi.fn();
     const decide = vi.fn().mockRejectedValue(new Error("Unable to update this request."));
     render(<ApprovalDialog action="approve" request={request} api={{ decide }} onClose={close} onCompleted={vi.fn()} />);
-    fireEvent.change(screen.getByLabelText("Reviewer name"), { target: { value: "Dana Reviewer" } });
     fireEvent.click(screen.getByRole("button", { name: "Approve" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Unable to update this request.");
     fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
@@ -70,7 +58,6 @@ describe("ApprovalDialog", () => {
     const decide = vi.fn();
     render(<ApprovalDialog action="edit" request={request} api={{ decide }} onClose={vi.fn()} onCompleted={vi.fn()} />);
     fireEvent.change(screen.getByLabelText("Item 1 description"), { target: { value: "   " } });
-    fireEvent.change(screen.getByLabelText("Reviewer name"), { target: { value: "Dana Reviewer" } });
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
     expect(screen.getByRole("alert")).toHaveTextContent("Each item needs a description");
     expect(decide).not.toHaveBeenCalled();
@@ -80,7 +67,6 @@ describe("ApprovalDialog", () => {
     const decide = vi.fn().mockResolvedValue(request);
     render(<ApprovalDialog action="edit" request={request} api={{ decide } as PurchaseRequestApprovalApi} onClose={vi.fn()} onCompleted={vi.fn()} />);
     fireEvent.change(screen.getByLabelText("Item 1 quantity"), { target: { value: "3" } });
-    fireEvent.change(screen.getByLabelText("Reviewer name"), { target: { value: "Dana Reviewer" } });
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
     await waitFor(() => expect(decide).toHaveBeenCalledWith("request-1", expect.objectContaining({
       action: "edit",
