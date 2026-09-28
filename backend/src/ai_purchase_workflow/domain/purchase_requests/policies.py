@@ -2,7 +2,10 @@ from decimal import Decimal
 
 from ai_purchase_workflow.domain.purchase_requests.entities import PurchaseItem, PurchaseRequest
 from ai_purchase_workflow.domain.purchase_requests.enums import ApprovalOutcome, RequestStatus
-from ai_purchase_workflow.domain.purchase_requests.errors import DomainValidationError
+from ai_purchase_workflow.domain.purchase_requests.errors import (
+    BudgetExceededError,
+    DomainValidationError,
+)
 from ai_purchase_workflow.domain.purchase_requests.value_objects import Money
 
 
@@ -11,7 +14,7 @@ class BudgetPolicy:
         if total.currency != available_budget.currency:
             raise DomainValidationError("Budget currency does not match the draft order currency.")
         if total.amount > available_budget.amount:
-            raise DomainValidationError("Purchase request exceeds the available budget.")
+            raise BudgetExceededError("Purchase request exceeds the available budget.")
 
 
 class VendorPolicy:

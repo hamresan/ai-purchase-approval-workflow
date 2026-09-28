@@ -15,9 +15,11 @@ def route_after_extraction(
 
 def route_after_preparation(
     state: PurchaseRequestWorkflowState,
-) -> Literal["await_approval", "human_review"]:
+) -> Literal["await_approval", "failed", "human_review"]:
     if state["status"] == "pending_approval":
         return "await_approval"
+    if state["status"] == "failed":
+        return "failed"
     return "human_review"
 
 

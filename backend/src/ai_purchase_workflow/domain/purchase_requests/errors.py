@@ -6,6 +6,10 @@ class DomainValidationError(PurchaseRequestDomainError, ValueError):
     """Raised when domain data violates an invariant."""
 
 
+class BudgetExceededError(DomainValidationError):
+    """Raised when a purchase request total exceeds the available budget."""
+
+
 class InvalidRequestTransitionError(PurchaseRequestDomainError):
     def __init__(self, current_status: str, target_status: str) -> None:
         super().__init__(

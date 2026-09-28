@@ -61,7 +61,7 @@ class PreparePurchaseRequestNode:
             return updated
 
         try:
-            request = await self._preparer.execute(extracted)
+            preparation = await self._preparer.execute(extracted)
         except PurchaseRequestPreparationError as error:
             updated = state.copy()
             updated["status"] = "human_review"
@@ -78,9 +78,29 @@ class PreparePurchaseRequestNode:
             )
             return updated
 
-        await self._workflow_threads.bind(request.id, state["workflow_id"])
+        request = preparation.request
         updated = state.copy()
         updated["purchase_request_id"] = request.id
+        if preparation.failure_reason is not None:
+            updated["status"] = "failed"
+            updated["review_reason"] = preparation.failure_reason
+            updated["tool_results"] = (
+                "trusted_data_resolved",
+                "draft_order_created",
+                "budget_rejected",
+            )
+            self._observer.record(
+                WorkflowObservation(
+                    event="workflow_business_rule_rejected",
+                    workflow_thread_id=state["workflow_id"],
+                    purchase_request_id=request.id,
+                    state_transition="failed",
+                    tool_name="check_budget",
+                )
+            )
+            return updated
+
+        await self._workflow_threads.bind(request.id, state["workflow_id"])
         updated["status"] = "pending_approval"
         updated["tool_results"] = (
             "trusted_data_resolved",

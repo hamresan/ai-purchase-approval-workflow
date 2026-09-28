@@ -13,6 +13,7 @@ WorkflowStatus = Literal[
     "pending_approval",
     "approved",
     "rejected",
+    "failed",
     "submitted",
 ]
 

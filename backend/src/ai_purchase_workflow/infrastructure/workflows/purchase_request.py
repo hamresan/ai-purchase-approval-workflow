@@ -37,7 +37,7 @@ class PurchaseRequestWorkflow:
         builder.add_conditional_edges(
             "prepare",
             route_after_preparation,
-            {"await_approval": "await_approval", "human_review": END},
+            {"await_approval": "await_approval", "failed": END, "human_review": END},
         )
         builder.add_conditional_edges(
             "await_approval",

@@ -31,7 +31,20 @@ async def test_generate_maps_openai_compatible_json_response() -> None:
         assert request.headers["Authorization"] == "Bearer secret"
         payload = json.loads(request.content)
         assert payload["model"] == "example-model"
-        assert payload["response_format"] == {"type": "json_object"}
+
+        response_format = payload["response_format"]
+        assert response_format["type"] == "json_schema"
+        assert response_format["json_schema"]["strict"] is True
+
+        schema = response_format["json_schema"]["schema"]
+        assert schema["additionalProperties"] is False
+        assert schema["properties"]["items"]["items"]["properties"]["quantity"] == {
+            "type": "integer",
+            "minimum": 1,
+        }
+        assert schema["properties"]["requester_name"]["type"] == ["string", "null"]
+        assert schema["properties"]["review_reason"]["type"] == ["string", "null"]
+
         return httpx.Response(
             200,
             json={
@@ -41,7 +54,10 @@ async def test_generate_maps_openai_compatible_json_response() -> None:
                             "content": json.dumps(
                                 {
                                     "schema_version": "1.0",
+                                    "requester_name": None,
                                     "items": [{"description": "Monitor", "quantity": 1}],
+                                    "needs_human_review": False,
+                                    "review_reason": None,
                                 }
                             )
                         }
@@ -55,7 +71,10 @@ async def test_generate_maps_openai_compatible_json_response() -> None:
 
     assert response.content == {
         "schema_version": "1.0",
+        "requester_name": None,
         "items": [{"description": "Monitor", "quantity": 1}],
+        "needs_human_review": False,
+        "review_reason": None,
     }
 
 

@@ -25,6 +25,8 @@ services:
       WORKFLOW_MODEL_TIMEOUT_SECONDS: ${WORKFLOW_MODEL_TIMEOUT_SECONDS:-30}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"      
     ports:
       - "${BACKEND_PORT}:8000"
     depends_on:
