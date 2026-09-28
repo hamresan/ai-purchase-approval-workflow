@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import timedelta
 
@@ -28,7 +28,7 @@ def build_identity_module(
     session_factory: async_sessionmaker[AsyncSession],
 ) -> IdentityModule:
     @asynccontextmanager
-    async def identity_session_factory() -> AsyncIterator[AsyncSession]:
+    async def identity_session_factory() -> AsyncGenerator[AsyncSession]:
         async with session_factory() as session:
             yield session
 
@@ -40,7 +40,7 @@ def build_identity_module(
         )
     )
     clock = SystemClock()
-    codec = PyJwtHmacCodec(secret=settings.identity_jwt_signing_secret.encode())
+    codec = PyJwtHmacCodec(secret=settings.identity_jwt_signing_secret)
     issuer = JwtAccessTokenIssuer(
         signer=codec,
         clock=clock,
