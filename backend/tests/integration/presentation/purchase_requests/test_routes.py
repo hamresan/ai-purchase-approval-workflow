@@ -1,3 +1,4 @@
+import pytest
 from httpx import AsyncClient
 
 
@@ -275,3 +276,24 @@ async def test_free_text_create_runs_workflow_to_pending_approval(
     assert payload["requester_name"] == "Dana"
     assert payload["items"][0]["description"] == "Laptop stand"
     assert payload["items"][0]["vendor"] == "Acme"
+
+
+@pytest.mark.parametrize(
+    ("method", "path"),
+    [
+        ("GET", "/api/purchase-requests"),
+        ("GET", "/api/purchase-requests/00000000-0000-0000-0000-000000000000"),
+        ("POST", "/api/purchase-requests"),
+        ("POST", "/api/purchase-requests/00000000-0000-0000-0000-000000000000/prepare"),
+        ("POST", "/api/purchase-requests/00000000-0000-0000-0000-000000000000/submit"),
+        ("POST", "/api/purchase-requests/00000000-0000-0000-0000-000000000000/approval"),
+    ],
+)
+async def test_purchase_routes_require_authentication(
+    unauthenticated_api_client: AsyncClient,
+    method: str,
+    path: str,
+) -> None:
+    response = await unauthenticated_api_client.request(method, path)
+
+    assert response.status_code == 401
