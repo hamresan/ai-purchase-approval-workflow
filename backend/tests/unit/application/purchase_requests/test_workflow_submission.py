@@ -50,7 +50,11 @@ async def test_submit_free_text_builds_context_and_returns_persisted_request() -
     )
 
     assert result.id == created.id
-    assert workflow.free_texts == ["Requester: Dana\nRequest: I need one laptop stand"]
+    assert workflow.free_texts == ["I need one laptop stand"]
+    assert workflow.requester_names == ["Dana"]
+    assert workflow.requester_user_ids == [
+        UUID("11111111-1111-1111-1111-111111111111")
+    ]
 
 
 @pytest.mark.asyncio
