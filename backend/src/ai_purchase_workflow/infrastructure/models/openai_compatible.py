@@ -13,6 +13,43 @@ from ai_purchase_workflow.application.purchase_requests.extraction.errors import
 from ai_purchase_workflow.infrastructure.models.config import OpenAICompatibleModelConfig
 from ai_purchase_workflow.infrastructure.models.responses import ChatCompletionResponse
 
+_PURCHASE_REQUEST_RESPONSE_FORMAT = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "purchase_request_extraction",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "schema_version": {"type": "string", "const": "1.0"},
+                "requester_name": {"type": ["string", "null"]},
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "description": {"type": "string", "minLength": 1},
+                            "quantity": {"type": "integer", "minimum": 1},
+                        },
+                        "required": ["description", "quantity"],
+                        "additionalProperties": False,
+                    },
+                },
+                "needs_human_review": {"type": "boolean"},
+                "review_reason": {"type": ["string", "null"]},
+            },
+            "required": [
+                "schema_version",
+                "requester_name",
+                "items",
+                "needs_human_review",
+                "review_reason",
+            ],
+            "additionalProperties": False,
+        },
+    },
+}
+
 
 class OpenAICompatiblePurchaseRequestModel(PurchaseRequestModel):
     def __init__(
@@ -39,7 +76,7 @@ class OpenAICompatiblePurchaseRequestModel(PurchaseRequestModel):
                             {"role": "system", "content": request.system_prompt},
                             {"role": "user", "content": request.user_prompt},
                         ],
-                        "response_format": {"type": "json_object"},
+                        "response_format": _PURCHASE_REQUEST_RESPONSE_FORMAT,
                     },
                 )
                 response.raise_for_status()
