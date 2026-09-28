@@ -118,25 +118,41 @@ async def create_purchase_request(
 async def get_purchase_request_by_id(
     request_id: UUID,
     use_case: GetPurchaseRequestDetailDependency,
+    principal: CurrentPrincipalDependency,
 ) -> PurchaseRequestDetailResponse:
     view = await use_case.execute(request_id)
+    AuthorizationPolicy().require_request_access(principal, view.requester_user_id)
     return PurchaseRequestDetailResponse.from_detail_view(view)
 
 
 @router.get("", response_model=PurchaseRequestListResponse)
 async def list_purchase_requests(
     use_case: ListPurchaseRequestsDependency,
+    principal: CurrentPrincipalDependency,
     request_status: RequestStatusQuery = None,
     limit: LimitQuery = 20,
     offset: OffsetQuery = 0,
     order: OrderQuery = "desc",
 ) -> PurchaseRequestListResponse:
+    policy = AuthorizationPolicy()
+    policy.require_any(
+        principal,
+        ApplicationRole.REQUESTER,
+        ApplicationRole.APPROVER,
+        ApplicationRole.ADMIN,
+    )
+    requester_user_id = (
+        principal.user_id
+        if principal.roles.isdisjoint({ApplicationRole.APPROVER, ApplicationRole.ADMIN})
+        else None
+    )
     page = await use_case.execute(
         PurchaseRequestListQuery(
             status=request_status,
             limit=limit,
             offset=offset,
             descending=order == "desc",
+            requester_user_id=requester_user_id,
         )
     )
     return PurchaseRequestListResponse(
