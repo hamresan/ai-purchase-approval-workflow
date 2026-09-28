@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ai_purchase_workflow.application.access import ApplicationPrincipal
 from ai_purchase_workflow.infrastructure.access import SqlAlchemyRoleReader
-from ai_purchase_workflow.presentation.purchase_requests.dependencies import get_session
+from ai_purchase_workflow.presentation.dependencies import get_session
 
 bearer = HTTPBearer(auto_error=False)
 BearerCredentials = Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)]
