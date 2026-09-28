@@ -14,8 +14,6 @@ class SqlAlchemyRoleReader(RoleReader):
 
     async def get_roles(self, user_id: UUID) -> frozenset[ApplicationRole]:
         result = await self._session.execute(
-            select(ApplicationUserRoleModel.role).where(
-                ApplicationUserRoleModel.user_id == user_id
-            )
+            select(ApplicationUserRoleModel.role).where(ApplicationUserRoleModel.user_id == user_id)
         )
         return frozenset(ApplicationRole(value) for value in result.scalars())
