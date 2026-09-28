@@ -5,7 +5,7 @@ import { AppShell } from "@/components/AppShell";
 describe("AppShell", () => {
   it("navigates through primary actions without implying an authenticated user", () => {
     const onNavigate = vi.fn();
-    render(<AppShell route="requests" onNavigate={onNavigate}><div>Content</div></AppShell>);
+    render(<AppShell route="requests" onNavigate={onNavigate} onSignOut={vi.fn()}><div>Content</div></AppShell>);
 
     fireEvent.click(screen.getByRole("button", { name: /Purchase Requests/ }));
     fireEvent.click(screen.getByRole("button", { name: /New Purchase Request/ }));
