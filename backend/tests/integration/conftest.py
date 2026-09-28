@@ -55,7 +55,6 @@ async def approver_principal() -> ApplicationPrincipal:
     )
 
 
-
 @pytest.fixture(scope="session", autouse=True)
 def migrate_database() -> None:
     config = Config("alembic.ini")
