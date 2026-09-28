@@ -26,6 +26,8 @@ class PurchaseRequestWorkflowState(TypedDict):
     workflow_id: str
     messages: tuple[str, ...]
     free_text: str
+    requester_name: str | None
+    requester_user_id: UUID | None
     status: WorkflowStatus
     tool_results: tuple[str, ...]
     extracted_request: NotRequired[ExtractedPurchaseRequest]
