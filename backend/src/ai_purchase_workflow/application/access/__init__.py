@@ -3,6 +3,13 @@ from ai_purchase_workflow.application.access.authorization import (
     AuthorizationPolicy,
 )
 from ai_purchase_workflow.application.access.principal import ApplicationPrincipal
+from ai_purchase_workflow.application.access.role_writer import RoleWriter
 from ai_purchase_workflow.application.access.roles import ApplicationRole
 
-__all__ = ["ApplicationPrincipal", "ApplicationRole", "AuthorizationError", "AuthorizationPolicy"]
+__all__ = [
+    "ApplicationPrincipal",
+    "ApplicationRole",
+    "AuthorizationError",
+    "AuthorizationPolicy",
+    "RoleWriter",
+]
