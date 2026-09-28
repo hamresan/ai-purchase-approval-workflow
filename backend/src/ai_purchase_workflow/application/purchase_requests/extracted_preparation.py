@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from ai_purchase_workflow.application.purchase_requests.dto import PurchaseRequestView
 from ai_purchase_workflow.application.purchase_requests.extraction import ExtractedPurchaseRequest
 from ai_purchase_workflow.application.purchase_requests.repository import PurchaseRequestRepository
@@ -6,12 +8,23 @@ from ai_purchase_workflow.application.purchase_requests.trusted_tools import (
     CreateDraftOrder,
     FindVendor,
 )
-from ai_purchase_workflow.domain.purchase_requests import AuditEntry, PurchaseRequest, RequestStatus
+from ai_purchase_workflow.domain.purchase_requests import (
+    AuditEntry,
+    BudgetExceededError,
+    PurchaseRequest,
+    RequestStatus,
+)
 from ai_purchase_workflow.domain.purchase_requests.errors import PurchaseRequestDomainError
 
 
 class PurchaseRequestPreparationError(Exception):
-    """Expected domain failure while preparing an extracted purchase request."""
+    """Unexpected domain failure while preparing an extracted purchase request."""
+
+
+@dataclass(frozen=True, slots=True)
+class PurchaseRequestPreparationResult:
+    request: PurchaseRequestView
+    failure_reason: str | None = None
 
 
 class PrepareExtractedPurchaseRequest:
@@ -27,7 +40,10 @@ class PrepareExtractedPurchaseRequest:
         self._create_draft_order = create_draft_order
         self._check_budget = check_budget
 
-    async def execute(self, extracted: ExtractedPurchaseRequest) -> PurchaseRequestView:
+    async def execute(
+        self,
+        extracted: ExtractedPurchaseRequest,
+    ) -> PurchaseRequestPreparationResult:
         try:
             trusted_items = tuple(
                 [
@@ -37,11 +53,35 @@ class PrepareExtractedPurchaseRequest:
             )
             request = PurchaseRequest.create(trusted_items, extracted.requester_name)
             draft = self._create_draft_order.execute(request, trusted_items)
-            await self._check_budget.execute(request.requester_name, draft.total)
         except PurchaseRequestDomainError as error:
             raise PurchaseRequestPreparationError(str(error)) from error
 
         request.draft_order = draft
+        try:
+            await self._check_budget.execute(request.requester_name, draft.total)
+        except BudgetExceededError as error:
+            failure_reason = str(error)
+            request.audit_entries = (
+                AuditEntry.create(
+                    request.id,
+                    "request_extracted",
+                    "Structured purchase request extracted from the model response.",
+                ),
+                AuditEntry.create(
+                    request.id,
+                    "budget_rejected",
+                    failure_reason,
+                ),
+            )
+            request.transition_to(RequestStatus.FAILED)
+            await self._repository.add(request)
+            return PurchaseRequestPreparationResult(
+                request=PurchaseRequestView.from_domain(request),
+                failure_reason=failure_reason,
+            )
+        except PurchaseRequestDomainError as error:
+            raise PurchaseRequestPreparationError(str(error)) from error
+
         request.audit_entries = (
             AuditEntry.create(
                 request.id,
@@ -61,4 +101,6 @@ class PrepareExtractedPurchaseRequest:
         )
         request.transition_to(RequestStatus.PENDING_APPROVAL)
         await self._repository.add(request)
-        return PurchaseRequestView.from_domain(request)
+        return PurchaseRequestPreparationResult(
+            request=PurchaseRequestView.from_domain(request),
+        )
