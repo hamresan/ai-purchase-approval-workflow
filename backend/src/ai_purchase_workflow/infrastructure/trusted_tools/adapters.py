@@ -7,7 +7,9 @@ from ai_purchase_workflow.application.purchase_requests.trusted_tools import (
     TrustedCatalogItem,
 )
 from ai_purchase_workflow.domain.purchase_requests import DomainValidationError, DraftOrder, Money
-from ai_purchase_workflow.infrastructure.trusted_tools.catalog_item_matcher import CatalogItemMatcher
+from ai_purchase_workflow.infrastructure.trusted_tools.catalog_item_matcher import (
+    CatalogItemMatcher,
+)
 
 
 class FixtureBudgetReader(BudgetReader):
