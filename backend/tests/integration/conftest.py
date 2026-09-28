@@ -1,14 +1,17 @@
 import os
+from uuid import UUID
 from collections.abc import AsyncIterator
 
 import pytest
 from alembic import command
 from alembic.config import Config
+from fastapi import Request
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from tests.application.purchase_requests.fakes.workflow import FakePurchaseRequestWorkflowGateway
 
+from ai_purchase_workflow.application.access import ApplicationPrincipal, ApplicationRole
 from ai_purchase_workflow.composition_root.purchase_requests import (
     build_approve_purchase_request,
     build_edit_purchase_request,
@@ -19,6 +22,7 @@ from ai_purchase_workflow.infrastructure.persistence.purchase_requests import (
     SqlAlchemyPurchaseRequestRepository,
 )
 from ai_purchase_workflow.presentation.app import create_app
+from ai_purchase_workflow.presentation.auth.dependencies import get_current_principal
 from ai_purchase_workflow.presentation.purchase_requests.approval_dispatcher import (
     ApprovalActionDispatcher,
     ApproveActionHandler,
