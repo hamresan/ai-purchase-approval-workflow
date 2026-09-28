@@ -129,7 +129,10 @@ class PurchaseRequest:
 
     @classmethod
     def create(
-        cls, items: tuple[PurchaseItem, ...], requester_name: str | None = None, requester_user_id: UUID | None = None
+        cls,
+        items: tuple[PurchaseItem, ...],
+        requester_name: str | None = None,
+        requester_user_id: UUID | None = None,
     ) -> PurchaseRequest:
         if not items:
             raise DomainValidationError("A purchase request must contain at least one item.")
