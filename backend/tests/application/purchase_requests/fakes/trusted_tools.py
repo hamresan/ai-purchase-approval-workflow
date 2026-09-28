@@ -12,8 +12,10 @@ from ai_purchase_workflow.domain.purchase_requests import DomainValidationError,
 class FakeBudgetReader(BudgetReader):
     def __init__(self, amount: str = "500.00") -> None:
         self._amount = Decimal(amount)
+        self.requester_names: list[str | None] = []
 
     async def get_available_budget(self, requester_name: str | None, currency: str) -> Money:
+        self.requester_names.append(requester_name)
         if requester_name is None:
             raise DomainValidationError("No trusted budget data is available for this requester.")
         return Money(self._amount, currency)
