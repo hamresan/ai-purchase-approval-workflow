@@ -8,7 +8,6 @@ export async function seedPendingRequest(page: Page): Promise<string> {
   const response = await page.request.post("/api/purchase-requests", {
     data: {
       request_text: "Dana needs one laptop stand",
-      requester_name: "Dana",
     },
   });
 
