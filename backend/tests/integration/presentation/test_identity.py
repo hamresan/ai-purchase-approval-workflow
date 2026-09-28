@@ -1,11 +1,7 @@
-from uuid import UUID
-
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from ai_purchase_workflow.application.access import ApplicationRole
 from ai_purchase_workflow.composition_root.settings import Settings
-from ai_purchase_workflow.infrastructure.access import ApplicationUserRoleModel
 from ai_purchase_workflow.infrastructure.notifications import InMemoryNotificationQueue
 from ai_purchase_workflow.presentation.app import create_app
 
@@ -80,15 +76,6 @@ async def test_registered_identity_with_requester_role_can_access_purchase_api(
         )
         assert verify_response.status_code == 200
         auth_session = verify_response.json()
-
-        async with session_factory() as session:
-            session.add(
-                ApplicationUserRoleModel(
-                    user_id=UUID(auth_session["user_id"]),
-                    role=ApplicationRole.REQUESTER.value,
-                )
-            )
-            await session.commit()
 
         response = await client.get(
             "/api/purchase-requests",
