@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
+from ai_purchase_workflow.application.access import AuthorizationError
 from ai_purchase_workflow.application.purchase_requests import (
     PurchaseRequestApprovalError,
     PurchaseRequestNotFoundError,
@@ -10,6 +11,13 @@ from ai_purchase_workflow.domain.purchase_requests import DomainValidationError
 
 
 def register_purchase_request_error_handlers(app: FastAPI) -> None:
+    @app.exception_handler(AuthorizationError)
+    async def handle_forbidden(
+        _request: Request,
+        error: AuthorizationError,
+    ) -> JSONResponse:
+        return JSONResponse(status_code=403, content={"detail": str(error)})
+
     @app.exception_handler(PurchaseRequestNotFoundError)
     async def handle_not_found(
         _request: Request,
