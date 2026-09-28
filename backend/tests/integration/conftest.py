@@ -1,6 +1,6 @@
 import os
-from uuid import UUID
 from collections.abc import AsyncIterator
+from uuid import UUID
 
 import pytest
 from alembic import command
