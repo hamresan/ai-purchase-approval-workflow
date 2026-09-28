@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 
-from identity.application.dto import AuthSessionResult, VerifyOtpCommand
-from identity.public import OtpVerifier
+from identity.public import AuthSessionResult, OtpVerifier, VerifyOtpCommand
 
 from ai_purchase_workflow.application.access import ApplicationRole, RoleWriter
 
