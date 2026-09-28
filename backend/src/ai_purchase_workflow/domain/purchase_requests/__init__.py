@@ -7,6 +7,7 @@ from ai_purchase_workflow.domain.purchase_requests.entities import (
 )
 from ai_purchase_workflow.domain.purchase_requests.enums import ApprovalOutcome, RequestStatus
 from ai_purchase_workflow.domain.purchase_requests.errors import (
+    BudgetExceededError,
     DomainValidationError,
     InvalidRequestTransitionError,
 )
@@ -23,6 +24,7 @@ __all__ = [
     "ApprovalGatePolicy",
     "ApprovalOutcome",
     "AuditEntry",
+    "BudgetExceededError",
     "BudgetPolicy",
     "DomainValidationError",
     "DraftOrder",
