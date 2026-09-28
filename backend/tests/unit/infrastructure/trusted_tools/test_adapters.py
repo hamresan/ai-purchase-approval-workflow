@@ -11,6 +11,8 @@ from ai_purchase_workflow.infrastructure.trusted_tools.adapters import FixtureCa
         "laptop stand",
         "LAPTOP STAND",
         "  Laptop   stand  ",
+        "laptop stands",
+        "Laptop Stands",
     ],
 )
 async def test_fixture_catalog_reader_normalizes_description_for_lookup(description: str) -> None:
