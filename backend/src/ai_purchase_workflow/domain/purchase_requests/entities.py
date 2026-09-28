@@ -125,10 +125,11 @@ class PurchaseRequest:
     draft_order: DraftOrder | None = None
     approval_decision: ApprovalDecision | None = None
     audit_entries: tuple[AuditEntry, ...] = field(default_factory=tuple)
+    requester_user_id: UUID | None = None
 
     @classmethod
     def create(
-        cls, items: tuple[PurchaseItem, ...], requester_name: str | None = None
+        cls, items: tuple[PurchaseItem, ...], requester_name: str | None = None, requester_user_id: UUID | None = None
     ) -> PurchaseRequest:
         if not items:
             raise DomainValidationError("A purchase request must contain at least one item.")
@@ -143,6 +144,7 @@ class PurchaseRequest:
             status=RequestStatus.DRAFTING,
             created_at=now,
             updated_at=now,
+            requester_user_id=requester_user_id,
         )
 
     def transition_to(
