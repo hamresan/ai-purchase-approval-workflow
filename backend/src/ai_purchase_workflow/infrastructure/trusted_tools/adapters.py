@@ -43,11 +43,7 @@ class FixtureCatalogReader(CatalogReader):
 
     async def find_item(self, description: str) -> TrustedCatalogItem:
         item = next(
-            (
-                item
-                for item in self._items
-                if self._matcher.matches(description, item.description)
-            ),
+            (item for item in self._items if self._matcher.matches(description, item.description)),
             None,
         )
         if item is None:
