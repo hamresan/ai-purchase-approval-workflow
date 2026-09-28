@@ -34,9 +34,14 @@ def build_identity_module(
         async with session_factory() as session:
             yield session
 
+    resolved_notification_queue = (
+        notification_queue
+        if notification_queue is not None
+        else InMemoryNotificationQueue()
+    )
     notification = NotificationModule(
         NotificationModuleConfig(
-            queue=(\n                notification_queue\n                if notification_queue is not None\n                else InMemoryNotificationQueue()\n            ),
+            queue=resolved_notification_queue,
             renderer=UnusedNotificationTemplateRenderer(),
             provider_resolver=UnusedNotificationProviderResolver(),
         )
