@@ -21,13 +21,11 @@ class CreatePurchaseItemRequest(BaseModel):
 
 
 class CreatePurchaseRequestBody(BaseModel):
-    requester_name: str | None = None
     items: list[CreatePurchaseItemRequest] = Field(min_length=1)
 
 
 class FreeTextPurchaseRequestBody(BaseModel):
     request_text: str = Field(min_length=10, max_length=500)
-    requester_name: str | None = Field(default=None, max_length=200)
 
 
 class EditPurchaseItemBody(BaseModel):
@@ -37,7 +35,6 @@ class EditPurchaseItemBody(BaseModel):
 
 class ApprovalBody(BaseModel):
     action: Literal["approve", "reject", "edit"]
-    decided_by: str = Field(min_length=1)
     reason: str | None = None
     items: list[EditPurchaseItemBody] | None = None
 
