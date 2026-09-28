@@ -10,7 +10,6 @@ interface Props {
 
 export function NewPurchaseRequest({ api, onBack }: Props) {
   const [description, setDescription] = useState("");
-  const [requesterName, setRequesterName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [state, setState] = useState<"editing" | "submitting" | "success">("editing");
   const [showNextSteps, setShowNextSteps] = useState(false);
@@ -26,10 +25,7 @@ export function NewPurchaseRequest({ api, onBack }: Props) {
     setError(null);
     setState("submitting");
     try {
-      await api.submit({
-        requestText,
-        requesterName: requesterName.trim() || undefined,
-      });
+      await api.submit({ requestText });
       setState("success");
     } catch (submissionError) {
       setError(
@@ -42,7 +38,7 @@ export function NewPurchaseRequest({ api, onBack }: Props) {
   };
 
   if (state === "success") {
-    return <section className="page new-request-page"><SuccessState onBack={onBack} onCreateAnother={() => { setDescription(""); setRequesterName(""); setError(null); setState("editing"); }} /></section>;
+    return <section className="page new-request-page"><SuccessState onBack={onBack} onCreateAnother={() => { setDescription(""); setError(null); setState("editing"); }} /></section>;
   }
 
   return (
@@ -54,9 +50,6 @@ export function NewPurchaseRequest({ api, onBack }: Props) {
           <FormStep number="1" title="What do you want to purchase?" description="Describe the items or services you need in plain language." active>
             <textarea aria-label="What do you want to purchase?" maxLength={500} disabled={state === "submitting"} value={description} onChange={(event) => { setDescription(event.target.value); setError(null); }} placeholder="For example: I need 5 ergonomic office chairs for our main office, around $300 each, preferably from a trusted supplier." className={error ? "invalid" : ""} />
             <div className="field-footer"><span className="field-error" role={error ? "alert" : undefined}>{error}</span><span>{description.length} / 500</span></div>
-          </FormStep>
-          <FormStep number="2" title="Your name (optional)" description="Helps identify who made the request.">
-            <input aria-label="Your name (optional)" disabled={state === "submitting"} value={requesterName} onChange={(event) => setRequesterName(event.target.value)} placeholder="Enter your name" />
           </FormStep>
           {state === "submitting" && <div className="submission-progress" role="status"><div className="spinner" /><div><strong>Submitting your request…</strong><span>Preparing the workflow and waiting for approval.</span></div></div>}
           <div className="form-actions"><button type="button" className="secondary-button" disabled={state === "submitting"} onClick={onBack}>Cancel</button><button className="primary-button" disabled={state === "submitting"} type="submit">{state === "submitting" ? "Submitting…" : "Submit Request →"}</button></div>
