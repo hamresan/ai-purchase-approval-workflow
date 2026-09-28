@@ -3,7 +3,8 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { App } from "@/app/App";
 
 describe("App", () => {
-  afterEach(() => vi.unstubAllGlobals());
+  beforeEach(() => window.localStorage.setItem("purchase-approval.auth-session", JSON.stringify({ userId: "user-1", accessToken: "token", refreshToken: "refresh" })));
+  afterEach(() => { window.localStorage.clear(); vi.unstubAllGlobals(); });
 
   it("renders the purchase request application shell and navigates back", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ items: [], total: 0, limit: 7, offset: 0 }), { status: 200, headers: { "Content-Type": "application/json" } })));
