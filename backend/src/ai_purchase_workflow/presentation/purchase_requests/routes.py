@@ -194,6 +194,12 @@ async def decide_purchase_request(
     request_id: UUID,
     body: ApprovalBody,
     dispatcher: ApprovalDispatcherDependency,
+    detail_use_case: GetPurchaseRequestDetailDependency,
+    principal: CurrentPrincipalDependency,
 ) -> PurchaseRequestResponse:
-    view = await dispatcher.execute(request_id, body)
+    policy = AuthorizationPolicy()
+    policy.require_approver(principal)
+    detail = await detail_use_case.execute(request_id)
+    policy.ensure_not_self_approval(principal, detail.requester_user_id)
+    view = await dispatcher.execute(request_id, body, str(principal.user_id))
     return PurchaseRequestResponse.from_view(view)
