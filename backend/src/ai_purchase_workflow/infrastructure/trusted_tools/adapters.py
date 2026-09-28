@@ -7,6 +7,7 @@ from ai_purchase_workflow.application.purchase_requests.trusted_tools import (
     TrustedCatalogItem,
 )
 from ai_purchase_workflow.domain.purchase_requests import DomainValidationError, DraftOrder, Money
+from ai_purchase_workflow.infrastructure.trusted_tools.catalog_item_matcher import CatalogItemMatcher
 
 
 class FixtureBudgetReader(BudgetReader):
@@ -21,8 +22,9 @@ class FixtureBudgetReader(BudgetReader):
 
 
 class FixtureCatalogReader(CatalogReader):
-    def __init__(self) -> None:
-        items = (
+    def __init__(self, matcher: CatalogItemMatcher | None = None) -> None:
+        self._matcher = matcher or CatalogItemMatcher()
+        self._items = (
             TrustedCatalogItem(
                 description="Laptop stand",
                 vendor="Acme",
@@ -36,17 +38,19 @@ class FixtureCatalogReader(CatalogReader):
                 available_quantity=5,
             ),
         )
-        self._items = {self._normalize_description(item.description): item for item in items}
 
     async def find_item(self, description: str) -> TrustedCatalogItem:
-        item = self._items.get(self._normalize_description(description))
+        item = next(
+            (
+                item
+                for item in self._items
+                if self._matcher.matches(description, item.description)
+            ),
+            None,
+        )
         if item is None:
             raise DomainValidationError(f"No trusted vendor data is available for {description}.")
         return item
-
-    @staticmethod
-    def _normalize_description(description: str) -> str:
-        return " ".join(description.split()).casefold()
 
 
 class FixtureOrderGateway(OrderGateway):
