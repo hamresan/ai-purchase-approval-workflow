@@ -28,10 +28,9 @@ describe("NewPurchaseRequest", () => {
     const submit = vi.fn().mockResolvedValue({ requestId: "request-1", status: "pending_approval" });
     renderForm({ submit });
     fireEvent.change(screen.getByLabelText("What do you want to purchase?"), { target: { value: "  I need two laptop stands  " } });
-    fireEvent.change(screen.getByLabelText("Your name (optional)"), { target: { value: "  Dana  " } });
     fireEvent.click(screen.getByRole("button", { name: /Submit Request/ }));
 
-    await waitFor(() => expect(submit).toHaveBeenCalledWith({ requestText: "I need two laptop stands", requesterName: "Dana" }));
+    await waitFor(() => expect(submit).toHaveBeenCalledWith({ requestText: "I need two laptop stands" }));
     expect(await screen.findByRole("heading", { name: "Your request has been submitted" })).toBeInTheDocument();
   });
 
