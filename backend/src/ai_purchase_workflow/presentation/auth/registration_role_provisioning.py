@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from identity.public import AuthSessionResult, OtpVerifier, VerifyOtpCommand
+from identity.public import AuthSessionResult, OtpPurpose, OtpVerifier, VerifyOtpCommand
 
 from ai_purchase_workflow.application.access import ApplicationRole, RoleWriter
 
@@ -12,6 +12,6 @@ class RegistrationRoleProvisioningOtpVerifier(OtpVerifier):
 
     async def execute(self, command: VerifyOtpCommand) -> AuthSessionResult:
         result = await self.verifier.execute(command)
-        if command.full_name is not None:
+        if result.purpose is OtpPurpose.REGISTRATION:
             await self.role_writer.ensure_role(result.user_id, ApplicationRole.REQUESTER)
         return result
