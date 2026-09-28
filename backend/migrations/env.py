@@ -2,9 +2,9 @@ import os
 from logging.config import fileConfig
 
 from alembic import context
+from identity.migrations import identity_metadata
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
-from identity.migrations import identity_metadata
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from ai_purchase_workflow.infrastructure.persistence.models import Base

@@ -1,10 +1,9 @@
+from datetime import UTC, datetime
 from uuid import UUID
 
+from identity.domain import UserStatus
 from identity.infrastructure.persistence.sqlalchemy.models import UserModel
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from datetime import UTC, datetime
-from identity.domain import UserStatus
 
 from ai_purchase_workflow.application.access import ApplicationRole
 from ai_purchase_workflow.infrastructure.access import SqlAlchemyRoleReader, SqlAlchemyRoleWriter

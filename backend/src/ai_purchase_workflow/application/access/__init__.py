@@ -10,8 +10,8 @@ from ai_purchase_workflow.application.access.roles import ApplicationRole
 __all__ = [
     "ApplicationPrincipal",
     "ApplicationRole",
-    "BootstrapFirstAdmin",
     "AuthorizationError",
     "AuthorizationPolicy",
+    "BootstrapFirstAdmin",
     "RoleWriter",
 ]
