@@ -18,6 +18,17 @@ class AuthorizationPolicy:
     def require_admin(self, principal: ApplicationPrincipal) -> None:
         self.require_any(principal, ApplicationRole.ADMIN)
 
+    def require_request_owner(
+        self,
+        principal: ApplicationPrincipal,
+        requester_user_id: UUID | None,
+    ) -> None:
+        if ApplicationRole.ADMIN in principal.roles:
+            return
+        self.require_requester(principal)
+        if requester_user_id != principal.user_id:
+            raise AuthorizationError("Not authorized to modify this purchase request.")
+
     def require_request_access(
         self,
         principal: ApplicationPrincipal,
