@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from ai_purchase_workflow.application.observability import WorkflowObservation, WorkflowObserver
 from ai_purchase_workflow.infrastructure.workflows.purchase_request import (
     PurchaseRequestWorkflow,
@@ -28,9 +30,16 @@ class PurchaseRequestWorkflowRunner:
         self,
         free_text: str,
         *,
+        requester_name: str | None = None,
+        requester_user_id: UUID | None = None,
         checkpoint_id: str | None = None,
     ) -> PurchaseRequestWorkflowResult:
-        state = self._state_factory.create(free_text, checkpoint_id=checkpoint_id)
+        state = self._state_factory.create(
+            free_text,
+            requester_name=requester_name,
+            requester_user_id=requester_user_id,
+            checkpoint_id=checkpoint_id,
+        )
         self._observer.record(
             WorkflowObservation(
                 event="workflow_started",
