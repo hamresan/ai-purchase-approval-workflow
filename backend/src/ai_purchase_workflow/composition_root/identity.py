@@ -36,7 +36,7 @@ def build_identity_module(
 
     notification = NotificationModule(
         NotificationModuleConfig(
-            queue=notification_queue or InMemoryNotificationQueue(),
+            queue=(\n                notification_queue\n                if notification_queue is not None\n                else InMemoryNotificationQueue()\n            ),
             renderer=UnusedNotificationTemplateRenderer(),
             provider_resolver=UnusedNotificationProviderResolver(),
         )
