@@ -3,6 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
 
+from ai_purchase_workflow.application.access import ApplicationRole, AuthorizationPolicy
 from ai_purchase_workflow.application.purchase_requests import (
     CreatePurchaseRequest,
     GetPurchaseRequest,
