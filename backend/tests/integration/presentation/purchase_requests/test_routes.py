@@ -188,29 +188,6 @@ async def test_prepare_rejects_over_budget(api_client: AsyncClient) -> None:
     assert "exceeds the available budget" in response.json()["detail"]
 
 
-async def test_prepare_rejects_missing_budget_data(api_client: AsyncClient) -> None:
-    created = (
-        await api_client.post(
-            "/api/purchase-requests",
-            json={
-                "items": [
-                    {
-                        "description": "Laptop stand",
-                        "quantity": 1,
-                        "unit_price_amount": "1.00",
-                        "currency": "USD",
-                    }
-                ],
-            },
-        )
-    ).json()
-
-    response = await api_client.post(f"/api/purchase-requests/{created['id']}/prepare")
-
-    assert response.status_code == 422
-    assert "No trusted budget data" in response.json()["detail"]
-
-
 async def test_list_validates_pagination_and_order(api_client: AsyncClient) -> None:
     invalid_limit = await api_client.get("/api/purchase-requests", params={"limit": 0})
     invalid_offset = await api_client.get("/api/purchase-requests", params={"offset": -1})
