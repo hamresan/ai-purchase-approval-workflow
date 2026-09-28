@@ -109,6 +109,7 @@ async def test_postgres_checkpoint_survives_connection_and_resumes_approved_requ
             )
             paused = await runner.execute(
                 "Dana needs a laptop stand",
+                requester_name="Dana",
                 checkpoint_id=thread_id,
             )
 
