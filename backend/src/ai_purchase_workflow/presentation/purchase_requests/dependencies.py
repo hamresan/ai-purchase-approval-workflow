@@ -90,6 +90,7 @@ def get_submit_free_text_purchase_request(
     return SubmitFreeTextPurchaseRequest(
         LangGraphPurchaseRequestWorkflowStarter(runner),
         GetPurchaseRequest(repository),
+        repository,
     )
 
 
