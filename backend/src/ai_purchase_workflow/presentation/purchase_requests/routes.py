@@ -90,11 +90,13 @@ async def create_purchase_request(
     body: CreatePurchaseRequestBody | FreeTextPurchaseRequestBody,
     use_case: CreatePurchaseRequestDependency,
     free_text_use_case: SubmitFreeTextPurchaseRequestDependency,
+    principal: CurrentPrincipalDependency,
     idempotency_key: IdempotencyKeyHeader = None,
 ) -> PurchaseRequestResponse:
+    AuthorizationPolicy().require_requester(principal)
     if isinstance(body, CreatePurchaseRequestBody):
         view = await use_case.execute(
-            PurchaseRequestCommandMapper.from_body(body),
+            PurchaseRequestCommandMapper.from_body(body, principal),
             idempotency_key=idempotency_key,
         )
         return PurchaseRequestResponse.from_view(view)
@@ -103,7 +105,8 @@ async def create_purchase_request(
         view = await free_text_use_case.execute(
             SubmitFreeTextPurchaseRequestCommand(
                 request_text=body.request_text,
-                requester_name=body.requester_name,
+                requester_name=principal.display_name,
+                requester_user_id=principal.user_id,
             )
         )
     except PurchaseRequestWorkflowReviewRequiredError as error:
