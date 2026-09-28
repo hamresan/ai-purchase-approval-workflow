@@ -1,7 +1,6 @@
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from ai_purchase_workflow.composition_root.identity import build_identity_module
 from ai_purchase_workflow.composition_root.settings import Settings
 from ai_purchase_workflow.infrastructure.notifications import InMemoryNotificationQueue
 from ai_purchase_workflow.presentation.app import create_app
@@ -13,13 +12,8 @@ async def test_identity_otp_request_queues_notification(
 ) -> None:
     settings = Settings(database_url=test_database_url)
     queue = InMemoryNotificationQueue()
-    app = create_app(settings)
+    app = create_app(settings, notification_queue=queue)
     app.state.session_factory = session_factory
-    app.state.identity = build_identity_module(
-        settings,
-        session_factory,
-        notification_queue=queue,
-    )
 
     async with (
         app.router.lifespan_context(app),
