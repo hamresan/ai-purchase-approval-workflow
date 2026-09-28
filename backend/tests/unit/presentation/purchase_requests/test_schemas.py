@@ -6,4 +6,4 @@ from ai_purchase_workflow.presentation.purchase_requests.schemas import Approval
 
 def test_reject_approval_body_requires_reason() -> None:
     with pytest.raises(ValidationError):
-        ApprovalBody(action="reject", decided_by="manager")
+        ApprovalBody(action="reject")
