@@ -134,4 +134,17 @@ async def approval_api_client(
         app.router.lifespan_context(app),
         AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client,
     ):
+        yield client@pytest.fixture
+async def unauthenticated_api_client(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> AsyncIterator[AsyncClient]:
+    app = create_app(Settings(database_url=TEST_DATABASE_URL))
+    app.state.session_factory = session_factory
+    async with (
+        app.router.lifespan_context(app),
+        AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client,
+    ):
         yield client
+
+
+
