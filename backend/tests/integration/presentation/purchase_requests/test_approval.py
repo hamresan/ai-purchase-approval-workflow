@@ -30,7 +30,7 @@ async def test_approval_api_approves_pending_request_and_records_audit(
     request_id = await create_pending_request(approval_api_client)
     response = await approval_api_client.post(
         f"/api/purchase-requests/{request_id}/approval",
-        json={"action": "approve", "decided_by": "manager", "reason": "Within policy."},
+        json={"action": "approve", "reason": "Within policy."},
     )
     assert response.status_code == 200
     assert response.json()["status"] == "approved"
@@ -44,7 +44,7 @@ async def test_approval_api_rejects_pending_request_and_records_audit(
     request_id = await create_pending_request(approval_api_client)
     response = await approval_api_client.post(
         f"/api/purchase-requests/{request_id}/approval",
-        json={"action": "reject", "decided_by": "manager", "reason": "Not required."},
+        json={"action": "reject", "reason": "Not required."},
     )
     assert response.status_code == 200
     assert response.json()["status"] == "rejected"
@@ -60,7 +60,6 @@ async def test_approval_api_edits_revalidates_and_keeps_request_pending(
         f"/api/purchase-requests/{request_id}/approval",
         json={
             "action": "edit",
-            "decided_by": "manager",
             "items": [{"description": "Monitor", "quantity": 1}],
         },
     )
@@ -104,7 +103,6 @@ async def test_approval_conflict_returns_safe_409(
     created = await approval_api_client.post(
         "/api/purchase-requests",
         json={
-            "requester_name": "Dana",
             "items": [
                 {
                     "description": "Laptop stand",
