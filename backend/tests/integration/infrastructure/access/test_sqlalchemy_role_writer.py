@@ -1,8 +1,5 @@
-from datetime import UTC, datetime
 from uuid import UUID
 
-from identity.domain import UserStatus
-from identity.infrastructure.persistence.sqlalchemy.models import UserModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
