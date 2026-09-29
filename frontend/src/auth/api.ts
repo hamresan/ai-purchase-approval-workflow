@@ -11,6 +11,8 @@ export interface OtpChallenge {
 export interface IdentityAuthApi {
   requestOtp(mobileNumber: string, purpose: AuthPurpose): Promise<OtpChallenge>;
   verifyOtp(challengeId: string, code: string, fullName?: string): Promise<AuthSession>;
+  refreshSession(refreshToken: string): Promise<AuthSession>;
+  revokeSession(refreshToken: string): Promise<void>;
 }
 
 export class HttpIdentityAuthApi implements IdentityAuthApi {
@@ -47,19 +49,38 @@ export class HttpIdentityAuthApi implements IdentityAuthApi {
     });
     if (!response.ok) throw new ApiError(response.status, await readIdentityError(response));
     const payload = (await response.json()) as Record<string, unknown>;
-    if (
-      typeof payload.user_id !== "string"
-      || typeof payload.access_token !== "string"
-      || typeof payload.refresh_token !== "string"
-    ) {
-      throw new ApiError(502, "The server returned an invalid authentication response.");
-    }
-    return {
-      userId: payload.user_id,
-      accessToken: payload.access_token,
-      refreshToken: payload.refresh_token,
-    };
+    return mapAuthSession(payload);
   }
+
+  async refreshSession(refreshToken: string): Promise<AuthSession> {
+    const response = await fetch(`${this.baseUrl}/identity/sessions/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    if (!response.ok) throw new ApiError(response.status, await readIdentityError(response));
+    return mapAuthSession((await response.json()) as Record<string, unknown>);
+  }
+
+  async revokeSession(refreshToken: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/identity/sessions/revoke`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    if (!response.ok) throw new ApiError(response.status, await readIdentityError(response));
+  }
+}
+
+function mapAuthSession(payload: Record<string, unknown>): AuthSession {
+  if (
+    typeof payload.user_id !== "string"
+    || typeof payload.access_token !== "string"
+    || typeof payload.refresh_token !== "string"
+  ) {
+    throw new ApiError(502, "The server returned an invalid authentication response.");
+  }
+  return { userId: payload.user_id, accessToken: payload.access_token, refreshToken: payload.refresh_token };
 }
 
 async function readIdentityError(response: Response): Promise<string> {
