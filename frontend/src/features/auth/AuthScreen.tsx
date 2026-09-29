@@ -50,11 +50,15 @@ export function AuthScreen({ api, onAuthenticated }: Props) {
     await verifyCode(code);
   };
 
-  const completeProfile = (event: FormEvent) => {
+  const completeProfile = async (event: FormEvent) => {
     event.preventDefault();
     if (!fullName.trim()) return setError("Enter your full name.");
     if (!verifiedSession) return setError("Registration session is unavailable.");
-    onAuthenticated(verifiedSession);
+    setBusy(true); setError("");
+    try {
+      await api.updateProfile(verifiedSession.accessToken, fullName.trim());
+      onAuthenticated(verifiedSession);
+    } catch (caught) { setError(errorMessage(caught)); } finally { setBusy(false); }
   };
 
   const resetMobile = () => {
@@ -87,7 +91,7 @@ export function AuthScreen({ api, onAuthenticated }: Props) {
       <form onSubmit={completeProfile}>
         <label className="auth-field">Full name<input aria-label="Full name" value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="Enter your full name" autoComplete="name" /></label>
         {error && <p className="auth-error" role="alert">{error}</p>}
-        <button className="primary-button auth-submit" type="submit">Continue</button>
+        <button className="primary-button auth-submit" disabled={busy} type="submit">{busy ? "Saving…" : "Continue"}</button>
       </form>
     </>}
   </section></main>;
