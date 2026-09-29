@@ -2,7 +2,6 @@ import { expect, test } from "@playwright/test";
 
 
 test("create request runs the workflow and can be approved from the browser", async ({ page }) => {
-  await page.setExtraHTTPHeaders({ "X-E2E-Actor": "requester" });
   let createdRequestId: string | undefined;
   page.on("response", async (response) => {
     if (
@@ -23,7 +22,6 @@ test("create request runs the workflow and can be approved from the browser", as
   await expect(page.getByRole("heading", { name: "Your request has been submitted" })).toBeVisible();
   expect(createdRequestId).toBeTruthy();
 
-  await page.setExtraHTTPHeaders({ "X-E2E-Actor": "approver" });
   await page.goto(`/requests/${createdRequestId}`);
   await expect(page.getByText("Waiting for approval")).toBeVisible();
   await page.getByRole("button", { name: /Approve/ }).click();
