@@ -26,7 +26,7 @@ describe("AuthScreen", () => {
       fireEvent.change(screen.getByLabelText(`OTP digit ${index}`), { target: { value: String(index) } });
     }
 
-    await waitFor(() => expect(api.verifyOtp).toHaveBeenCalledWith("challenge-1", "123456"));
+    await waitFor(() => expect(api.verifyOtp).toHaveBeenCalledWith("challenge-1", "123456", undefined));
     await waitFor(() => expect(authenticated).toHaveBeenCalled());
   });
 
@@ -56,6 +56,7 @@ describe("AuthScreen", () => {
       clipboardData: { getData: () => "123456" },
     });
 
+    await waitFor(() => expect(api.verifyOtp).toHaveBeenCalledWith("challenge-1", "123456", "New user"));
     await screen.findByRole("heading", { name: "Set up your profile" });
     expect(authenticated).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText("Full name"), { target: { value: "Dana" } });
