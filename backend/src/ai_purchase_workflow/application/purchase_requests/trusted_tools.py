@@ -1,6 +1,10 @@
 from typing import Protocol
 from uuid import UUID
 
+from ai_purchase_workflow.application.trusted_data import (
+    BudgetConstraintReader,
+    TrustedCatalogReader,
+)
 from ai_purchase_workflow.domain.purchase_requests import (
     DomainValidationError,
     DraftOrder,
@@ -8,15 +12,12 @@ from ai_purchase_workflow.domain.purchase_requests import (
     PurchaseItem,
     PurchaseRequest,
 )
-from ai_purchase_workflow.application.trusted_data import BudgetConstraintReader, TrustedCatalogReader
-
 from ai_purchase_workflow.domain.purchase_requests.policies import (
     ApprovalGatePolicy,
     BudgetPolicy,
     DraftOrderPolicy,
     VendorPolicy,
 )
-
 
 
 class OrderGateway(Protocol):

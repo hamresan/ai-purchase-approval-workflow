@@ -1,3 +1,5 @@
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from ai_purchase_workflow.application.purchase_requests import (
     CheckBudget,
     CreateDraftOrder,
@@ -27,10 +29,12 @@ from ai_purchase_workflow.domain.purchase_requests import (
 )
 from ai_purchase_workflow.infrastructure.observability import LoggingWorkflowObserver
 from ai_purchase_workflow.infrastructure.prompts import FilePromptTemplateReader
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from ai_purchase_workflow.infrastructure.trusted_data.budget_reader import SqlAlchemyBudgetConstraintReader
-from ai_purchase_workflow.infrastructure.trusted_data.catalog_reader import SqlAlchemyTrustedCatalogReader
+from ai_purchase_workflow.infrastructure.trusted_data.budget_reader import (
+    SqlAlchemyBudgetConstraintReader,
+)
+from ai_purchase_workflow.infrastructure.trusted_data.catalog_reader import (
+    SqlAlchemyTrustedCatalogReader,
+)
 from ai_purchase_workflow.infrastructure.trusted_tools import FixtureOrderGateway
 from ai_purchase_workflow.infrastructure.workflows import (
     AwaitApprovalNode,

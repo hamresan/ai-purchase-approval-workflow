@@ -1,3 +1,5 @@
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from ai_purchase_workflow.application.purchase_requests import (
     ApprovePurchaseRequest,
     CheckBudget,
@@ -17,10 +19,12 @@ from ai_purchase_workflow.domain.purchase_requests import (
     DraftOrderPolicy,
     VendorPolicy,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from ai_purchase_workflow.infrastructure.trusted_data.budget_reader import SqlAlchemyBudgetConstraintReader
-from ai_purchase_workflow.infrastructure.trusted_data.catalog_reader import SqlAlchemyTrustedCatalogReader
+from ai_purchase_workflow.infrastructure.trusted_data.budget_reader import (
+    SqlAlchemyBudgetConstraintReader,
+)
+from ai_purchase_workflow.infrastructure.trusted_data.catalog_reader import (
+    SqlAlchemyTrustedCatalogReader,
+)
 from ai_purchase_workflow.infrastructure.trusted_tools import FixtureOrderGateway
 
 
