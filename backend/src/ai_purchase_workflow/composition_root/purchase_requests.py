@@ -65,7 +65,7 @@ def build_edit_purchase_request(
 ) -> EditPurchaseRequest:
     return EditPurchaseRequest(
         repository=repository,
-        find_vendor=FindVendor(FixtureCatalogReader(), VendorPolicy()),
+        find_vendor=FindVendor(SqlAlchemyTrustedCatalogReader(session), VendorPolicy()),
         create_draft_order=CreateDraftOrder(DraftOrderPolicy()),
-        check_budget=CheckBudget(FixtureBudgetReader(), BudgetPolicy()),
+        check_budget=CheckBudget(SqlAlchemyBudgetConstraintReader(session), BudgetPolicy()),
     )
