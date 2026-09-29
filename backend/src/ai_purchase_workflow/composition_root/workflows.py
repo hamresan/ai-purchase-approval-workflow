@@ -27,11 +27,11 @@ from ai_purchase_workflow.domain.purchase_requests import (
 )
 from ai_purchase_workflow.infrastructure.observability import LoggingWorkflowObserver
 from ai_purchase_workflow.infrastructure.prompts import FilePromptTemplateReader
-from ai_purchase_workflow.infrastructure.trusted_tools import (
-    FixtureBudgetReader,
-    FixtureCatalogReader,
-    FixtureOrderGateway,
-)
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from ai_purchase_workflow.infrastructure.trusted_data.budget_reader import SqlAlchemyBudgetConstraintReader
+from ai_purchase_workflow.infrastructure.trusted_data.catalog_reader import SqlAlchemyTrustedCatalogReader
+from ai_purchase_workflow.infrastructure.trusted_tools import FixtureOrderGateway
 from ai_purchase_workflow.infrastructure.workflows import (
     AwaitApprovalNode,
     ExtractPurchaseRequestNode,
@@ -55,6 +55,7 @@ def build_start_purchase_request_workflow(
     threads: WorkflowThreadRepository,
     checkpointer: CheckpointSaver,
     settings: Settings,
+    session: AsyncSession,
 ) -> PurchaseRequestWorkflowRunner:
     observer = LoggingWorkflowObserver()
     extractor = ExtractPurchaseRequest(
@@ -65,9 +66,9 @@ def build_start_purchase_request_workflow(
     )
     preparer = PrepareExtractedPurchaseRequest(
         repository=repository,
-        find_vendor=FindVendor(FixtureCatalogReader(), VendorPolicy()),
+        find_vendor=FindVendor(SqlAlchemyTrustedCatalogReader(session), VendorPolicy()),
         create_draft_order=CreateDraftOrder(DraftOrderPolicy()),
-        check_budget=CheckBudget(FixtureBudgetReader(), BudgetPolicy()),
+        check_budget=CheckBudget(SqlAlchemyBudgetConstraintReader(session), BudgetPolicy()),
     )
     submitter = SubmitPurchaseRequest(
         repository,
