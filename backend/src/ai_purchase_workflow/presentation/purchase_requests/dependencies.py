@@ -86,6 +86,7 @@ def get_submit_free_text_purchase_request(
         threads,
         request.app.state.checkpointer,
         request.app.state.settings,
+        session,
     )
     return SubmitFreeTextPurchaseRequest(
         LangGraphPurchaseRequestWorkflowStarter(runner),
@@ -108,7 +109,7 @@ def get_list_purchase_requests(session: SessionDependency) -> ListPurchaseReques
 
 def get_prepare_purchase_request(session: SessionDependency) -> PreparePurchaseRequest:
     repository = SqlAlchemyPurchaseRequestRepository(session)
-    return build_prepare_purchase_request(repository)
+    return build_prepare_purchase_request(repository, session)
 
 
 def get_submit_purchase_request(session: SessionDependency) -> SubmitPurchaseRequest:
@@ -130,5 +131,5 @@ def get_approval_dispatcher(
     return ApprovalActionDispatcher(
         ApproveActionHandler(build_approve_purchase_request(repository, workflow)),
         RejectActionHandler(build_reject_purchase_request(repository, workflow)),
-        EditActionHandler(build_edit_purchase_request(repository)),
+        EditActionHandler(build_edit_purchase_request(repository, session)),
     )
