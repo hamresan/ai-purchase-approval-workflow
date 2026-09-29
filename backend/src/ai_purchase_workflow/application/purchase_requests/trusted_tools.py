@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Protocol
 from uuid import UUID
 
@@ -9,7 +8,7 @@ from ai_purchase_workflow.domain.purchase_requests import (
     PurchaseItem,
     PurchaseRequest,
 )
-from ai_purchase_workflow.application.trusted_data import BudgetConstraintReader
+from ai_purchase_workflow.application.trusted_data import BudgetConstraintReader, TrustedCatalogReader
 
 from ai_purchase_workflow.domain.purchase_requests.policies import (
     ApprovalGatePolicy,
@@ -18,17 +17,6 @@ from ai_purchase_workflow.domain.purchase_requests.policies import (
     VendorPolicy,
 )
 
-
-@dataclass(frozen=True, slots=True)
-class TrustedCatalogItem:
-    description: str
-    vendor: str
-    unit_price: Money
-    available_quantity: int
-
-
-class CatalogReader(Protocol):
-    async def find_item(self, description: str) -> TrustedCatalogItem: ...
 
 
 class OrderGateway(Protocol):
@@ -52,7 +40,7 @@ class CheckBudget:
 
 
 class FindVendor:
-    def __init__(self, reader: CatalogReader, policy: VendorPolicy) -> None:
+    def __init__(self, reader: TrustedCatalogReader, policy: VendorPolicy) -> None:
         self._reader = reader
         self._policy = policy
 
@@ -65,7 +53,7 @@ class FindVendor:
             description=trusted.description,
             quantity=quantity,
             unit_price=trusted.unit_price,
-            vendor=trusted.vendor,
+            vendor=trusted.vendor_name,
         )
         self._policy.ensure_available(resolved, trusted.available_quantity)
         return resolved
