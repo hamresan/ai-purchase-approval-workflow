@@ -1,8 +1,7 @@
 import os
-from decimal import Decimal
-from uuid import uuid4
 from collections.abc import AsyncIterator
-from uuid import UUID
+from decimal import Decimal
+from uuid import UUID, uuid4
 
 import pytest
 from alembic import command
@@ -20,14 +19,14 @@ from ai_purchase_workflow.composition_root.purchase_requests import (
     build_reject_purchase_request,
 )
 from ai_purchase_workflow.composition_root.settings import Settings
+from ai_purchase_workflow.infrastructure.persistence.purchase_requests import (
+    SqlAlchemyPurchaseRequestRepository,
+)
 from ai_purchase_workflow.infrastructure.trusted_data.models import (
     BudgetLimitModel,
     ProductModel,
     TrustedOfferModel,
     VendorModel,
-)
-from ai_purchase_workflow.infrastructure.persistence.purchase_requests import (
-    SqlAlchemyPurchaseRequestRepository,
 )
 from ai_purchase_workflow.presentation.app import create_app
 from ai_purchase_workflow.presentation.auth.dependencies import get_current_principal
