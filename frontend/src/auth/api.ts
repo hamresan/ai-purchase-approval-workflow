@@ -13,6 +13,7 @@ export interface IdentityAuthApi {
   verifyOtp(challengeId: string, code: string, fullName?: string): Promise<AuthSession>;
   refreshSession(refreshToken: string): Promise<AuthSession>;
   revokeSession(refreshToken: string): Promise<void>;
+  updateProfile(accessToken: string, fullName: string): Promise<void>;
 }
 
 export class HttpIdentityAuthApi implements IdentityAuthApi {
@@ -60,6 +61,15 @@ export class HttpIdentityAuthApi implements IdentityAuthApi {
     });
     if (!response.ok) throw new ApiError(response.status, await readIdentityError(response));
     return mapAuthSession((await response.json()) as Record<string, unknown>);
+  }
+
+  async updateProfile(accessToken: string, fullName: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/api/profile`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify({ full_name: fullName }),
+    });
+    if (!response.ok) throw new ApiError(response.status, await readIdentityError(response));
   }
 
   async revokeSession(refreshToken: string): Promise<void> {
