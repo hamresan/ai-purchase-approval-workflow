@@ -33,7 +33,7 @@ export function AuthScreen({ api, onAuthenticated }: Props) {
     if (code.length !== 6 || busy) return;
     setBusy(true); setError("");
     try {
-      const session = await api.verifyOtp(challengeId, code);
+      const session = await api.verifyOtp(challengeId, code, purpose === "registration" ? "New user" : undefined);
       if (purpose === "registration") {
         setVerifiedSession(session);
         setStep("profile");
