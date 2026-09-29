@@ -15,6 +15,7 @@ from ai_purchase_workflow.infrastructure.trusted_data.models import (
     BudgetLimitModel,
     DepartmentMembershipModel,
     DepartmentModel,
+    OrganizationMemberModel,
     ProductModel,
     TrustedOfferModel,
     VendorModel,
@@ -62,12 +63,17 @@ async def test_catalog_reader_rejects_missing_or_inactive_data(db_session: Async
 async def test_budget_reader_returns_user_and_department_constraints(
     db_session: AsyncSession,
 ) -> None:
+    member = OrganizationMemberModel(
+        id=UUID("50000000-0000-0000-0000-000000000001"),
+        identity_user_id=USER_ID,
+        is_active=True,
+    )
     department = DepartmentModel(id=DEPARTMENT_ID, name="Engineering", is_active=True)
-    db_session.add(department)
+    db_session.add_all([member, department])
     await db_session.flush()
     db_session.add(
         DepartmentMembershipModel(
-            user_id=USER_ID,
+            member_id=member.id,
             department_id=DEPARTMENT_ID,
             is_active=True,
         )
@@ -174,16 +180,21 @@ async def test_budget_reader_ignores_inactive_department_budget_path(
     membership_active: bool,
     budget_active: bool,
 ) -> None:
+    member = OrganizationMemberModel(
+        id=UUID("50000000-0000-0000-0000-000000000002"),
+        identity_user_id=USER_ID,
+        is_active=True,
+    )
     department = DepartmentModel(
         id=DEPARTMENT_ID,
         name="Engineering",
         is_active=department_active,
     )
-    db_session.add(department)
+    db_session.add_all([member, department])
     await db_session.flush()
     db_session.add(
         DepartmentMembershipModel(
-            user_id=USER_ID,
+            member_id=member.id,
             department_id=DEPARTMENT_ID,
             is_active=membership_active,
         )
@@ -211,12 +222,17 @@ async def test_budget_reader_ignores_inactive_department_budget_path(
 async def test_budget_reader_keeps_active_user_budget_when_department_path_is_inactive(
     db_session: AsyncSession,
 ) -> None:
+    member = OrganizationMemberModel(
+        id=UUID("50000000-0000-0000-0000-000000000003"),
+        identity_user_id=USER_ID,
+        is_active=True,
+    )
     department = DepartmentModel(id=DEPARTMENT_ID, name="Engineering", is_active=False)
-    db_session.add(department)
+    db_session.add_all([member, department])
     await db_session.flush()
     db_session.add(
         DepartmentMembershipModel(
-            user_id=USER_ID,
+            member_id=member.id,
             department_id=DEPARTMENT_ID,
             is_active=True,
         )
