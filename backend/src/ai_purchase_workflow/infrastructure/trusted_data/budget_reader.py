@@ -51,12 +51,16 @@ class SqlAlchemyBudgetConstraintReader(BudgetConstraintReader):
         )
         if not rows:
             raise DomainValidationError("No trusted budget data is available for this requester.")
-        return tuple(
-            BudgetConstraint(
-                owner_type=row.owner_type,
-                owner_id=row.user_id if row.user_id is not None else row.department_id,
-                available=Money(row.amount, row.currency),
+        constraints: list[BudgetConstraint] = []
+        for row in rows:
+            owner_id = row.user_id or row.department_id
+            if owner_id is None:
+                raise DomainValidationError("Trusted budget data has no valid owner.")
+            constraints.append(
+                BudgetConstraint(
+                    owner_type=row.owner_type,
+                    owner_id=owner_id,
+                    available=Money(row.amount, row.currency),
+                )
             )
-            for row in rows
-            if row.user_id is not None or row.department_id is not None
-        )
+        return tuple(constraints)
