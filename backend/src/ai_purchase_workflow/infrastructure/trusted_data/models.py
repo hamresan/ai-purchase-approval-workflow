@@ -1,7 +1,7 @@
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import Boolean, ForeignKey, Index, Integer, Numeric, String, UniqueConstraint
+from sqlalchemy import Boolean, ForeignKey, Index, Integer, Numeric, String, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -82,14 +82,14 @@ class BudgetLimitModel(Base):
             "user_id",
             "currency",
             unique=True,
-            postgresql_where=(mapped_column(String(20), name="owner_type") == "USER"),
+            postgresql_where=text("owner_type = 'USER'"),
         ),
         Index(
             "uq_budget_limits_department_currency",
             "department_id",
             "currency",
             unique=True,
-            postgresql_where=(mapped_column(String(20), name="owner_type") == "DEPARTMENT"),
+            postgresql_where=text("owner_type = 'DEPARTMENT'"),
         ),
     )
 
