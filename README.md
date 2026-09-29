@@ -41,7 +41,7 @@ Application ──────► Domain policies/entities
 Infrastructure
   ├── PostgreSQL repositories
   ├── LangGraph workflow/checkpoints
-  ├── trusted fixture adapters
+  ├── PostgreSQL trusted catalog/budget readers
   └── model adapters
         ├── Fake
         ├── Ollama
@@ -83,7 +83,7 @@ Open:
 - API docs: http://localhost:8000/docs
 - Health: http://localhost:8000/health
 
-The default `.env.example` uses `WORKFLOW_MODEL_PROVIDER=fake`. This deterministic provider requires no external network or API key and is intended for development, demonstration, and CI. It produces the fixture-backed Laptop stand workflow so the complete approval journey can be exercised reliably.
+The default `.env.example` uses `WORKFLOW_MODEL_PROVIDER=fake`. This deterministic provider requires no external network or API key and is intended for development, demonstration, and CI. It produces a deterministic Laptop stand extraction so the complete approval journey can be exercised reliably against persisted trusted catalog and budget data.
 
 To stop and remove the local stack:
 
@@ -204,7 +204,7 @@ Reject uses `"action": "reject"` and requires a non-empty `reason`. Edit uses `"
 ## Supported behavior
 
 - Free-text purchase-request extraction through a provider-neutral model contract.
-- Trusted fixture-backed catalog, vendor, budget, and order adapters.
+- PostgreSQL-backed trusted catalog, vendor, availability, user/department budget data, plus the focused fixture order-submission boundary.
 - PostgreSQL business persistence and LangGraph PostgreSQL checkpoints.
 - Human Approve / Reject / Edit flows.
 - Approval-gated order submission.
@@ -230,7 +230,7 @@ See [SECURITY.md](SECURITY.md) for the security boundary and reporting guidance.
 This repository is a focused workflow demonstration, not a production procurement platform.
 
 - No multi-tenancy.
-- Catalog, vendor, budget, and order integrations are deterministic fixture adapters rather than ERP/procurement systems.
+- Catalog, vendor, availability, and budget data are application-owned PostgreSQL records; order submission remains a deterministic fixture boundary rather than an ERP/procurement integration.
 - No payment or money movement.
 - OTP notification intent is integrated through `hamresan-notification`, but durable SMS/email delivery and workflow notifications are not implemented yet.
 - No autonomous purchasing; human approval remains mandatory.
@@ -309,7 +309,7 @@ docs/
 
 ## Release status
 
-Stages 0–9 are complete. Stage 10 adds the post-v1 authentication and authorization foundation.
+Stages 0–10 are complete. Stage 11 adds application-owned organization membership plus PostgreSQL-backed trusted catalog, vendor, availability, and user/department budget persistence.
 
 Verified UI screenshots/GIFs should be captured from the final release build only and must not contain private request data. They are intentionally not represented by mock images.
 
