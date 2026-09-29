@@ -113,6 +113,73 @@ async def test_budget_reader_returns_user_and_department_constraints(
     }
 
 
+async def test_budget_reader_returns_user_constraint_without_department(
+    db_session: AsyncSession,
+) -> None:
+    db_session.add(
+        BudgetLimitModel(
+            id=UUID("40000000-0000-0000-0000-000000000020"),
+            owner_type="USER",
+            user_id=USER_ID,
+            department_id=None,
+            amount=Decimal("500.00"),
+            currency="USD",
+            is_active=True,
+        )
+    )
+    await db_session.commit()
+
+    constraints = await SqlAlchemyBudgetConstraintReader(db_session).get_applicable_constraints(
+        USER_ID,
+        "USD",
+    )
+
+    assert [(item.owner_type, item.available.amount) for item in constraints] == [
+        ("USER", Decimal("500.00"))
+    ]
+
+
+async def test_budget_reader_returns_department_constraint_without_user_budget(
+    db_session: AsyncSession,
+) -> None:
+    member = OrganizationMemberModel(
+        id=UUID("50000000-0000-0000-0000-000000000020"),
+        identity_user_id=USER_ID,
+        is_active=True,
+    )
+    department = DepartmentModel(id=DEPARTMENT_ID, name="Engineering", is_active=True)
+    db_session.add_all([member, department])
+    await db_session.flush()
+    db_session.add_all(
+        [
+            DepartmentMembershipModel(
+                member_id=member.id,
+                department_id=DEPARTMENT_ID,
+                is_active=True,
+            ),
+            BudgetLimitModel(
+                id=UUID("40000000-0000-0000-0000-000000000021"),
+                owner_type="DEPARTMENT",
+                user_id=None,
+                department_id=DEPARTMENT_ID,
+                amount=Decimal("1000.00"),
+                currency="USD",
+                is_active=True,
+            ),
+        ]
+    )
+    await db_session.commit()
+
+    constraints = await SqlAlchemyBudgetConstraintReader(db_session).get_applicable_constraints(
+        USER_ID,
+        "USD",
+    )
+
+    assert [(item.owner_type, item.available.amount) for item in constraints] == [
+        ("DEPARTMENT", Decimal("1000.00"))
+    ]
+
+
 async def test_budget_reader_rejects_requester_without_applicable_budget(
     db_session: AsyncSession,
 ) -> None:
@@ -167,15 +234,17 @@ async def test_catalog_reader_rejects_inactive_trusted_data(
 
 
 @pytest.mark.parametrize(
-    ("department_active", "membership_active", "budget_active"),
+    ("member_active", "department_active", "membership_active", "budget_active"),
     [
-        (False, True, True),
-        (True, False, True),
-        (True, True, False),
+        (False, True, True, True),
+        (True, False, True, True),
+        (True, True, False, True),
+        (True, True, True, False),
     ],
 )
 async def test_budget_reader_ignores_inactive_department_budget_path(
     db_session: AsyncSession,
+    member_active: bool,
     department_active: bool,
     membership_active: bool,
     budget_active: bool,
@@ -183,7 +252,7 @@ async def test_budget_reader_ignores_inactive_department_budget_path(
     member = OrganizationMemberModel(
         id=UUID("50000000-0000-0000-0000-000000000002"),
         identity_user_id=USER_ID,
-        is_active=True,
+        is_active=member_active,
     )
     department = DepartmentModel(
         id=DEPARTMENT_ID,
