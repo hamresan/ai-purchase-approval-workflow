@@ -56,6 +56,9 @@ from ai_purchase_workflow.infrastructure.workflows import (
 )
 
 
+REQUESTER_USER_ID = UUID("11111111-1111-1111-1111-111111111111")
+
+
 def build_workflow(
     content: object,
     *,
@@ -120,7 +123,10 @@ async def test_workflow_pauses_before_submission_and_binds_thread() -> None:
     )
 
     result = await runner.execute(
-        "Dana needs two laptop stands", requester_name="Dana", checkpoint_id="thread-1"
+        "Dana needs two laptop stands",
+        requester_name="Dana",
+        requester_user_id=REQUESTER_USER_ID,
+        checkpoint_id="thread-1",
     )
 
     assert result.checkpoint_id == "thread-1"
@@ -151,7 +157,10 @@ async def test_workflow_resumes_approved_request_and_submits_once() -> None:
         }
     )
     result = await runner.execute(
-        "Dana needs a laptop stand", requester_name="Dana", checkpoint_id="thread-approved"
+        "Dana needs a laptop stand",
+        requester_name="Dana",
+        requester_user_id=REQUESTER_USER_ID,
+        checkpoint_id="thread-approved",
     )
     assert result.purchase_request_id is not None
     request = repository.requests[result.purchase_request_id]
@@ -180,7 +189,10 @@ async def test_workflow_resumes_rejected_request_without_submitting() -> None:
         }
     )
     result = await runner.execute(
-        "Dana needs a laptop stand", requester_name="Dana", checkpoint_id="thread-rejected"
+        "Dana needs a laptop stand",
+        requester_name="Dana",
+        requester_user_id=REQUESTER_USER_ID,
+        checkpoint_id="thread-rejected",
     )
     assert result.purchase_request_id is not None
     request = repository.requests[result.purchase_request_id]
@@ -258,7 +270,11 @@ async def test_workflow_persists_over_budget_request_as_business_failure() -> No
         budget=FakeBudgetReader("10.00"),
     )
 
-    result = await runner.execute("Dana needs two laptop stands", requester_name="Dana")
+    result = await runner.execute(
+        "Dana needs two laptop stands",
+        requester_name="Dana",
+        requester_user_id=REQUESTER_USER_ID,
+    )
 
     assert result.status == "failed"
     assert result.needs_human_review is False
