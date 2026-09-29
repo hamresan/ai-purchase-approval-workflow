@@ -269,3 +269,51 @@ async def test_budget_reader_keeps_active_user_budget_when_department_path_is_in
     assert [(item.owner_type, item.available.amount) for item in constraints] == [
         ("USER", Decimal("500.00"))
     ]
+
+
+async def test_catalog_reader_rejects_ambiguous_active_offers(
+    db_session: AsyncSession,
+) -> None:
+    product = ProductModel(
+        id=UUID("10000000-0000-0000-0000-000000000020"),
+        name="Docking station",
+        is_active=True,
+    )
+    first_vendor = VendorModel(
+        id=UUID("20000000-0000-0000-0000-000000000020"),
+        name="First vendor",
+        is_active=True,
+    )
+    second_vendor = VendorModel(
+        id=UUID("20000000-0000-0000-0000-000000000021"),
+        name="Second vendor",
+        is_active=True,
+    )
+    db_session.add_all([product, first_vendor, second_vendor])
+    await db_session.flush()
+    db_session.add_all(
+        [
+            TrustedOfferModel(
+                id=UUID("30000000-0000-0000-0000-000000000020"),
+                product_id=product.id,
+                vendor_id=first_vendor.id,
+                unit_price_amount=Decimal("80.00"),
+                currency="USD",
+                available_quantity=5,
+                is_active=True,
+            ),
+            TrustedOfferModel(
+                id=UUID("30000000-0000-0000-0000-000000000021"),
+                product_id=product.id,
+                vendor_id=second_vendor.id,
+                unit_price_amount=Decimal("70.00"),
+                currency="USD",
+                available_quantity=8,
+                is_active=True,
+            ),
+        ]
+    )
+    await db_session.commit()
+
+    with pytest.raises(DomainValidationError, match="explicit offer selection is required"):
+        await SqlAlchemyTrustedCatalogReader(db_session).find_item("Docking stations")
