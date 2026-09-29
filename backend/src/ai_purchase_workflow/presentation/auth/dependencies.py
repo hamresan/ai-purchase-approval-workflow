@@ -20,7 +20,11 @@ async def get_current_principal(
     credentials: BearerCredentials,
 ) -> ApplicationPrincipal:
     if request.app.state.settings.app_env == "test":
-        test_principal = getattr(request.app.state, "e2e_principal", None)
+        actor = request.headers.get("X-E2E-Actor")
+        test_principals = getattr(request.app.state, "e2e_principals", {})
+        test_principal = test_principals.get(actor) if actor else None
+        if test_principal is None:
+            test_principal = getattr(request.app.state, "e2e_principal", None)
         if test_principal is not None:
             return test_principal
     if credentials is None:
