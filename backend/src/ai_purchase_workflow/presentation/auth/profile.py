@@ -1,7 +1,5 @@
 from dataclasses import dataclass
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
 from ai_purchase_workflow.presentation.auth.dependencies import CurrentPrincipalDependency
