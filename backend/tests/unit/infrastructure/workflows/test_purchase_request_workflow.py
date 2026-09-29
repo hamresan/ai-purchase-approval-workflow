@@ -1,4 +1,5 @@
 from decimal import Decimal
+from uuid import UUID
 
 import pytest
 from langgraph.checkpoint.memory import InMemorySaver
@@ -287,12 +288,14 @@ async def test_workflow_uses_authenticated_requester_for_budget_not_model_reques
         budget=budget,
     )
 
+    requester_user_id = UUID("11111111-1111-1111-1111-111111111111")
     result = await runner.execute(
         "Please buy one laptop stand",
         requester_name="Dana",
+        requester_user_id=requester_user_id,
     )
 
     assert result.purchase_request_id is not None
     request = repository.requests[result.purchase_request_id]
     assert request.requester_name == "Dana"
-    assert budget.requester_names == ["Dana"]
+    assert budget.requester_user_ids == [requester_user_id]
