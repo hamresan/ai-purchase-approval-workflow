@@ -156,3 +156,43 @@ async def test_login_does_not_provision_requester_role(
         )
 
     assert response.status_code == 403
+
+
+async def test_authenticated_user_can_update_identity_profile(
+    session_factory: async_sessionmaker[AsyncSession],
+    test_database_url: str,
+) -> None:
+    settings = Settings(database_url=test_database_url)
+    queue = InMemoryNotificationQueue()
+    app = create_app(settings, notification_queue=queue)
+    app.state.session_factory = session_factory
+
+    async with (
+        app.router.lifespan_context(app),
+        AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client,
+    ):
+        otp_response = await client.post(
+            "/identity/otp/request",
+            json={
+                "identity_type": "mobile",
+                "destination": "+96890000003",
+                "purpose": "registration",
+                "locale": "en",
+            },
+        )
+        otp = queue.items[-1].variables["otp"]
+        assert isinstance(otp, str)
+        verified = await client.post(
+            "/identity/otp/verify",
+            json={"challenge_id": otp_response.json()["challenge_id"], "code": otp},
+        )
+        assert verified.status_code == 200
+
+        response = await client.patch(
+            "/api/profile",
+            headers={"Authorization": f"Bearer {verified.json()['access_token']}"},
+            json={"full_name": "Dana Example"},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {"full_name": "Dana Example"}
