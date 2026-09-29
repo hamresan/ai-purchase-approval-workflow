@@ -19,11 +19,40 @@ export function App() {
   const e2eMode = import.meta.env.VITE_E2E_AUTH_BYPASS === "true";
   const [route, setRoute] = useState<AppRoute>(() => routeFromPath(window.location.pathname));
   const [requestId, setRequestId] = useState<string | null>(() => requestIdFromPath(window.location.pathname));
-  const http = useMemo(() => e2eMode ? { fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, init) } : new AuthorizedHttpClient({ getAccessToken: () => session?.accessToken ?? null }), [e2eMode, session]);
+  const http = useMemo(() => e2eMode ? { fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, init) } : new AuthorizedHttpClient({
+    getSession: () => sessionStore.load(),
+    refreshSession: async () => {
+      const current = sessionStore.load();
+      if (!current) throw new Error("Authentication is required.");
+      const refreshed = await authApi.refreshSession(current.refreshToken);
+      sessionStore.save(refreshed);
+      setSession(refreshed);
+      return refreshed;
+    },
+    clearSession: () => {
+      sessionStore.clear();
+      setSession(null);
+    },
+  }), [authApi, e2eMode, sessionStore]);
+  const authApi = useMemo(() => new HttpIdentityAuthApi(), []);
+  const http = useMemo(() => e2eMode ? { fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, init) } : new AuthorizedHttpClient({
+    getSession: () => sessionStore.load(),
+    refreshSession: async () => {
+      const current = sessionStore.load();
+      if (!current) throw new Error("Authentication is required.");
+      const refreshed = await authApi.refreshSession(current.refreshToken);
+      sessionStore.save(refreshed);
+      setSession(refreshed);
+      return refreshed;
+    },
+    clearSession: () => {
+      sessionStore.clear();
+      setSession(null);
+    },
+  }), [authApi, e2eMode, sessionStore]);
   const requestApi = useMemo(() => new HttpPurchaseRequestApi("", http), [http]);
   const submissionApi = useMemo(() => new HttpPurchaseRequestSubmissionApi("", http), [http]);
   const approvalApi = useMemo(() => new HttpPurchaseRequestApprovalApi("", http), [http]);
-  const authApi = useMemo(() => new HttpIdentityAuthApi(), []);
 
   useEffect(() => {
     const syncRoute = () => { setRoute(routeFromPath(window.location.pathname)); setRequestId(requestIdFromPath(window.location.pathname)); };
@@ -38,7 +67,12 @@ export function App() {
     window.history.pushState({}, "", pathForRequestDetail(id)); setRequestId(id); setRoute("request-detail");
   }, []);
   const authenticated = (value: AuthSession) => { sessionStore.save(value); setSession(value); window.history.replaceState({}, "", "/requests"); setRoute("requests"); setRequestId(null); };
-  const signOut = () => { sessionStore.clear(); setSession(null); };
+  const signOut = () => {
+    const current = sessionStore.load();
+    sessionStore.clear();
+    setSession(null);
+    if (current) void authApi.revokeSession(current.refreshToken).catch(() => undefined);
+  };
 
   if (!session && !e2eMode) return <AuthScreen api={authApi} onAuthenticated={authenticated} />;
   return <AppShell route={route} onNavigate={navigate} onSignOut={signOut}>
