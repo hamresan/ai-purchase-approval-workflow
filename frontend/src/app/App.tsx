@@ -19,21 +19,6 @@ export function App() {
   const e2eMode = import.meta.env.VITE_E2E_AUTH_BYPASS === "true";
   const [route, setRoute] = useState<AppRoute>(() => routeFromPath(window.location.pathname));
   const [requestId, setRequestId] = useState<string | null>(() => requestIdFromPath(window.location.pathname));
-  const http = useMemo(() => e2eMode ? { fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, init) } : new AuthorizedHttpClient({
-    getSession: () => sessionStore.load(),
-    refreshSession: async () => {
-      const current = sessionStore.load();
-      if (!current) throw new Error("Authentication is required.");
-      const refreshed = await authApi.refreshSession(current.refreshToken);
-      sessionStore.save(refreshed);
-      setSession(refreshed);
-      return refreshed;
-    },
-    clearSession: () => {
-      sessionStore.clear();
-      setSession(null);
-    },
-  }), [authApi, e2eMode, sessionStore]);
   const authApi = useMemo(() => new HttpIdentityAuthApi(), []);
   const http = useMemo(() => e2eMode ? { fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, init) } : new AuthorizedHttpClient({
     getSession: () => sessionStore.load(),
