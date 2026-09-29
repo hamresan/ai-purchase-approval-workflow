@@ -31,11 +31,10 @@ async def test_catalog_reader_returns_active_trusted_offer(db_session: AsyncSess
     vendor = VendorModel(
         id=UUID("20000000-0000-0000-0000-000000000001"), name="Acme", is_active=True
     )
-    db_session.add_all(
-        [
-            product,
-            vendor,
-            TrustedOfferModel(
+    db_session.add_all([product, vendor])
+    await db_session.flush()
+    db_session.add(
+        TrustedOfferModel(
                 id=UUID("30000000-0000-0000-0000-000000000001"),
                 product_id=product.id,
                 vendor_id=vendor.id,
@@ -43,8 +42,7 @@ async def test_catalog_reader_returns_active_trusted_offer(db_session: AsyncSess
                 currency="USD",
                 available_quantity=10,
                 is_active=True,
-            ),
-        ]
+            )
     )
     await db_session.commit()
 
