@@ -26,7 +26,6 @@ def upgrade() -> None:
         sa.Column("user_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("department_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
-        sa.ForeignKeyConstraint(["user_id"], ["identity_users.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["department_id"], ["departments.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("user_id"),
     )
@@ -86,7 +85,6 @@ def upgrade() -> None:
             name="ck_budget_limits_owner",
         ),
         sa.CheckConstraint("amount >= 0", name="ck_budget_limits_nonnegative_amount"),
-        sa.ForeignKeyConstraint(["user_id"], ["identity_users.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["department_id"], ["departments.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
