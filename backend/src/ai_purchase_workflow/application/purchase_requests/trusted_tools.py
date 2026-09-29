@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Protocol
+from uuid import UUID
 
 from ai_purchase_workflow.domain.purchase_requests import (
     DomainValidationError,
@@ -8,6 +9,8 @@ from ai_purchase_workflow.domain.purchase_requests import (
     PurchaseItem,
     PurchaseRequest,
 )
+from ai_purchase_workflow.application.trusted_data import BudgetConstraintReader
+
 from ai_purchase_workflow.domain.purchase_requests.policies import (
     ApprovalGatePolicy,
     BudgetPolicy,
@@ -24,10 +27,6 @@ class TrustedCatalogItem:
     available_quantity: int
 
 
-class BudgetReader(Protocol):
-    async def get_available_budget(self, requester_name: str | None, currency: str) -> Money: ...
-
-
 class CatalogReader(Protocol):
     async def find_item(self, description: str) -> TrustedCatalogItem: ...
 
@@ -37,13 +36,19 @@ class OrderGateway(Protocol):
 
 
 class CheckBudget:
-    def __init__(self, reader: BudgetReader, policy: BudgetPolicy) -> None:
+    def __init__(self, reader: BudgetConstraintReader, policy: BudgetPolicy) -> None:
         self._reader = reader
         self._policy = policy
 
-    async def execute(self, requester_name: str | None, total: Money) -> None:
-        budget = await self._reader.get_available_budget(requester_name, total.currency)
-        self._policy.ensure_within_budget(total, budget)
+    async def execute(self, requester_user_id: UUID | None, total: Money) -> None:
+        if requester_user_id is None:
+            raise DomainValidationError("An authenticated requester is required for budget checks.")
+        constraints = await self._reader.get_applicable_constraints(
+            requester_user_id,
+            total.currency,
+        )
+        for constraint in constraints:
+            self._policy.ensure_within_budget(total, constraint.available)
 
 
 class FindVendor:
