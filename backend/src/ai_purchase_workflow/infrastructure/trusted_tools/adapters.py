@@ -1,7 +1,6 @@
 from decimal import Decimal
 
 from ai_purchase_workflow.application.purchase_requests.trusted_tools import (
-    BudgetReader,
     CatalogReader,
     OrderGateway,
     TrustedCatalogItem,
@@ -10,17 +9,6 @@ from ai_purchase_workflow.domain.purchase_requests import DomainValidationError,
 from ai_purchase_workflow.infrastructure.trusted_tools.catalog_item_matcher import (
     CatalogItemMatcher,
 )
-
-
-class FixtureBudgetReader(BudgetReader):
-    def __init__(self) -> None:
-        self._budgets = {"Dana": Money(Decimal("500.00"), "USD")}
-
-    async def get_available_budget(self, requester_name: str | None, currency: str) -> Money:
-        budget = self._budgets.get(requester_name or "")
-        if budget is None or budget.currency != currency:
-            raise DomainValidationError("No trusted budget data is available for this requester.")
-        return budget
 
 
 class FixtureCatalogReader(CatalogReader):
