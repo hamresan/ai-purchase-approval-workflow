@@ -150,7 +150,7 @@ class EditPurchaseRequest:
             [await self._find_vendor.resolve(item.description, item.quantity) for item in items]
         )
         revised_draft = self._create_draft_order.execute(request, resolved_items)
-        await self._check_budget.execute(request.requester_name, revised_draft.total)
+        await self._check_budget.execute(request.requester_user_id, revised_draft.total)
 
         request.items = resolved_items
         request.draft_order = revised_draft
