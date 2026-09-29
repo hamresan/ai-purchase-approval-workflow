@@ -41,7 +41,7 @@ describe("AuthScreen", () => {
       clipboardData: { getData: () => "123456" },
     });
 
-    await waitFor(() => expect(api.verifyOtp).toHaveBeenCalledWith("challenge-1", "123456"));
+    await waitFor(() => expect(api.verifyOtp).toHaveBeenCalledWith("challenge-1", "123456", undefined));
   });
 
   it("collects the registration profile after OTP verification", async () => {
