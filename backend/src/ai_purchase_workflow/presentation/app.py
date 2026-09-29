@@ -43,12 +43,27 @@ def create_app(
     app.state.session_factory = session_factory
     app.state.identity = identity
     if resolved_settings.app_env == "test":
-        app.state.e2e_principal = ApplicationPrincipal(
-            user_id=UUID("11111111-1111-1111-1111-111111111111"),
-            session_id=UUID("33333333-3333-3333-3333-333333333333"),
-            display_name="Dana",
-            roles=frozenset({ApplicationRole.ADMIN}),
-        )
+        app.state.e2e_principals = {
+            "requester": ApplicationPrincipal(
+                user_id=UUID("11111111-1111-1111-1111-111111111111"),
+                session_id=UUID("33333333-3333-3333-3333-333333333333"),
+                display_name="Dana",
+                roles=frozenset({ApplicationRole.REQUESTER}),
+            ),
+            "approver": ApplicationPrincipal(
+                user_id=UUID("22222222-2222-2222-2222-222222222222"),
+                session_id=UUID("44444444-4444-4444-4444-444444444444"),
+                display_name="Alex",
+                roles=frozenset({ApplicationRole.APPROVER}),
+            ),
+            "admin": ApplicationPrincipal(
+                user_id=UUID("55555555-5555-5555-5555-555555555555"),
+                session_id=UUID("66666666-6666-6666-6666-666666666666"),
+                display_name="Admin",
+                roles=frozenset({ApplicationRole.ADMIN}),
+            ),
+        }
+        app.state.e2e_principal = app.state.e2e_principals["admin"]
     register_http_observability(app)
     register_purchase_request_error_handlers(app)
     identity.fastapi.install(app)
