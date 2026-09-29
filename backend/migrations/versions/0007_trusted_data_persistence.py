@@ -14,6 +14,19 @@ depends_on: Sequence[str] | None = None
 
 def upgrade() -> None:
     op.create_table(
+        "organization_members",
+        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("identity_user_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("is_active", sa.Boolean(), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("identity_user_id"),
+    )
+    op.create_index(
+        "ix_organization_members_identity_user_id",
+        "organization_members",
+        ["identity_user_id"],
+    )
+    op.create_table(
         "departments",
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("name", sa.String(length=160), nullable=False),
@@ -23,11 +36,12 @@ def upgrade() -> None:
     )
     op.create_table(
         "department_memberships",
-        sa.Column("user_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("member_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("department_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
         sa.ForeignKeyConstraint(["department_id"], ["departments.id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("user_id"),
+        sa.ForeignKeyConstraint(["member_id"], ["organization_members.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("member_id"),
     )
     op.create_index(
         "ix_department_memberships_department_id",
@@ -114,3 +128,4 @@ def downgrade() -> None:
     op.drop_table("products")
     op.drop_table("department_memberships")
     op.drop_table("departments")
+    op.drop_table("organization_members")
