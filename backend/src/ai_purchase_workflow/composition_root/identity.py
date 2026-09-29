@@ -14,12 +14,14 @@ from identity.access_tokens import (
 )
 from identity.infrastructure.security import SystemClock
 from notification import NotificationModule, NotificationModuleConfig
+from notification.application.contracts.queue import NotificationQueue
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from ai_purchase_workflow.application.access import ApplicationRole
 from ai_purchase_workflow.composition_root.settings import Settings
 from ai_purchase_workflow.infrastructure.access import SqlAlchemyRoleWriter
 from ai_purchase_workflow.infrastructure.notifications import (
+    DevelopmentNotificationQueue,
     InMemoryNotificationQueue,
     UnusedNotificationProviderResolver,
     UnusedNotificationTemplateRenderer,
@@ -40,9 +42,15 @@ def build_identity_module(
         async with session_factory() as session:
             yield session
 
-    resolved_notification_queue = (
-        notification_queue if notification_queue is not None else InMemoryNotificationQueue()
-    )
+    if notification_queue is not None:
+        resolved_notification_queue: NotificationQueue = notification_queue
+    else:
+        in_memory_queue = InMemoryNotificationQueue()
+        resolved_notification_queue = (
+            DevelopmentNotificationQueue(in_memory_queue)
+            if settings.app_env == "development"
+            else in_memory_queue
+        )
     notification = NotificationModule(
         NotificationModuleConfig(
             queue=resolved_notification_queue,
