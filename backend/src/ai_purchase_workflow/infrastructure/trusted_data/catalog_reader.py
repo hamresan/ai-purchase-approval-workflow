@@ -38,10 +38,12 @@ class SqlAlchemyTrustedCatalogReader(TrustedCatalogReader):
         ]
         if not matches:
             raise DomainValidationError(f"No trusted vendor data is available for {description}.")
-        product, offer, vendor = min(
-            matches,
-            key=lambda row: (row[1].unit_price_amount, row[2].name, str(row[1].id)),
-        )
+        if len(matches) > 1:
+            raise DomainValidationError(
+                f"Multiple trusted vendor offers are available for {description}; "
+                "an explicit offer selection is required."
+            )
+        product, offer, vendor = matches[0]
         return TrustedCatalogItem(
             product_id=product.id,
             description=product.name,
