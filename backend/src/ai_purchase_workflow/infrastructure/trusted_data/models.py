@@ -21,7 +21,6 @@ class DepartmentMembershipModel(Base):
 
     user_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
-        ForeignKey("identity_users.id", ondelete="CASCADE"),
         primary_key=True,
     )
     department_id: Mapped[UUID] = mapped_column(
@@ -97,7 +96,6 @@ class BudgetLimitModel(Base):
     owner_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     user_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True),
-        ForeignKey("identity_users.id", ondelete="CASCADE"),
         nullable=True,
         index=True,
     )
