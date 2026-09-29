@@ -9,6 +9,7 @@ from ai_purchase_workflow.infrastructure.trusted_data.models import (
     BudgetLimitModel,
     DepartmentMembershipModel,
     DepartmentModel,
+    OrganizationMemberModel,
 )
 
 
@@ -24,11 +25,16 @@ class SqlAlchemyBudgetConstraintReader(BudgetConstraintReader):
         department_ids = (
             select(DepartmentMembershipModel.department_id)
             .join(
+                OrganizationMemberModel,
+                OrganizationMemberModel.id == DepartmentMembershipModel.member_id,
+            )
+            .join(
                 DepartmentModel,
                 DepartmentModel.id == DepartmentMembershipModel.department_id,
             )
             .where(
-                DepartmentMembershipModel.user_id == requester_user_id,
+                OrganizationMemberModel.identity_user_id == requester_user_id,
+                OrganizationMemberModel.is_active.is_(True),
                 DepartmentMembershipModel.is_active.is_(True),
                 DepartmentModel.is_active.is_(True),
             )
