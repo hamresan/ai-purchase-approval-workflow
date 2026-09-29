@@ -59,7 +59,7 @@ def create_app(
             "admin": ApplicationPrincipal(
                 user_id=UUID("55555555-5555-5555-5555-555555555555"),
                 session_id=UUID("66666666-6666-6666-6666-666666666666"),
-                display_name="Admin",
+                display_name="Dana",
                 roles=frozenset({ApplicationRole.ADMIN}),
             ),
         }
