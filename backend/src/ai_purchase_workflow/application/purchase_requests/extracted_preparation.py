@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from uuid import UUID
 
 from ai_purchase_workflow.application.purchase_requests.dto import PurchaseRequestView
 from ai_purchase_workflow.application.purchase_requests.extraction import ExtractedPurchaseRequest
@@ -43,6 +44,9 @@ class PrepareExtractedPurchaseRequest:
     async def execute(
         self,
         extracted: ExtractedPurchaseRequest,
+        *,
+        requester_name: str | None = None,
+        requester_user_id: UUID | None = None,
     ) -> PurchaseRequestPreparationResult:
         try:
             trusted_items = tuple(
@@ -51,7 +55,11 @@ class PrepareExtractedPurchaseRequest:
                     for item in extracted.items
                 ]
             )
-            request = PurchaseRequest.create(trusted_items, extracted.requester_name)
+            request = PurchaseRequest.create(
+                trusted_items,
+                requester_name,
+                requester_user_id=requester_user_id,
+            )
             draft = self._create_draft_order.execute(request, trusted_items)
         except PurchaseRequestDomainError as error:
             raise PurchaseRequestPreparationError(str(error)) from error

@@ -30,6 +30,7 @@ class InMemoryPurchaseRequestRepository(PurchaseRequestRepository):
         limit: int,
         offset: int,
         descending: bool,
+        requester_user_id: UUID | None = None,
     ) -> PurchaseRequestPageResult:
         values = tuple(
             sorted(
@@ -38,10 +39,11 @@ class InMemoryPurchaseRequestRepository(PurchaseRequestRepository):
                 reverse=descending,
             )
         )
-        filtered = (
-            values
-            if status is None
-            else tuple(request for request in values if request.status is status)
+        filtered = tuple(
+            request
+            for request in values
+            if (status is None or request.status is status)
+            and (requester_user_id is None or request.requester_user_id == requester_user_id)
         )
         return PurchaseRequestPageResult(
             items=filtered[offset : offset + limit],

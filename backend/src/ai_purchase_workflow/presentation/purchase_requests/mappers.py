@@ -1,3 +1,4 @@
+from ai_purchase_workflow.application.access import ApplicationPrincipal
 from ai_purchase_workflow.application.purchase_requests import (
     CreatePurchaseItem,
     CreatePurchaseRequestCommand,
@@ -11,9 +12,13 @@ from ai_purchase_workflow.presentation.purchase_requests.schemas import (
 
 class PurchaseRequestCommandMapper:
     @staticmethod
-    def from_body(body: CreatePurchaseRequestBody) -> CreatePurchaseRequestCommand:
+    def from_body(
+        body: CreatePurchaseRequestBody,
+        principal: ApplicationPrincipal,
+    ) -> CreatePurchaseRequestCommand:
         return CreatePurchaseRequestCommand(
-            requester_name=body.requester_name,
+            requester_name=principal.display_name,
+            requester_user_id=principal.user_id,
             items=tuple(
                 CreatePurchaseItem(
                     description=item.description,

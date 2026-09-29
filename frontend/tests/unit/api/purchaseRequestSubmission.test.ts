@@ -8,12 +8,12 @@ describe("HttpPurchaseRequestSubmissionApi", () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ request_id: "request-1", status: "pending_approval" }), { status: 201, headers: { "Content-Type": "application/json" } }));
     vi.stubGlobal("fetch", fetchMock);
 
-    const result = await new HttpPurchaseRequestSubmissionApi("http://api.test").submit({ requestText: "Two laptop stands", requesterName: "Dana" });
+    const result = await new HttpPurchaseRequestSubmissionApi("http://api.test").submit({ requestText: "Two laptop stands" });
 
     expect(result).toEqual({ requestId: "request-1", status: "pending_approval" });
     expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/purchase-requests", expect.objectContaining({
       method: "POST",
-      body: JSON.stringify({ request_text: "Two laptop stands", requester_name: "Dana" }),
+      body: JSON.stringify({ request_text: "Two laptop stands" }),
     }));
   });
 

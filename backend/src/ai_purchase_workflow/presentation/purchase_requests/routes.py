@@ -3,6 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
 
+from ai_purchase_workflow.application.access import ApplicationRole, AuthorizationPolicy
 from ai_purchase_workflow.application.purchase_requests import (
     CreatePurchaseRequest,
     GetPurchaseRequest,
@@ -16,6 +17,7 @@ from ai_purchase_workflow.application.purchase_requests import (
     SubmitPurchaseRequest,
 )
 from ai_purchase_workflow.domain.purchase_requests import RequestStatus
+from ai_purchase_workflow.presentation.auth import CurrentPrincipalDependency
 from ai_purchase_workflow.presentation.purchase_requests.approval_dispatcher import (
     ApprovalActionDispatcher,
 )
@@ -88,11 +90,13 @@ async def create_purchase_request(
     body: CreatePurchaseRequestBody | FreeTextPurchaseRequestBody,
     use_case: CreatePurchaseRequestDependency,
     free_text_use_case: SubmitFreeTextPurchaseRequestDependency,
+    principal: CurrentPrincipalDependency,
     idempotency_key: IdempotencyKeyHeader = None,
 ) -> PurchaseRequestResponse:
+    AuthorizationPolicy().require_requester(principal)
     if isinstance(body, CreatePurchaseRequestBody):
         view = await use_case.execute(
-            PurchaseRequestCommandMapper.from_body(body),
+            PurchaseRequestCommandMapper.from_body(body, principal),
             idempotency_key=idempotency_key,
         )
         return PurchaseRequestResponse.from_view(view)
@@ -101,7 +105,8 @@ async def create_purchase_request(
         view = await free_text_use_case.execute(
             SubmitFreeTextPurchaseRequestCommand(
                 request_text=body.request_text,
-                requester_name=body.requester_name,
+                requester_name=principal.display_name,
+                requester_user_id=principal.user_id,
             )
         )
     except PurchaseRequestWorkflowReviewRequiredError as error:
@@ -113,25 +118,41 @@ async def create_purchase_request(
 async def get_purchase_request_by_id(
     request_id: UUID,
     use_case: GetPurchaseRequestDetailDependency,
+    principal: CurrentPrincipalDependency,
 ) -> PurchaseRequestDetailResponse:
     view = await use_case.execute(request_id)
+    AuthorizationPolicy().require_request_access(principal, view.requester_user_id)
     return PurchaseRequestDetailResponse.from_detail_view(view)
 
 
 @router.get("", response_model=PurchaseRequestListResponse)
 async def list_purchase_requests(
     use_case: ListPurchaseRequestsDependency,
+    principal: CurrentPrincipalDependency,
     request_status: RequestStatusQuery = None,
     limit: LimitQuery = 20,
     offset: OffsetQuery = 0,
     order: OrderQuery = "desc",
 ) -> PurchaseRequestListResponse:
+    policy = AuthorizationPolicy()
+    policy.require_any(
+        principal,
+        ApplicationRole.REQUESTER,
+        ApplicationRole.APPROVER,
+        ApplicationRole.ADMIN,
+    )
+    requester_user_id = (
+        principal.user_id
+        if principal.roles.isdisjoint({ApplicationRole.APPROVER, ApplicationRole.ADMIN})
+        else None
+    )
     page = await use_case.execute(
         PurchaseRequestListQuery(
             status=request_status,
             limit=limit,
             offset=offset,
             descending=order == "desc",
+            requester_user_id=requester_user_id,
         )
     )
     return PurchaseRequestListResponse(
@@ -146,7 +167,11 @@ async def list_purchase_requests(
 async def prepare_purchase_request(
     request_id: UUID,
     use_case: PreparePurchaseRequestDependency,
+    detail_use_case: GetPurchaseRequestDetailDependency,
+    principal: CurrentPrincipalDependency,
 ) -> PurchaseRequestResponse:
+    detail = await detail_use_case.execute(request_id)
+    AuthorizationPolicy().require_request_owner(principal, detail.requester_user_id)
     view = await use_case.execute(request_id)
     return PurchaseRequestResponse.from_view(view)
 
@@ -155,7 +180,11 @@ async def prepare_purchase_request(
 async def submit_purchase_request(
     request_id: UUID,
     use_case: SubmitPurchaseRequestDependency,
+    detail_use_case: GetPurchaseRequestDetailDependency,
+    principal: CurrentPrincipalDependency,
 ) -> PurchaseRequestResponse:
+    detail = await detail_use_case.execute(request_id)
+    AuthorizationPolicy().require_request_owner(principal, detail.requester_user_id)
     view = await use_case.execute(request_id)
     return PurchaseRequestResponse.from_view(view)
 
@@ -165,6 +194,12 @@ async def decide_purchase_request(
     request_id: UUID,
     body: ApprovalBody,
     dispatcher: ApprovalDispatcherDependency,
+    detail_use_case: GetPurchaseRequestDetailDependency,
+    principal: CurrentPrincipalDependency,
 ) -> PurchaseRequestResponse:
-    view = await dispatcher.execute(request_id, body)
+    policy = AuthorizationPolicy()
+    policy.require_approver(principal)
+    detail = await detail_use_case.execute(request_id)
+    policy.ensure_not_self_approval(principal, detail.requester_user_id)
+    view = await dispatcher.execute(request_id, body, str(principal.user_id))
     return PurchaseRequestResponse.from_view(view)

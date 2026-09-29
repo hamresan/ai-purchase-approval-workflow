@@ -2,15 +2,20 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir uv
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir uv
 
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev --no-install-project
 
 COPY alembic.ini ./
 COPY migrations ./migrations
 COPY src ./src
 
+RUN uv sync --frozen --no-dev --no-editable
+
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "ai_purchase_workflow.presentation.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/app/.venv/bin/uvicorn", "ai_purchase_workflow.presentation.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]

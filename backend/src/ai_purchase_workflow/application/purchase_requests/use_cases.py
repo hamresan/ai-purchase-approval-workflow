@@ -43,7 +43,11 @@ class CreatePurchaseRequest:
             )
             for item in command.items
         )
-        request = PurchaseRequest.create(items=items, requester_name=command.requester_name)
+        request = PurchaseRequest.create(
+            items=items,
+            requester_name=command.requester_name,
+            requester_user_id=command.requester_user_id,
+        )
         if idempotency_key is None:
             await self._repository.add(request)
             persisted = request
@@ -73,6 +77,7 @@ class ListPurchaseRequests:
             limit=query.limit,
             offset=query.offset,
             descending=query.descending,
+            requester_user_id=query.requester_user_id,
         )
         return PurchaseRequestPage(
             items=tuple(PurchaseRequestView.from_domain(request) for request in page.items),

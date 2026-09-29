@@ -9,7 +9,7 @@ describe("HttpPurchaseRequestApi", () => {
     const api = new HttpPurchaseRequestApi("http://api.test");
 
     await expect(api.list({ status: "approved", limit: 7, offset: 0, order: "desc" })).resolves.toEqual({ items: [], total: 0, limit: 7, offset: 0 });
-    expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/purchase-requests?limit=7&offset=0&order=desc&status=approved");
+    expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/purchase-requests?limit=7&offset=0&order=desc&status=approved", undefined);
   });
 
   it("gets a request detail by encoded id", async () => {
@@ -19,7 +19,7 @@ describe("HttpPurchaseRequestApi", () => {
     const api = new HttpPurchaseRequestApi("http://api.test");
 
     await expect(api.get("request id")).resolves.toEqual(detail);
-    expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/purchase-requests/request%20id");
+    expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/purchase-requests/request%20id", undefined);
   });
 
   it("omits the optional status filter", async () => {
@@ -28,7 +28,7 @@ describe("HttpPurchaseRequestApi", () => {
     const api = new HttpPurchaseRequestApi();
 
     await api.list({ limit: 7, offset: 7, order: "asc" });
-    expect(fetchMock).toHaveBeenCalledWith("/api/purchase-requests?limit=7&offset=7&order=asc");
+    expect(fetchMock).toHaveBeenCalledWith("/api/purchase-requests?limit=7&offset=7&order=asc", undefined);
   });
 
   it("maps API error details to a typed error", async () => {

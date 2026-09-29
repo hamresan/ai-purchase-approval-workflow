@@ -51,6 +51,7 @@ class PurchaseRequestPersistenceMapper:
         return PurchaseRequestModel(
             id=request.id,
             requester_name=request.requester_name,
+            requester_user_id=request.requester_user_id,
             status=request.status.value,
             items=[self._item_mapper.to_record(item) for item in request.items],
             created_at=request.created_at,
@@ -59,6 +60,7 @@ class PurchaseRequestPersistenceMapper:
 
     def update_model(self, model: PurchaseRequestModel, request: PurchaseRequest) -> None:
         model.requester_name = request.requester_name
+        model.requester_user_id = request.requester_user_id
         model.status = request.status.value
         model.items = [self._item_mapper.to_record(item) for item in request.items]
         model.updated_at = request.updated_at
@@ -110,6 +112,7 @@ class PurchaseRequestPersistenceMapper:
             draft_order=draft_order,
             approval_decision=approval_decision,
             audit_entries=audit_entries,
+            requester_user_id=model.requester_user_id,
         )
 
 

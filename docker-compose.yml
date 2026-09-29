@@ -19,6 +19,9 @@ services:
       APP_ENV: ${APP_ENV}
       DATABASE_URL: ${DATABASE_URL}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
+      IDENTITY_SIGNING_SECRET: ${IDENTITY_SIGNING_SECRET:-development-identity-signing-secret}
+      IDENTITY_JWT_SIGNING_SECRET: ${IDENTITY_JWT_SIGNING_SECRET:-development-jwt-signing-secret-change-me}
+      IDENTITY_ACCESS_TOKEN_MINUTES: ${IDENTITY_ACCESS_TOKEN_MINUTES:-15}
       WORKFLOW_MODEL_PROVIDER: ${WORKFLOW_MODEL_PROVIDER:-fake}
       WORKFLOW_MODEL_NAME: ${WORKFLOW_MODEL_NAME:-qwen3:8b}
       WORKFLOW_MODEL_BASE_URL: ${WORKFLOW_MODEL_BASE_URL:-}
@@ -37,6 +40,7 @@ services:
     build: ./frontend
     environment:
       VITE_BACKEND_URL: http://backend:8000
+      VITE_E2E_AUTH_BYPASS: ${VITE_E2E_AUTH_BYPASS:-false}
     ports:
       - "${FRONTEND_PORT}:5173"
     depends_on:

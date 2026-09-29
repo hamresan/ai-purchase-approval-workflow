@@ -23,4 +23,5 @@ class PurchaseRequestRepository(Protocol):
         limit: int,
         offset: int,
         descending: bool,
+        requester_user_id: UUID | None = None,
     ) -> PurchaseRequestPageResult: ...

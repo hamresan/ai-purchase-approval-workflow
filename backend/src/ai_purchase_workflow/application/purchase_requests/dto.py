@@ -19,6 +19,7 @@ class CreatePurchaseItem:
 class CreatePurchaseRequestCommand:
     requester_name: str | None
     items: tuple[CreatePurchaseItem, ...]
+    requester_user_id: UUID | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,6 +28,7 @@ class PurchaseRequestListQuery:
     limit: int = 20
     offset: int = 0
     descending: bool = True
+    requester_user_id: UUID | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,6 +48,7 @@ class PurchaseRequestView:
     status: RequestStatus
     created_at: datetime
     updated_at: datetime
+    requester_user_id: UUID | None = None
 
     @classmethod
     def from_domain(cls, request: PurchaseRequest) -> "PurchaseRequestView":
@@ -65,6 +68,7 @@ class PurchaseRequestView:
             status=request.status,
             created_at=request.created_at,
             updated_at=request.updated_at,
+            requester_user_id=request.requester_user_id,
         )
 
 

@@ -3,6 +3,7 @@ from typing import Protocol
 from uuid import UUID
 
 from ai_purchase_workflow.application.purchase_requests.dto import PurchaseRequestView
+from ai_purchase_workflow.application.purchase_requests.repository import PurchaseRequestRepository
 from ai_purchase_workflow.application.purchase_requests.use_cases import GetPurchaseRequest
 
 
@@ -13,7 +14,13 @@ class PurchaseRequestWorkflowStartResult:
 
 
 class PurchaseRequestWorkflowStarter(Protocol):
-    async def start(self, free_text: str) -> PurchaseRequestWorkflowStartResult: ...
+    async def start(
+        self,
+        free_text: str,
+        *,
+        requester_name: str | None = None,
+        requester_user_id: UUID | None = None,
+    ) -> PurchaseRequestWorkflowStartResult: ...
 
 
 class PurchaseRequestWorkflowReviewRequiredError(Exception):
@@ -24,6 +31,7 @@ class PurchaseRequestWorkflowReviewRequiredError(Exception):
 class SubmitFreeTextPurchaseRequestCommand:
     request_text: str
     requester_name: str | None = None
+    requester_user_id: UUID | None = None
 
 
 class SubmitFreeTextPurchaseRequest:
@@ -31,19 +39,21 @@ class SubmitFreeTextPurchaseRequest:
         self,
         workflow: PurchaseRequestWorkflowStarter,
         get_purchase_request: GetPurchaseRequest,
+        repository: PurchaseRequestRepository | None = None,
     ) -> None:
         self._workflow = workflow
         self._get_purchase_request = get_purchase_request
+        self._repository = repository
 
     async def execute(
         self,
         command: SubmitFreeTextPurchaseRequestCommand,
     ) -> PurchaseRequestView:
-        free_text = command.request_text
-        if command.requester_name:
-            free_text = f"Requester: {command.requester_name}\nRequest: {command.request_text}"
-
-        result = await self._workflow.start(free_text)
+        result = await self._workflow.start(
+            command.request_text,
+            requester_name=command.requester_name,
+            requester_user_id=command.requester_user_id,
+        )
         if result.purchase_request_id is None:
             fallback_detail = "The request needs more information before it can continue."
             raise PurchaseRequestWorkflowReviewRequiredError(

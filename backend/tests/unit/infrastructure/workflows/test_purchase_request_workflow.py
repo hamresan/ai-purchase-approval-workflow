@@ -118,7 +118,9 @@ async def test_workflow_pauses_before_submission_and_binds_thread() -> None:
         }
     )
 
-    result = await runner.execute("Dana needs two laptop stands", checkpoint_id="thread-1")
+    result = await runner.execute(
+        "Dana needs two laptop stands", requester_name="Dana", checkpoint_id="thread-1"
+    )
 
     assert result.checkpoint_id == "thread-1"
     assert result.status == "pending_approval"
@@ -147,7 +149,9 @@ async def test_workflow_resumes_approved_request_and_submits_once() -> None:
             "items": [{"description": "Laptop stand", "quantity": 1}],
         }
     )
-    result = await runner.execute("Dana needs a laptop stand", checkpoint_id="thread-approved")
+    result = await runner.execute(
+        "Dana needs a laptop stand", requester_name="Dana", checkpoint_id="thread-approved"
+    )
     assert result.purchase_request_id is not None
     request = repository.requests[result.purchase_request_id]
     request.approval_decision = ApprovalDecision.create(
@@ -174,7 +178,9 @@ async def test_workflow_resumes_rejected_request_without_submitting() -> None:
             "items": [{"description": "Laptop stand", "quantity": 1}],
         }
     )
-    result = await runner.execute("Dana needs a laptop stand", checkpoint_id="thread-rejected")
+    result = await runner.execute(
+        "Dana needs a laptop stand", requester_name="Dana", checkpoint_id="thread-rejected"
+    )
     assert result.purchase_request_id is not None
     request = repository.requests[result.purchase_request_id]
     request.approval_decision = ApprovalDecision.create(
@@ -230,7 +236,7 @@ async def test_workflow_routes_tool_failure_to_human_review() -> None:
         }
     )
 
-    result = await runner.execute("Dana needs an unknown item")
+    result = await runner.execute("Dana needs an unknown item", requester_name="Dana")
 
     assert result.status == "human_review"
     assert result.needs_human_review is True
@@ -251,7 +257,7 @@ async def test_workflow_persists_over_budget_request_as_business_failure() -> No
         budget=FakeBudgetReader("10.00"),
     )
 
-    result = await runner.execute("Dana needs two laptop stands")
+    result = await runner.execute("Dana needs two laptop stands", requester_name="Dana")
 
     assert result.status == "failed"
     assert result.needs_human_review is False
@@ -267,3 +273,26 @@ async def test_workflow_persists_over_budget_request_as_business_failure() -> No
     assert request.draft_order is not None
     assert request.draft_order.total.amount == Decimal("50.00")
     assert request.audit_entries[-1].event_type == "budget_rejected"
+
+
+@pytest.mark.asyncio
+async def test_workflow_uses_authenticated_requester_for_budget_not_model_requester() -> None:
+    budget = FakeBudgetReader()
+    runner, _workflow, repository, _threads, _gateway = build_workflow(
+        {
+            "schema_version": "1.0",
+            "requester_name": "Spoofed User",
+            "items": [{"description": "Laptop stand", "quantity": 1}],
+        },
+        budget=budget,
+    )
+
+    result = await runner.execute(
+        "Please buy one laptop stand",
+        requester_name="Dana",
+    )
+
+    assert result.purchase_request_id is not None
+    request = repository.requests[result.purchase_request_id]
+    assert request.requester_name == "Dana"
+    assert budget.requester_names == ["Dana"]

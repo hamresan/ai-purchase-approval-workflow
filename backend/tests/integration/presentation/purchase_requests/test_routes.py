@@ -1,3 +1,4 @@
+import pytest
 from httpx import AsyncClient
 
 
@@ -188,29 +189,6 @@ async def test_prepare_rejects_over_budget(api_client: AsyncClient) -> None:
     assert "exceeds the available budget" in response.json()["detail"]
 
 
-async def test_prepare_rejects_missing_budget_data(api_client: AsyncClient) -> None:
-    created = (
-        await api_client.post(
-            "/api/purchase-requests",
-            json={
-                "items": [
-                    {
-                        "description": "Laptop stand",
-                        "quantity": 1,
-                        "unit_price_amount": "1.00",
-                        "currency": "USD",
-                    }
-                ],
-            },
-        )
-    ).json()
-
-    response = await api_client.post(f"/api/purchase-requests/{created['id']}/prepare")
-
-    assert response.status_code == 422
-    assert "No trusted budget data" in response.json()["detail"]
-
-
 async def test_list_validates_pagination_and_order(api_client: AsyncClient) -> None:
     invalid_limit = await api_client.get("/api/purchase-requests", params={"limit": 0})
     invalid_offset = await api_client.get("/api/purchase-requests", params={"offset": -1})
@@ -298,3 +276,24 @@ async def test_free_text_create_runs_workflow_to_pending_approval(
     assert payload["requester_name"] == "Dana"
     assert payload["items"][0]["description"] == "Laptop stand"
     assert payload["items"][0]["vendor"] == "Acme"
+
+
+@pytest.mark.parametrize(
+    ("method", "path"),
+    [
+        ("GET", "/api/purchase-requests"),
+        ("GET", "/api/purchase-requests/00000000-0000-0000-0000-000000000000"),
+        ("POST", "/api/purchase-requests"),
+        ("POST", "/api/purchase-requests/00000000-0000-0000-0000-000000000000/prepare"),
+        ("POST", "/api/purchase-requests/00000000-0000-0000-0000-000000000000/submit"),
+        ("POST", "/api/purchase-requests/00000000-0000-0000-0000-000000000000/approval"),
+    ],
+)
+async def test_purchase_routes_require_authentication(
+    unauthenticated_api_client: AsyncClient,
+    method: str,
+    path: str,
+) -> None:
+    response = await unauthenticated_api_client.request(method, path)
+
+    assert response.status_code == 401

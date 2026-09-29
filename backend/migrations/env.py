@@ -2,6 +2,7 @@ import os
 from logging.config import fileConfig
 
 from alembic import context
+from identity.migrations import identity_metadata
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
@@ -16,7 +17,7 @@ if database_url := os.getenv("DATABASE_URL"):
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-target_metadata = Base.metadata
+target_metadata = [Base.metadata, identity_metadata()]
 
 
 def run_migrations_offline() -> None:

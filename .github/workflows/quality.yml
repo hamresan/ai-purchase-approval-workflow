@@ -50,6 +50,7 @@ jobs:
           BACKEND_PORT: 8000
           FRONTEND_PORT: 5173
           WORKFLOW_MODEL_PROVIDER: fake
+          VITE_E2E_AUTH_BYPASS: "true"
       - name: Wait for Docker E2E stack
         run: |
           for attempt in {1..30}; do

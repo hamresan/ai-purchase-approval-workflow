@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     app_env: str = "development"
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_purchase_workflow"
     frontend_origin: str = "http://localhost:5173"
+    identity_signing_secret: str = "development-identity-signing-secret"
+    identity_jwt_signing_secret: str = "development-jwt-signing-secret-change-me"
+    identity_access_token_minutes: int = 15
     workflow_model_provider: ModelProvider = ModelProvider.FAKE
     workflow_model_name: str = "qwen3:8b"
     workflow_model_base_url: str | None = None

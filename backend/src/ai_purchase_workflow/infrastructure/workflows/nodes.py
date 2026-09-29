@@ -61,7 +61,11 @@ class PreparePurchaseRequestNode:
             return updated
 
         try:
-            preparation = await self._preparer.execute(extracted)
+            preparation = await self._preparer.execute(
+                extracted,
+                requester_name=state["requester_name"],
+                requester_user_id=state["requester_user_id"],
+            )
         except PurchaseRequestPreparationError as error:
             updated = state.copy()
             updated["status"] = "human_review"

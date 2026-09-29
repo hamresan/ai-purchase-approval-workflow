@@ -8,11 +8,11 @@ describe("HttpPurchaseRequestApprovalApi", () => {
     vi.stubGlobal("fetch", fetchMock);
     const api = new HttpPurchaseRequestApprovalApi("http://api.test");
 
-    await api.decide("request 1", { action: "approve", decidedBy: "Purchase reviewer", reason: "OK" });
+    await api.decide("request 1", { action: "approve", reason: "OK" });
 
     expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/purchase-requests/request%201/approval", expect.objectContaining({
       method: "POST",
-      body: JSON.stringify({ action: "approve", decided_by: "Purchase reviewer", reason: "OK", items: null }),
+      body: JSON.stringify({ action: "approve", reason: "OK", items: null }),
     }));
   });
 
@@ -20,6 +20,6 @@ describe("HttpPurchaseRequestApprovalApi", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail: [{ secret: "internal" }] }), { status: 422, headers: { "Content-Type": "application/json" } })));
     const api = new HttpPurchaseRequestApprovalApi();
 
-    await expect(api.decide("1", { action: "reject", decidedBy: "Reviewer", reason: "No" })).rejects.toThrow("Unable to update this request.");
+    await expect(api.decide("1", { action: "reject", reason: "No" })).rejects.toThrow("Unable to update this request.");
   });
 });

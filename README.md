@@ -24,7 +24,7 @@ LangGraph checkpoint + human approval pause
     └── Approve → resume checkpoint → approval-gated submission
 ```
 
-The browser UI supports request creation, dashboard review, request details, audit timeline, and Approve / Reject / Edit decisions.
+The purchase APIs and browser workflow are protected by passwordless Identity authentication and application-owned roles. The browser refreshes expired access tokens through Identity session refresh and signs the user out when the refresh session is no longer valid.
 
 ## Architecture
 
@@ -91,17 +91,22 @@ To stop and remove the local stack:
 docker compose down
 ```
 
-## Use the web interface
+## Authentication and authorization
 
-1. Open http://localhost:5173.
-2. Select **New Purchase Request**.
-3. Enter a request of at least 10 characters and optionally a requester name.
-4. Submit it. With the default Fake provider, the deterministic extracted request is a Laptop stand for Dana.
-5. Open the request and inspect its trusted vendor, price, budget result, draft order, and timeline.
-6. Choose **Approve**, **Reject**, or **Edit**.
-7. Approve resumes the persisted workflow and submits through the approval gate; Reject records the reason; Edit revalidates trusted data and returns the request to approval review.
+Passwordless registration, login, session refresh, and revocation are provided by `hamresan-identity` under `/identity`. OTP notification intent flows through `hamresan-notification`; durable provider delivery is added in the notification stage.
 
-Reviewer identity is entered explicitly in the approval dialog. Authentication/authorization is intentionally not part of this v1 demonstration.
+Successful first-time registration provisions the application `REQUESTER` role. Application authorization owns `REQUESTER`, `APPROVER`, and `ADMIN` roles. Requester and approver identity are derived from the authenticated principal rather than request payloads or model output, and self-approval is rejected.
+
+The first administrator is bootstrapped explicitly after that person has registered:
+
+```bash
+cd backend
+uv run python -m ai_purchase_workflow.operations.bootstrap_admin --mobile +96891234567
+```
+
+The command resolves an already registered mobile identity through the public Identity contract, is idempotent, and grants `ADMIN` to that user; normal registration never grants `ADMIN`.
+
+All `/api/purchase-requests` calls require a Bearer access token. The browser provides mobile OTP login/registration, post-verification profile setup for new users, session refresh, and sign-out/revocation.
 
 ## Model providers
 
@@ -160,12 +165,10 @@ The interactive OpenAPI document at `/docs` is the canonical field-level referen
 Create and start a free-text workflow:
 
 ```bash
-curl -X POST http://localhost:8000/api/purchase-requests \
-  -H "Content-Type: application/json" \
-  -d '{
-    "request_text": "Dana needs one laptop stand",
-    "requester_name": "Dana"
-  }'
+curl -X POST http://localhost:8000/api/purchase-requests \\
+  -H "Authorization: Bearer <access-token>" \\
+  -H "Content-Type: application/json" \\
+  -d '{"request_text": "I need one laptop stand"}'
 ```
 
 The response is a purchase-request representation with a UUID `id`, requester, items, status, and timestamps. A successful workflow normally reaches `pending_approval`.
@@ -173,28 +176,30 @@ The response is a purchase-request representation with a UUID `id`, requester, i
 List requests:
 
 ```bash
-curl "http://localhost:8000/api/purchase-requests?status=pending_approval&limit=20&offset=0&order=desc"
+curl -H "Authorization: Bearer <access-token>" \\
+  "http://localhost:8000/api/purchase-requests?status=pending_approval&limit=20&offset=0&order=desc"
 ```
 
 Read details and audit history:
 
 ```bash
-curl http://localhost:8000/api/purchase-requests/<request-uuid>
+curl -H "Authorization: Bearer <access-token>" \\
+  http://localhost:8000/api/purchase-requests/<request-uuid>
 ```
 
 Approve:
 
 ```bash
-curl -X POST http://localhost:8000/api/purchase-requests/<request-uuid>/approval \
-  -H "Content-Type: application/json" \
+curl -X POST http://localhost:8000/api/purchase-requests/<request-uuid>/approval \\
+  -H "Authorization: Bearer <access-token>" \\
+  -H "Content-Type: application/json" \\
   -d '{
     "action": "approve",
-    "decided_by": "Reviewer Name",
     "reason": "Within budget"
   }'
 ```
 
-Reject uses `"action": "reject"` and requires a non-empty `reason`. Edit uses `"action": "edit"`, explicit `decided_by`, and an `items` array containing `description` and positive `quantity`; trusted vendor and price are resolved again by the backend.
+Reject uses `"action": "reject"` and requires a non-empty `reason`. Edit uses `"action": "edit"` and an `items` array containing `description` and positive `quantity`; the authenticated principal is the authoritative decision actor, and trusted vendor and price are resolved again by the backend.
 
 ## Supported behavior
 
@@ -224,15 +229,14 @@ See [SECURITY.md](SECURITY.md) for the security boundary and reporting guidance.
 
 This repository is a focused workflow demonstration, not a production procurement platform.
 
-- No authentication, authorization, roles, or multi-tenancy.
-- Reviewer identity is manually entered and is not cryptographically verified.
+- No multi-tenancy.
 - Catalog, vendor, budget, and order integrations are deterministic fixture adapters rather than ERP/procurement systems.
 - No payment or money movement.
-- No email/notification system.
+- OTP notification intent is integrated through `hamresan-notification`, but durable SMS/email delivery and workflow notifications are not implemented yet.
 - No autonomous purchasing; human approval remains mandatory.
 - No generic chat interface.
 - External model-provider behavior depends on the selected provider/model and is not required by CI.
-- A production deployment would require Auth/AuthZ, real trusted commerce integrations, operational secret management, deployment hardening, and recovery design appropriate to its environment.
+- A production deployment would require real trusted commerce integrations, durable notification delivery, distributed rate limiting, operational secret management, deployment hardening, and recovery design appropriate to its environment.
 
 ## Development
 
@@ -305,7 +309,7 @@ docs/
 
 ## Release status
 
-Stages 0–8 of the implementation roadmap are complete. Stage 9 is release hardening: documentation, clean-clone verification, repository/security/accessibility review, and final quality validation.
+Stages 0–9 are complete. Stage 10 adds the post-v1 authentication and authorization foundation.
 
 Verified UI screenshots/GIFs should be captured from the final release build only and must not contain private request data. They are intentionally not represented by mock images.
 

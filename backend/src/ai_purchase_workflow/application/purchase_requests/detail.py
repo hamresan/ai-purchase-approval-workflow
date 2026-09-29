@@ -48,6 +48,7 @@ class PurchaseRequestDetailView:
     draft_order: DraftOrderView | None
     approval_decision: ApprovalDecisionView | None
     audit_entries: tuple[AuditEntryView, ...]
+    requester_user_id: UUID | None = None
 
     @classmethod
     def from_domain(cls, request: PurchaseRequest) -> "PurchaseRequestDetailView":
@@ -101,6 +102,7 @@ class PurchaseRequestDetailView:
                 reason=decision.reason,
                 decided_at=decision.decided_at,
             ),
+            requester_user_id=request.requester_user_id,
             audit_entries=tuple(
                 AuditEntryView(entry.event_type, entry.message, entry.occurred_at)
                 for entry in request.audit_entries

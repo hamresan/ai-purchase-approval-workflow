@@ -17,6 +17,9 @@ class PurchaseRequestModel(Base):
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
     requester_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    requester_user_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), nullable=True, index=True
+    )
     status: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
     items: Mapped[list[dict[str, object]]] = mapped_column(JSONB, nullable=False)
     created_at: Mapped[datetime] = mapped_column(

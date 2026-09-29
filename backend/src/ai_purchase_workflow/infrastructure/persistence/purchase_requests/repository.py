@@ -72,10 +72,13 @@ class SqlAlchemyPurchaseRequestRepository(PurchaseRequestRepository):
         limit: int,
         offset: int,
         descending: bool,
+        requester_user_id: UUID | None = None,
     ) -> PurchaseRequestPageResult:
         filters: list[ColumnElement[bool]] = []
         if status is not None:
             filters.append(PurchaseRequestModel.status == status.value)
+        if requester_user_id is not None:
+            filters.append(PurchaseRequestModel.requester_user_id == requester_user_id)
 
         count_statement = select(func.count()).select_from(PurchaseRequestModel).where(*filters)
         total = int((await self._session.scalar(count_statement)) or 0)
