@@ -8,6 +8,19 @@ from sqlalchemy.orm import Mapped, mapped_column
 from ai_purchase_workflow.infrastructure.persistence.models import Base
 
 
+class OrganizationMemberModel(Base):
+    __tablename__ = "organization_members"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
+    identity_user_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+
 class DepartmentModel(Base):
     __tablename__ = "departments"
 
@@ -19,8 +32,9 @@ class DepartmentModel(Base):
 class DepartmentMembershipModel(Base):
     __tablename__ = "department_memberships"
 
-    user_id: Mapped[UUID] = mapped_column(
+    member_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
+        ForeignKey("organization_members.id", ondelete="CASCADE"),
         primary_key=True,
     )
     department_id: Mapped[UUID] = mapped_column(
