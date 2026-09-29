@@ -184,7 +184,11 @@ async def test_authenticated_user_can_update_identity_profile(
         assert isinstance(otp, str)
         verified = await client.post(
             "/identity/otp/verify",
-            json={"challenge_id": otp_response.json()["challenge_id"], "code": otp},
+            json={
+                "challenge_id": otp_response.json()["challenge_id"],
+                "code": otp,
+                "full_name": "New user",
+            },
         )
         assert verified.status_code == 200
 
