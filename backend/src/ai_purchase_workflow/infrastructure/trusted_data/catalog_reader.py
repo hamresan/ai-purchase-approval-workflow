@@ -8,7 +8,9 @@ from ai_purchase_workflow.infrastructure.trusted_data.models import (
     TrustedOfferModel,
     VendorModel,
 )
-from ai_purchase_workflow.infrastructure.trusted_tools.catalog_item_matcher import CatalogItemMatcher
+from ai_purchase_workflow.infrastructure.trusted_tools.catalog_item_matcher import (
+    CatalogItemMatcher,
+)
 
 
 class SqlAlchemyTrustedCatalogReader(TrustedCatalogReader):
@@ -35,9 +37,7 @@ class SqlAlchemyTrustedCatalogReader(TrustedCatalogReader):
             if self._matcher.matches(description, product.name)
         ]
         if not matches:
-            raise DomainValidationError(
-                f"No trusted vendor data is available for {description}."
-            )
+            raise DomainValidationError(f"No trusted vendor data is available for {description}.")
         product, offer, vendor = min(
             matches,
             key=lambda row: (row[1].unit_price_amount, row[2].name, str(row[1].id)),

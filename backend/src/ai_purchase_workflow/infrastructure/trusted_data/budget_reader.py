@@ -1,6 +1,7 @@
+from uuid import UUID
+
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import UUID
 
 from ai_purchase_workflow.application.trusted_data import BudgetConstraint, BudgetConstraintReader
 from ai_purchase_workflow.domain.purchase_requests import DomainValidationError, Money
@@ -20,30 +21,36 @@ class SqlAlchemyBudgetConstraintReader(BudgetConstraintReader):
         requester_user_id: UUID,
         currency: str,
     ) -> tuple[BudgetConstraint, ...]:
-        department_ids = select(DepartmentMembershipModel.department_id).join(
-            DepartmentModel,
-            DepartmentModel.id == DepartmentMembershipModel.department_id,
-        ).where(
-            DepartmentMembershipModel.user_id == requester_user_id,
-            DepartmentMembershipModel.is_active.is_(True),
-            DepartmentModel.is_active.is_(True),
+        department_ids = (
+            select(DepartmentMembershipModel.department_id)
+            .join(
+                DepartmentModel,
+                DepartmentModel.id == DepartmentMembershipModel.department_id,
+            )
+            .where(
+                DepartmentMembershipModel.user_id == requester_user_id,
+                DepartmentMembershipModel.is_active.is_(True),
+                DepartmentModel.is_active.is_(True),
+            )
         )
         rows = (
-            await self._session.execute(
-                select(BudgetLimitModel).where(
-                    BudgetLimitModel.is_active.is_(True),
-                    BudgetLimitModel.currency == currency,
-                    or_(
-                        BudgetLimitModel.user_id == requester_user_id,
-                        BudgetLimitModel.department_id.in_(department_ids),
-                    ),
+            (
+                await self._session.execute(
+                    select(BudgetLimitModel).where(
+                        BudgetLimitModel.is_active.is_(True),
+                        BudgetLimitModel.currency == currency,
+                        or_(
+                            BudgetLimitModel.user_id == requester_user_id,
+                            BudgetLimitModel.department_id.in_(department_ids),
+                        ),
+                    )
                 )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         if not rows:
-            raise DomainValidationError(
-                "No trusted budget data is available for this requester."
-            )
+            raise DomainValidationError("No trusted budget data is available for this requester.")
         return tuple(
             BudgetConstraint(
                 owner_type=row.owner_type,
