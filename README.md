@@ -24,7 +24,7 @@ LangGraph checkpoint + human approval pause
     └── Approve → resume checkpoint → approval-gated submission
 ```
 
-The purchase APIs are protected by passwordless Identity authentication and application-owned roles. The existing browser workflow UI predates the authentication UI; authenticated cross-stack UI wiring is scheduled for the post-v1 hardening stage.
+The purchase APIs and browser workflow are protected by passwordless Identity authentication and application-owned roles. The browser refreshes expired access tokens through Identity session refresh and signs the user out when the refresh session is no longer valid.
 
 ## Architecture
 
@@ -101,12 +101,12 @@ The first administrator is bootstrapped explicitly after that person has registe
 
 ```bash
 cd backend
-uv run python -m ai_purchase_workflow.operations.bootstrap_admin --user-id <identity-user-uuid>
+uv run python -m ai_purchase_workflow.operations.bootstrap_admin --mobile +96891234567
 ```
 
-The command is idempotent and grants `ADMIN` to the existing Identity user; normal registration never grants `ADMIN`.
+The command resolves an already registered mobile identity through the public Identity contract, is idempotent, and grants `ADMIN` to that user; normal registration never grants `ADMIN`.
 
-All `/api/purchase-requests` calls require a Bearer access token. Authenticated browser login/onboarding UI is not part of Stage 10, so use the Identity HTTP API/OpenAPI for authentication while this backend foundation stage is in progress.
+All `/api/purchase-requests` calls require a Bearer access token. The browser provides mobile OTP login/registration, post-verification profile setup for new users, session refresh, and sign-out/revocation.
 
 ## Model providers
 
@@ -230,7 +230,6 @@ See [SECURITY.md](SECURITY.md) for the security boundary and reporting guidance.
 This repository is a focused workflow demonstration, not a production procurement platform.
 
 - No multi-tenancy.
-- Authenticated browser login/onboarding UI is not yet wired; Stage 10 establishes the backend authentication/authorization foundation.
 - Catalog, vendor, budget, and order integrations are deterministic fixture adapters rather than ERP/procurement systems.
 - No payment or money movement.
 - OTP notification intent is integrated through `hamresan-notification`, but durable SMS/email delivery and workflow notifications are not implemented yet.
