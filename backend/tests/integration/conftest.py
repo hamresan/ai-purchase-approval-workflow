@@ -123,7 +123,7 @@ async def approval_api_client(
             yield ApprovalActionDispatcher(
                 ApproveActionHandler(build_approve_purchase_request(repository, workflow)),
                 RejectActionHandler(build_reject_purchase_request(repository, workflow)),
-                EditActionHandler(build_edit_purchase_request(repository)),
+                EditActionHandler(build_edit_purchase_request(repository, session)),
             )
 
     app.dependency_overrides[get_approval_dispatcher] = override_approval_dispatcher
