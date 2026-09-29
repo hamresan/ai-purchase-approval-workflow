@@ -74,9 +74,11 @@ async def session_factory() -> AsyncIterator[async_sessionmaker[AsyncSession]]:
     async with factory() as session:
         await session.execute(
             text(
-                "TRUNCATE application_user_roles, identity_sessions, identity_otp_challenges, "
-                "identity_external_identities, identity_user_identities, identity_users, "
-                "purchase_request_idempotency, workflow_threads, audit_entries, "
+                "TRUNCATE budget_limits, trusted_offers, department_memberships, "
+                "products, vendors, departments, application_user_roles, "
+                "identity_sessions, identity_otp_challenges, identity_external_identities, "
+                "identity_user_identities, identity_users, purchase_request_idempotency, "
+                "workflow_threads, audit_entries, "
                 "approval_decisions, draft_orders, purchase_requests RESTART IDENTITY CASCADE"
             )
         )
