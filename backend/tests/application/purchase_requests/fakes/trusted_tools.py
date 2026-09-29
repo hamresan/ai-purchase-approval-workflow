@@ -12,8 +12,9 @@ from ai_purchase_workflow.domain.purchase_requests import DomainValidationError,
 
 
 class FakeBudgetReader(BudgetConstraintReader):
-    def __init__(self, *amounts: str) -> None:
+    def __init__(self, *amounts: str, has_data: bool = True) -> None:
         self._amounts = amounts or ("500.00",)
+        self._has_data = has_data
         self.requester_user_ids: list[UUID] = []
 
     async def get_applicable_constraints(
@@ -22,6 +23,8 @@ class FakeBudgetReader(BudgetConstraintReader):
         currency: str,
     ) -> tuple[BudgetConstraint, ...]:
         self.requester_user_ids.append(requester_user_id)
+        if not self._has_data:
+            raise DomainValidationError("No trusted budget data is available for this requester.")
         return tuple(
             BudgetConstraint(
                 owner_type="USER" if index == 0 else "DEPARTMENT",
