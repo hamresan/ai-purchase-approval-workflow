@@ -1,12 +1,13 @@
 from decimal import Decimal
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from ai_purchase_workflow.application.purchase_requests.trusted_tools import (
-    CatalogReader,
-    OrderGateway,
+from ai_purchase_workflow.application.purchase_requests.trusted_tools import OrderGateway
+from ai_purchase_workflow.application.trusted_data import (
+    BudgetConstraint,
+    BudgetConstraintReader,
     TrustedCatalogItem,
+    TrustedCatalogReader,
 )
-from ai_purchase_workflow.application.trusted_data import BudgetConstraint, BudgetConstraintReader
 from ai_purchase_workflow.domain.purchase_requests import DomainValidationError, DraftOrder, Money
 
 
@@ -31,7 +32,7 @@ class FakeBudgetReader(BudgetConstraintReader):
         )
 
 
-class FakeCatalogReader(CatalogReader):
+class FakeCatalogReader(TrustedCatalogReader):
     def __init__(self, available_quantity: int = 10) -> None:
         self._available_quantity = available_quantity
 
@@ -39,8 +40,10 @@ class FakeCatalogReader(CatalogReader):
         if description == "Unknown":
             raise DomainValidationError("No trusted vendor data is available for Unknown.")
         return TrustedCatalogItem(
+            product_id=uuid4(),
             description=description,
-            vendor="Trusted Vendor",
+            vendor_id=uuid4(),
+            vendor_name="Trusted Vendor",
             unit_price=Money(Decimal("25.00"), "USD"),
             available_quantity=self._available_quantity,
         )
