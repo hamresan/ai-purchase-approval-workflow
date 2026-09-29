@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from tests.application.purchase_requests.fakes.prompt import FakePromptTemplateReader
 from tests.application.purchase_requests.fakes.trusted_tools import (
@@ -110,6 +112,7 @@ async def test_postgres_checkpoint_survives_connection_and_resumes_approved_requ
             paused = await runner.execute(
                 "Dana needs a laptop stand",
                 requester_name="Dana",
+                requester_user_id=UUID("11111111-1111-1111-1111-111111111111"),
                 checkpoint_id=thread_id,
             )
 
