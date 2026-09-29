@@ -100,6 +100,7 @@ def build_identity_module(
         session_revoker=identity.public_api.session_revoker,
         session_bulk_revoker=identity.public_api.session_bulk_revoker,
         data_retention_cleaner=identity.public_api.data_retention_cleaner,
+        user_resolver=identity.public_api.user_resolver,
     )
     identity.fastapi = type(identity.fastapi)(
         access_token_authenticator=identity.fastapi.access_token_authenticator,
