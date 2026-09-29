@@ -115,3 +115,141 @@ async def test_budget_reader_rejects_requester_without_applicable_budget(
             USER_ID,
             "USD",
         )
+
+
+@pytest.mark.parametrize(
+    ("product_active", "vendor_active", "offer_active"),
+    [
+        (False, True, True),
+        (True, False, True),
+        (True, True, False),
+    ],
+)
+async def test_catalog_reader_rejects_inactive_trusted_data(
+    db_session: AsyncSession,
+    product_active: bool,
+    vendor_active: bool,
+    offer_active: bool,
+) -> None:
+    product = ProductModel(
+        id=UUID("10000000-0000-0000-0000-000000000010"),
+        name="Inactive test product",
+        is_active=product_active,
+    )
+    vendor = VendorModel(
+        id=UUID("20000000-0000-0000-0000-000000000010"),
+        name="Inactive test vendor",
+        is_active=vendor_active,
+    )
+    db_session.add_all([product, vendor])
+    await db_session.flush()
+    db_session.add(
+        TrustedOfferModel(
+            id=UUID("30000000-0000-0000-0000-000000000010"),
+            product_id=product.id,
+            vendor_id=vendor.id,
+            unit_price_amount=Decimal("25.00"),
+            currency="USD",
+            available_quantity=5,
+            is_active=offer_active,
+        )
+    )
+    await db_session.commit()
+
+    with pytest.raises(DomainValidationError, match="No trusted vendor data"):
+        await SqlAlchemyTrustedCatalogReader(db_session).find_item("Inactive test product")
+
+
+@pytest.mark.parametrize(
+    ("department_active", "membership_active", "budget_active"),
+    [
+        (False, True, True),
+        (True, False, True),
+        (True, True, False),
+    ],
+)
+async def test_budget_reader_ignores_inactive_department_budget_path(
+    db_session: AsyncSession,
+    department_active: bool,
+    membership_active: bool,
+    budget_active: bool,
+) -> None:
+    department = DepartmentModel(
+        id=DEPARTMENT_ID,
+        name="Engineering",
+        is_active=department_active,
+    )
+    db_session.add(department)
+    await db_session.flush()
+    db_session.add(
+        DepartmentMembershipModel(
+            user_id=USER_ID,
+            department_id=DEPARTMENT_ID,
+            is_active=membership_active,
+        )
+    )
+    db_session.add(
+        BudgetLimitModel(
+            id=UUID("40000000-0000-0000-0000-000000000010"),
+            owner_type="DEPARTMENT",
+            user_id=None,
+            department_id=DEPARTMENT_ID,
+            amount=Decimal("1000.00"),
+            currency="USD",
+            is_active=budget_active,
+        )
+    )
+    await db_session.commit()
+
+    with pytest.raises(DomainValidationError, match="No trusted budget data"):
+        await SqlAlchemyBudgetConstraintReader(db_session).get_applicable_constraints(
+            USER_ID,
+            "USD",
+        )
+
+
+async def test_budget_reader_keeps_active_user_budget_when_department_path_is_inactive(
+    db_session: AsyncSession,
+) -> None:
+    department = DepartmentModel(id=DEPARTMENT_ID, name="Engineering", is_active=False)
+    db_session.add(department)
+    await db_session.flush()
+    db_session.add(
+        DepartmentMembershipModel(
+            user_id=USER_ID,
+            department_id=DEPARTMENT_ID,
+            is_active=True,
+        )
+    )
+    db_session.add_all(
+        [
+            BudgetLimitModel(
+                id=UUID("40000000-0000-0000-0000-000000000011"),
+                owner_type="USER",
+                user_id=USER_ID,
+                department_id=None,
+                amount=Decimal("500.00"),
+                currency="USD",
+                is_active=True,
+            ),
+            BudgetLimitModel(
+                id=UUID("40000000-0000-0000-0000-000000000012"),
+                owner_type="DEPARTMENT",
+                user_id=None,
+                department_id=DEPARTMENT_ID,
+                amount=Decimal("1000.00"),
+                currency="USD",
+                is_active=True,
+            ),
+        ]
+    )
+    await db_session.commit()
+
+    constraints = await SqlAlchemyBudgetConstraintReader(db_session).get_applicable_constraints(
+        USER_ID,
+        "USD",
+    )
+
+    assert [(item.owner_type, item.available.amount) for item in constraints] == [
+        ("USER", Decimal("500.00"))
+    ]
