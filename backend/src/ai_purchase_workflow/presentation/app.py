@@ -10,6 +10,7 @@ from ai_purchase_workflow.composition_root.settings import Settings, get_setting
 from ai_purchase_workflow.infrastructure.notifications import InMemoryNotificationQueue
 from ai_purchase_workflow.infrastructure.persistence import create_session_factory
 from ai_purchase_workflow.infrastructure.workflows import postgres_checkpointer
+from ai_purchase_workflow.presentation.auth import build_profile_router
 from ai_purchase_workflow.presentation.observability import register_http_observability
 from ai_purchase_workflow.presentation.purchase_requests import router as purchase_requests_router
 from ai_purchase_workflow.presentation.purchase_requests.error_handlers import (
@@ -52,5 +53,6 @@ def create_app(
     register_purchase_request_error_handlers(app)
     identity.fastapi.install(app)
     app.include_router(health_router)
+    app.include_router(build_profile_router())
     app.include_router(purchase_requests_router)
     return app
