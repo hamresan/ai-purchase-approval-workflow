@@ -1,4 +1,6 @@
 import os
+from decimal import Decimal
+from uuid import uuid4
 from collections.abc import AsyncIterator
 from uuid import UUID
 
@@ -18,6 +20,12 @@ from ai_purchase_workflow.composition_root.purchase_requests import (
     build_reject_purchase_request,
 )
 from ai_purchase_workflow.composition_root.settings import Settings
+from ai_purchase_workflow.infrastructure.trusted_data.models import (
+    BudgetLimitModel,
+    ProductModel,
+    TrustedOfferModel,
+    VendorModel,
+)
 from ai_purchase_workflow.infrastructure.persistence.purchase_requests import (
     SqlAlchemyPurchaseRequestRepository,
 )
@@ -87,6 +95,50 @@ async def session_factory() -> AsyncIterator[async_sessionmaker[AsyncSession]]:
     await engine.dispose()
 
 
+async def seed_purchase_trusted_data(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    async with session_factory() as session:
+        laptop = ProductModel(id=uuid4(), name="Laptop stand", is_active=True)
+        monitor = ProductModel(id=uuid4(), name="Monitor", is_active=True)
+        acme = VendorModel(id=uuid4(), name="Acme", is_active=True)
+        northwind = VendorModel(id=uuid4(), name="Northwind", is_active=True)
+        session.add_all([laptop, monitor, acme, northwind])
+        await session.flush()
+        session.add_all(
+            [
+                TrustedOfferModel(
+                    id=uuid4(),
+                    product_id=laptop.id,
+                    vendor_id=acme.id,
+                    unit_price_amount=Decimal("35.00"),
+                    currency="USD",
+                    available_quantity=10,
+                    is_active=True,
+                ),
+                TrustedOfferModel(
+                    id=uuid4(),
+                    product_id=monitor.id,
+                    vendor_id=northwind.id,
+                    unit_price_amount=Decimal("250.00"),
+                    currency="USD",
+                    available_quantity=5,
+                    is_active=True,
+                ),
+                BudgetLimitModel(
+                    id=uuid4(),
+                    owner_type="USER",
+                    user_id=TEST_REQUESTER_ID,
+                    department_id=None,
+                    amount=Decimal("500.00"),
+                    currency="USD",
+                    is_active=True,
+                ),
+            ]
+        )
+        await session.commit()
+
+
 @pytest.fixture
 async def db_session(
     session_factory: async_sessionmaker[AsyncSession],
@@ -99,6 +151,7 @@ async def db_session(
 async def api_client(
     session_factory: async_sessionmaker[AsyncSession],
 ) -> AsyncIterator[AsyncClient]:
+    await seed_purchase_trusted_data(session_factory)
     app = create_app(Settings(database_url=TEST_DATABASE_URL))
     app.state.session_factory = session_factory
     app.dependency_overrides[get_current_principal] = requester_principal
@@ -113,6 +166,7 @@ async def api_client(
 async def approval_api_client(
     session_factory: async_sessionmaker[AsyncSession],
 ) -> AsyncIterator[AsyncClient]:
+    await seed_purchase_trusted_data(session_factory)
     app = create_app(Settings(database_url=TEST_DATABASE_URL))
     app.state.session_factory = session_factory
     workflow = FakePurchaseRequestWorkflowGateway()
