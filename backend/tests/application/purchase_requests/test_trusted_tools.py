@@ -1,4 +1,5 @@
 from decimal import Decimal
+from uuid import UUID
 
 import pytest
 
@@ -50,10 +51,19 @@ async def test_find_vendor_rejects_unavailable_quantity() -> None:
         )
 
 
-async def test_check_budget_rejects_over_budget() -> None:
-    tool = CheckBudget(FakeBudgetReader("20.00"), BudgetPolicy())
+async def test_check_budget_rejects_when_any_applicable_constraint_is_exceeded() -> None:
+    requester_user_id = UUID("11111111-1111-1111-1111-111111111111")
+    tool = CheckBudget(FakeBudgetReader("100.00", "20.00"), BudgetPolicy())
+
     with pytest.raises(DomainValidationError, match="exceeds"):
-        await tool.execute("Dana", Money(Decimal("25.00"), "USD"))
+        await tool.execute(requester_user_id, Money(Decimal("25.00"), "USD"))
+
+
+async def test_check_budget_requires_authenticated_requester() -> None:
+    tool = CheckBudget(FakeBudgetReader(), BudgetPolicy())
+
+    with pytest.raises(DomainValidationError, match="authenticated requester"):
+        await tool.execute(None, Money(Decimal("25.00"), "USD"))
 
 
 async def test_submit_order_requires_approval_before_gateway_call() -> None:
