@@ -55,7 +55,6 @@ from ai_purchase_workflow.infrastructure.workflows import (
     SubmitPurchaseRequestNode,
 )
 
-
 REQUESTER_USER_ID = UUID("11111111-1111-1111-1111-111111111111")
 
 
