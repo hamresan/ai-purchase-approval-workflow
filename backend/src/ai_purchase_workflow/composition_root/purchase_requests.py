@@ -17,21 +17,22 @@ from ai_purchase_workflow.domain.purchase_requests import (
     DraftOrderPolicy,
     VendorPolicy,
 )
-from ai_purchase_workflow.infrastructure.trusted_tools import (
-    FixtureBudgetReader,
-    FixtureCatalogReader,
-    FixtureOrderGateway,
-)
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from ai_purchase_workflow.infrastructure.trusted_data.budget_reader import SqlAlchemyBudgetConstraintReader
+from ai_purchase_workflow.infrastructure.trusted_data.catalog_reader import SqlAlchemyTrustedCatalogReader
+from ai_purchase_workflow.infrastructure.trusted_tools import FixtureOrderGateway
 
 
 def build_prepare_purchase_request(
     repository: PurchaseRequestRepository,
+    session: AsyncSession,
 ) -> PreparePurchaseRequest:
     return PreparePurchaseRequest(
         repository=repository,
-        find_vendor=FindVendor(FixtureCatalogReader(), VendorPolicy()),
+        find_vendor=FindVendor(SqlAlchemyTrustedCatalogReader(session), VendorPolicy()),
         create_draft_order=CreateDraftOrder(DraftOrderPolicy()),
-        check_budget=CheckBudget(FixtureBudgetReader(), BudgetPolicy()),
+        check_budget=CheckBudget(SqlAlchemyBudgetConstraintReader(session), BudgetPolicy()),
     )
 
 
@@ -60,6 +61,7 @@ def build_reject_purchase_request(
 
 def build_edit_purchase_request(
     repository: PurchaseRequestRepository,
+    session: AsyncSession,
 ) -> EditPurchaseRequest:
     return EditPurchaseRequest(
         repository=repository,
