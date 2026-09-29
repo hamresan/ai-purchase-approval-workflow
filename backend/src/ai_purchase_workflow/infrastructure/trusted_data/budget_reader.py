@@ -1,5 +1,6 @@
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
 
 from ai_purchase_workflow.application.trusted_data import BudgetConstraint, BudgetConstraintReader
 from ai_purchase_workflow.domain.purchase_requests import DomainValidationError, Money
@@ -16,7 +17,7 @@ class SqlAlchemyBudgetConstraintReader(BudgetConstraintReader):
 
     async def get_applicable_constraints(
         self,
-        requester_user_id,
+        requester_user_id: UUID,
         currency: str,
     ) -> tuple[BudgetConstraint, ...]:
         department_ids = select(DepartmentMembershipModel.department_id).join(
