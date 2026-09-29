@@ -89,17 +89,24 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["user_id"], ["identity_users.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["department_id"], ["departments.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "owner_type",
-            "user_id",
-            "department_id",
-            "currency",
-            name="uq_budget_limits_owner_currency",
-        ),
     )
     op.create_index("ix_budget_limits_owner_type", "budget_limits", ["owner_type"])
     op.create_index("ix_budget_limits_user_id", "budget_limits", ["user_id"])
     op.create_index("ix_budget_limits_department_id", "budget_limits", ["department_id"])
+    op.create_index(
+        "uq_budget_limits_user_currency",
+        "budget_limits",
+        ["user_id", "currency"],
+        unique=True,
+        postgresql_where=sa.text("owner_type = 'USER'"),
+    )
+    op.create_index(
+        "uq_budget_limits_department_currency",
+        "budget_limits",
+        ["department_id", "currency"],
+        unique=True,
+        postgresql_where=sa.text("owner_type = 'DEPARTMENT'"),
+    )
 
 
 def downgrade() -> None:
