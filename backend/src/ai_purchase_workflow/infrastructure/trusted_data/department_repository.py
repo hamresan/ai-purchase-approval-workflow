@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ai_purchase_workflow.application.admin import DepartmentRecord, DepartmentRepository
+from ai_purchase_workflow.infrastructure.trusted_data.department_mapper import DepartmentMapper
 from ai_purchase_workflow.infrastructure.trusted_data.models import DepartmentModel
 
 
@@ -15,13 +16,13 @@ class SqlAlchemyDepartmentRepository(DepartmentRepository):
         rows = (await self._session.execute(
             select(DepartmentModel).order_by(DepartmentModel.name)
         )).scalars().all()
-        return tuple(self._map(row) for row in rows)
+        return tuple(DepartmentMapper.to_record(row) for row in rows)
 
     async def create_department(self, name: str) -> DepartmentRecord:
         row = DepartmentModel(id=uuid4(), name=name, is_active=True)
         self._session.add(row)
         await self._session.commit()
-        return self._map(row)
+        return DepartmentMapper.to_record(row)
 
     async def update_department(
         self, department_id: UUID, name: str, is_active: bool
@@ -32,8 +33,4 @@ class SqlAlchemyDepartmentRepository(DepartmentRepository):
         row.name = name
         row.is_active = is_active
         await self._session.commit()
-        return self._map(row)
-
-    @staticmethod
-    def _map(row: DepartmentModel) -> DepartmentRecord:
-        return DepartmentRecord(id=row.id, name=row.name, is_active=row.is_active)
+        return DepartmentMapper.to_record(row)
