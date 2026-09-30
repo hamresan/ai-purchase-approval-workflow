@@ -10,6 +10,7 @@ from ai_purchase_workflow.composition_root.settings import Settings, get_setting
 from ai_purchase_workflow.infrastructure.notifications import InMemoryNotificationQueue
 from ai_purchase_workflow.infrastructure.persistence import create_session_factory
 from ai_purchase_workflow.infrastructure.workflows import postgres_checkpointer
+from ai_purchase_workflow.presentation.admin import resource_router as admin_resource_router
 from ai_purchase_workflow.presentation.admin import router as admin_router
 from ai_purchase_workflow.presentation.auth import build_profile_router
 from ai_purchase_workflow.presentation.observability import register_http_observability
@@ -72,4 +73,5 @@ def create_app(
     app.include_router(build_profile_router())
     app.include_router(purchase_requests_router)
     app.include_router(admin_router)
+    app.include_router(admin_resource_router)
     return app
