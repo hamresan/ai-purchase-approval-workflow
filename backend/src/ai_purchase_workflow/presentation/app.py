@@ -71,4 +71,5 @@ def create_app(
     app.include_router(health_router)
     app.include_router(build_profile_router())
     app.include_router(purchase_requests_router)
+    app.include_router(admin_router)
     return app
