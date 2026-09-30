@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AuthorizedHttpClient } from "@/api/httpClient";
+import { HttpAdminApi } from "@/api/admin";
 import { HttpPurchaseRequestApi } from "@/api/purchaseRequests";
 import { HttpPurchaseRequestApprovalApi } from "@/api/purchaseRequestApproval";
 import { HttpPurchaseRequestSubmissionApi } from "@/api/purchaseRequestSubmission";
@@ -8,6 +9,7 @@ import { HttpIdentityAuthApi } from "@/auth/api";
 import { BrowserAuthSessionStore, type AuthSession } from "@/auth/session";
 import { AppShell } from "@/components/AppShell";
 import { AuthScreen } from "@/features/auth/AuthScreen";
+import { AdminManagement } from "@/features/admin/AdminManagement";
 import { NewPurchaseRequest } from "@/features/requests/NewPurchaseRequest";
 import { RequestDashboard } from "@/features/requests/RequestDashboard";
 import { RequestDetail } from "@/features/requests/RequestDetail";
@@ -35,6 +37,7 @@ export function App() {
       setSession(null);
     },
   }), [authApi, e2eMode, sessionStore]);
+  const adminApi = useMemo(() => new HttpAdminApi(http), [http]);
   const requestApi = useMemo(() => new HttpPurchaseRequestApi("", http), [http]);
   const submissionApi = useMemo(() => new HttpPurchaseRequestSubmissionApi("", http), [http]);
   const approvalApi = useMemo(() => new HttpPurchaseRequestApprovalApi("", http), [http]);
@@ -61,6 +64,7 @@ export function App() {
 
   if (!session && !e2eMode) return <AuthScreen api={authApi} onAuthenticated={authenticated} />;
   return <AppShell route={route} onNavigate={navigate} onSignOut={signOut}>
+    {route === "admin" && <AdminManagement api={adminApi} />}
     {route === "new-request" && <NewPurchaseRequest api={submissionApi} onBack={() => navigate("requests")} />}
     {route === "request-detail" && requestId && <RequestDetail api={requestApi} approvalApi={approvalApi} requestId={requestId} onBack={() => navigate("requests")} />}
     {route === "requests" && <RequestDashboard api={requestApi} onNewRequest={() => navigate("new-request")} onOpenRequest={openRequest} />}
