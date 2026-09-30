@@ -1,6 +1,7 @@
 import os
 from collections.abc import AsyncIterator
-from uuid import UUID
+from decimal import Decimal
+from uuid import UUID, uuid4
 
 import pytest
 from alembic import command
@@ -20,6 +21,12 @@ from ai_purchase_workflow.composition_root.purchase_requests import (
 from ai_purchase_workflow.composition_root.settings import Settings
 from ai_purchase_workflow.infrastructure.persistence.purchase_requests import (
     SqlAlchemyPurchaseRequestRepository,
+)
+from ai_purchase_workflow.infrastructure.trusted_data.models import (
+    BudgetLimitModel,
+    ProductModel,
+    TrustedOfferModel,
+    VendorModel,
 )
 from ai_purchase_workflow.presentation.app import create_app
 from ai_purchase_workflow.presentation.auth.dependencies import get_current_principal
@@ -74,15 +81,61 @@ async def session_factory() -> AsyncIterator[async_sessionmaker[AsyncSession]]:
     async with factory() as session:
         await session.execute(
             text(
-                "TRUNCATE application_user_roles, identity_sessions, identity_otp_challenges, "
-                "identity_external_identities, identity_user_identities, identity_users, "
-                "purchase_request_idempotency, workflow_threads, audit_entries, "
+                "TRUNCATE budget_limits, trusted_offers, department_memberships, "
+                "organization_members, products, vendors, departments, application_user_roles, "
+                "identity_sessions, identity_otp_challenges, identity_external_identities, "
+                "identity_user_identities, identity_users, purchase_request_idempotency, "
+                "workflow_threads, audit_entries, "
                 "approval_decisions, draft_orders, purchase_requests RESTART IDENTITY CASCADE"
             )
         )
         await session.commit()
     yield factory
     await engine.dispose()
+
+
+async def seed_purchase_trusted_data(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    async with session_factory() as session:
+        laptop = ProductModel(id=uuid4(), name="Laptop stand", is_active=True)
+        monitor = ProductModel(id=uuid4(), name="Monitor", is_active=True)
+        acme = VendorModel(id=uuid4(), name="Acme", is_active=True)
+        northwind = VendorModel(id=uuid4(), name="Northwind", is_active=True)
+        session.add_all([laptop, monitor, acme, northwind])
+        await session.flush()
+        session.add_all(
+            [
+                TrustedOfferModel(
+                    id=uuid4(),
+                    product_id=laptop.id,
+                    vendor_id=acme.id,
+                    unit_price_amount=Decimal("35.00"),
+                    currency="USD",
+                    available_quantity=10,
+                    is_active=True,
+                ),
+                TrustedOfferModel(
+                    id=uuid4(),
+                    product_id=monitor.id,
+                    vendor_id=northwind.id,
+                    unit_price_amount=Decimal("250.00"),
+                    currency="USD",
+                    available_quantity=5,
+                    is_active=True,
+                ),
+                BudgetLimitModel(
+                    id=uuid4(),
+                    owner_type="USER",
+                    user_id=TEST_REQUESTER_ID,
+                    department_id=None,
+                    amount=Decimal("500.00"),
+                    currency="USD",
+                    is_active=True,
+                ),
+            ]
+        )
+        await session.commit()
 
 
 @pytest.fixture
@@ -97,6 +150,7 @@ async def db_session(
 async def api_client(
     session_factory: async_sessionmaker[AsyncSession],
 ) -> AsyncIterator[AsyncClient]:
+    await seed_purchase_trusted_data(session_factory)
     app = create_app(Settings(database_url=TEST_DATABASE_URL))
     app.state.session_factory = session_factory
     app.dependency_overrides[get_current_principal] = requester_principal
@@ -111,6 +165,7 @@ async def api_client(
 async def approval_api_client(
     session_factory: async_sessionmaker[AsyncSession],
 ) -> AsyncIterator[AsyncClient]:
+    await seed_purchase_trusted_data(session_factory)
     app = create_app(Settings(database_url=TEST_DATABASE_URL))
     app.state.session_factory = session_factory
     workflow = FakePurchaseRequestWorkflowGateway()
@@ -121,7 +176,7 @@ async def approval_api_client(
             yield ApprovalActionDispatcher(
                 ApproveActionHandler(build_approve_purchase_request(repository, workflow)),
                 RejectActionHandler(build_reject_purchase_request(repository, workflow)),
-                EditActionHandler(build_edit_purchase_request(repository)),
+                EditActionHandler(build_edit_purchase_request(repository, session)),
             )
 
     app.dependency_overrides[get_approval_dispatcher] = override_approval_dispatcher

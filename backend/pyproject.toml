@@ -15,6 +15,9 @@ allow-direct-references=true
 
 [tool.hatch.build.targets.wheel]
 packages=["src/ai_purchase_workflow"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/ai_purchase_workflow/infrastructure/prompts/templates/purchase_request_extraction/v1.txt" = "ai_purchase_workflow/infrastructure/prompts/templates/purchase_request_extraction/v1.txt"
 [tool.ruff]
 target-version="py312"
 line-length=100

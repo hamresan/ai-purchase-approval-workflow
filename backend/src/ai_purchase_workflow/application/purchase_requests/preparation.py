@@ -37,7 +37,7 @@ class PreparePurchaseRequest:
             trusted_items.append(await self._find_vendor.execute(item))
         resolved_items = tuple(trusted_items)
         draft = self._create_draft_order.execute(request, resolved_items)
-        await self._check_budget.execute(request.requester_name, draft.total)
+        await self._check_budget.execute(request.requester_user_id, draft.total)
         request.draft_order = draft
         request.audit_entries = (
             *request.audit_entries,

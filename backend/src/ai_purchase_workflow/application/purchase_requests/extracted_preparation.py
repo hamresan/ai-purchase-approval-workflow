@@ -66,7 +66,7 @@ class PrepareExtractedPurchaseRequest:
 
         request.draft_order = draft
         try:
-            await self._check_budget.execute(request.requester_name, draft.total)
+            await self._check_budget.execute(request.requester_user_id, draft.total)
         except BudgetExceededError as error:
             failure_reason = str(error)
             request.audit_entries = (

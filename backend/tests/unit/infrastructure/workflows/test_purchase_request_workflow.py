@@ -1,4 +1,5 @@
 from decimal import Decimal
+from uuid import UUID
 
 import pytest
 from langgraph.checkpoint.memory import InMemorySaver
@@ -53,6 +54,8 @@ from ai_purchase_workflow.infrastructure.workflows import (
     PurchaseRequestWorkflowStateFactory,
     SubmitPurchaseRequestNode,
 )
+
+REQUESTER_USER_ID = UUID("11111111-1111-1111-1111-111111111111")
 
 
 def build_workflow(
@@ -119,7 +122,10 @@ async def test_workflow_pauses_before_submission_and_binds_thread() -> None:
     )
 
     result = await runner.execute(
-        "Dana needs two laptop stands", requester_name="Dana", checkpoint_id="thread-1"
+        "Dana needs two laptop stands",
+        requester_name="Dana",
+        requester_user_id=REQUESTER_USER_ID,
+        checkpoint_id="thread-1",
     )
 
     assert result.checkpoint_id == "thread-1"
@@ -150,7 +156,10 @@ async def test_workflow_resumes_approved_request_and_submits_once() -> None:
         }
     )
     result = await runner.execute(
-        "Dana needs a laptop stand", requester_name="Dana", checkpoint_id="thread-approved"
+        "Dana needs a laptop stand",
+        requester_name="Dana",
+        requester_user_id=REQUESTER_USER_ID,
+        checkpoint_id="thread-approved",
     )
     assert result.purchase_request_id is not None
     request = repository.requests[result.purchase_request_id]
@@ -179,7 +188,10 @@ async def test_workflow_resumes_rejected_request_without_submitting() -> None:
         }
     )
     result = await runner.execute(
-        "Dana needs a laptop stand", requester_name="Dana", checkpoint_id="thread-rejected"
+        "Dana needs a laptop stand",
+        requester_name="Dana",
+        requester_user_id=REQUESTER_USER_ID,
+        checkpoint_id="thread-rejected",
     )
     assert result.purchase_request_id is not None
     request = repository.requests[result.purchase_request_id]
@@ -257,7 +269,11 @@ async def test_workflow_persists_over_budget_request_as_business_failure() -> No
         budget=FakeBudgetReader("10.00"),
     )
 
-    result = await runner.execute("Dana needs two laptop stands", requester_name="Dana")
+    result = await runner.execute(
+        "Dana needs two laptop stands",
+        requester_name="Dana",
+        requester_user_id=REQUESTER_USER_ID,
+    )
 
     assert result.status == "failed"
     assert result.needs_human_review is False
@@ -287,12 +303,14 @@ async def test_workflow_uses_authenticated_requester_for_budget_not_model_reques
         budget=budget,
     )
 
+    requester_user_id = UUID("11111111-1111-1111-1111-111111111111")
     result = await runner.execute(
         "Please buy one laptop stand",
         requester_name="Dana",
+        requester_user_id=requester_user_id,
     )
 
     assert result.purchase_request_id is not None
     request = repository.requests[result.purchase_request_id]
     assert request.requester_name == "Dana"
-    assert budget.requester_names == ["Dana"]
+    assert budget.requester_user_ids == [requester_user_id]

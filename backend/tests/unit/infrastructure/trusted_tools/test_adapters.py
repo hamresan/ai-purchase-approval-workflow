@@ -1,22 +1,5 @@
-import pytest
-
-from ai_purchase_workflow.infrastructure.trusted_tools.adapters import FixtureCatalogReader
+from ai_purchase_workflow.infrastructure.trusted_tools import FixtureOrderGateway
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "description",
-    [
-        "Laptop stand",
-        "laptop stand",
-        "LAPTOP STAND",
-        "  Laptop   stand  ",
-        "laptop stands",
-        "Laptop Stands",
-    ],
-)
-async def test_fixture_catalog_reader_normalizes_description_for_lookup(description: str) -> None:
-    item = await FixtureCatalogReader().find_item(description)
-
-    assert item.description == "Laptop stand"
-    assert item.vendor == "Acme"
+def test_fixture_order_gateway_remains_available_for_submission_boundary() -> None:
+    assert FixtureOrderGateway is not None

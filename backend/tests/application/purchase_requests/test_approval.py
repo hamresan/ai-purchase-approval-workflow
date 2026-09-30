@@ -1,4 +1,5 @@
 from decimal import Decimal
+from uuid import UUID
 
 import pytest
 
@@ -36,6 +37,7 @@ async def make_pending_request(
     request = PurchaseRequest.create(
         (PurchaseItem("Laptop stand", 1, Money(Decimal("35.00"), "USD"), "Acme"),),
         requester_name="Dana",
+        requester_user_id=UUID("11111111-1111-1111-1111-111111111111"),
     )
     request.draft_order = CreateDraftOrder(DraftOrderPolicy()).execute(request, request.items)
     request.transition_to(RequestStatus.PENDING_APPROVAL)

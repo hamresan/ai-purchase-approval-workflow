@@ -7,6 +7,7 @@ interface CreatedPurchaseRequest {
 export async function seedPendingRequest(page: Page): Promise<string> {
   await page.setExtraHTTPHeaders({ "X-E2E-Actor": "requester" });
   const response = await page.request.post("/api/purchase-requests", {
+    headers: { "X-E2E-Actor": "requester" },
     data: {
       request_text: "Dana needs one laptop stand",
     },

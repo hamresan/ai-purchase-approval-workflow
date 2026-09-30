@@ -1,4 +1,5 @@
 from decimal import Decimal
+from uuid import UUID
 
 import pytest
 
@@ -46,6 +47,7 @@ async def test_prepare_purchase_request_builds_trusted_draft_and_moves_to_pendin
             ),
         ),
         requester_name="Dana",
+        requester_user_id=UUID("11111111-1111-1111-1111-111111111111"),
     )
     await repository.add(request)
     use_case = PreparePurchaseRequest(
@@ -72,13 +74,16 @@ async def test_prepare_purchase_request_builds_trusted_draft_and_moves_to_pendin
 async def test_prepare_purchase_request_rejects_missing_budget_data(
     repository: PurchaseRequestRepository,
 ) -> None:
-    request = PurchaseRequest.create((PurchaseItem("Laptop stand", 1, Money(Decimal("1"), "USD")),))
+    request = PurchaseRequest.create(
+        (PurchaseItem("Laptop stand", 1, Money(Decimal("1"), "USD")),),
+        requester_user_id=UUID("11111111-1111-1111-1111-111111111111"),
+    )
     await repository.add(request)
     use_case = PreparePurchaseRequest(
         repository,
         FindVendor(FakeCatalogReader(), VendorPolicy()),
         CreateDraftOrder(DraftOrderPolicy()),
-        CheckBudget(FakeBudgetReader(), BudgetPolicy()),
+        CheckBudget(FakeBudgetReader(has_data=False), BudgetPolicy()),
     )
 
     with pytest.raises(DomainValidationError, match="budget data"):
@@ -91,6 +96,7 @@ async def test_submit_purchase_request_rejects_preapproval_at_application_bounda
     request = PurchaseRequest.create(
         (PurchaseItem("Laptop stand", 1, Money(Decimal("35"), "USD")),),
         requester_name="Dana",
+        requester_user_id=UUID("11111111-1111-1111-1111-111111111111"),
     )
     await repository.add(request)
     gateway = FakeOrderGateway()

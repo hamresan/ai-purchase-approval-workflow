@@ -68,6 +68,16 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_PORT: 5632
           POSTGRES_CONTAINER_PORT: 5432
+      - name: Seed Docker E2E trusted data
+        run: docker compose exec -T backend uv run python -m ai_purchase_workflow.operations.seed_e2e_trusted_data
+        env:
+          APP_ENV: test
+          POSTGRES_DB: ai_purchase_workflow
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_PORT: 5632
+          POSTGRES_CONTAINER_PORT: 5432
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/ai_purchase_workflow
       - name: Run Docker E2E
         run: cd frontend && npm run test:e2e
         env:

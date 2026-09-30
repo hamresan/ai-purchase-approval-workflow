@@ -1,27 +1,41 @@
 from decimal import Decimal
+from uuid import UUID, uuid4
 
-from ai_purchase_workflow.application.purchase_requests.trusted_tools import (
-    BudgetReader,
-    CatalogReader,
-    OrderGateway,
+from ai_purchase_workflow.application.purchase_requests.trusted_tools import OrderGateway
+from ai_purchase_workflow.application.trusted_data import (
+    BudgetConstraint,
+    BudgetConstraintReader,
     TrustedCatalogItem,
+    TrustedCatalogReader,
 )
 from ai_purchase_workflow.domain.purchase_requests import DomainValidationError, DraftOrder, Money
 
 
-class FakeBudgetReader(BudgetReader):
-    def __init__(self, amount: str = "500.00") -> None:
-        self._amount = Decimal(amount)
-        self.requester_names: list[str | None] = []
+class FakeBudgetReader(BudgetConstraintReader):
+    def __init__(self, *amounts: str, has_data: bool = True) -> None:
+        self._amounts = amounts or ("500.00",)
+        self._has_data = has_data
+        self.requester_user_ids: list[UUID] = []
 
-    async def get_available_budget(self, requester_name: str | None, currency: str) -> Money:
-        self.requester_names.append(requester_name)
-        if requester_name is None:
+    async def get_applicable_constraints(
+        self,
+        requester_user_id: UUID,
+        currency: str,
+    ) -> tuple[BudgetConstraint, ...]:
+        self.requester_user_ids.append(requester_user_id)
+        if not self._has_data:
             raise DomainValidationError("No trusted budget data is available for this requester.")
-        return Money(self._amount, currency)
+        return tuple(
+            BudgetConstraint(
+                owner_type="USER" if index == 0 else "DEPARTMENT",
+                owner_id=requester_user_id,
+                available=Money(Decimal(amount), currency),
+            )
+            for index, amount in enumerate(self._amounts)
+        )
 
 
-class FakeCatalogReader(CatalogReader):
+class FakeCatalogReader(TrustedCatalogReader):
     def __init__(self, available_quantity: int = 10) -> None:
         self._available_quantity = available_quantity
 
@@ -29,8 +43,10 @@ class FakeCatalogReader(CatalogReader):
         if description == "Unknown":
             raise DomainValidationError("No trusted vendor data is available for Unknown.")
         return TrustedCatalogItem(
+            product_id=uuid4(),
             description=description,
-            vendor="Trusted Vendor",
+            vendor_id=uuid4(),
+            vendor_name="Trusted Vendor",
             unit_price=Money(Decimal("25.00"), "USD"),
             available_quantity=self._available_quantity,
         )
