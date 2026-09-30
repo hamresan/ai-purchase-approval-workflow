@@ -1,4 +1,4 @@
-import type { HttpClient } from "@/api/httpClient";
+interface AdminHttpClient { fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> }
 
 export interface Department { id: string; name: string; is_active: boolean }
 export interface Product { id: string; name: string; is_active: boolean }
@@ -8,7 +8,7 @@ export interface Budget { id: string; owner_type: "USER" | "DEPARTMENT"; user_id
 export interface RoleAssignment { user_id: string; roles: string[] }
 
 export class HttpAdminApi {
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly http: AdminHttpClient) {}
   private async get<T>(path: string): Promise<T> {
     const response = await this.http.fetch(path);
     if (!response.ok) throw new Error("Unable to load administration data.");
