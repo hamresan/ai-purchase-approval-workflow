@@ -2,7 +2,7 @@ from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ai_purchase_workflow.application.access import ApplicationRole
 
@@ -31,6 +31,14 @@ class BudgetBody(BaseModel):
     amount: Decimal = Field(gt=0)
     currency: str = Field(min_length=3, max_length=3)
     is_active: bool = True
+
+    @model_validator(mode="after")
+    def validate_owner(self) -> "BudgetBody":
+        user_owner = self.owner_type == "USER" and self.user_id is not None and self.department_id is None
+        department_owner = self.owner_type == "DEPARTMENT" and self.department_id is not None and self.user_id is None
+        if not (user_owner or department_owner):
+            raise ValueError("Budget owner identifier must match owner_type.")
+        return self
 
 
 class RoleAssignmentBody(BaseModel):
