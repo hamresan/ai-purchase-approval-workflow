@@ -3,6 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ai_purchase_workflow.application.access import ApplicationPrincipal, AuthorizationPolicy
 from ai_purchase_workflow.application.admin import (
@@ -30,7 +31,6 @@ from ai_purchase_workflow.presentation.admin.resource_schemas import (
 )
 from ai_purchase_workflow.presentation.auth import CurrentPrincipalDependency
 from ai_purchase_workflow.presentation.dependencies import get_session
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/admin", tags=["admin-resources"])
 SessionDependency = Annotated[AsyncSession, Depends(get_session)]
@@ -45,11 +45,25 @@ def _authorize(principal: ApplicationPrincipal) -> None:
 
 
 def _offer_values(body: OfferBody) -> OfferValues:
-    return OfferValues(body.product_id, body.vendor_id, body.unit_price_amount, body.currency.upper(), body.available_quantity, body.is_active)
+    return OfferValues(
+        body.product_id,
+        body.vendor_id,
+        body.unit_price_amount,
+        body.currency.upper(),
+        body.available_quantity,
+        body.is_active,
+    )
 
 
 def _budget_values(body: BudgetBody) -> BudgetValues:
-    return BudgetValues(body.owner_type, body.user_id, body.department_id, body.amount, body.currency.upper(), body.is_active)
+    return BudgetValues(
+        body.owner_type,
+        body.user_id,
+        body.department_id,
+        body.amount,
+        body.currency.upper(),
+        body.is_active,
+    )
 
 
 @router.get("/products")
@@ -59,7 +73,11 @@ async def list_products(manager: ProductsDependency, principal: CurrentPrincipal
 
 
 @router.post("/products", status_code=201)
-async def create_product(body: NamedResourceBody, manager: ProductsDependency, principal: CurrentPrincipalDependency):
+async def create_product(
+    body: NamedResourceBody,
+    manager: ProductsDependency,
+    principal: CurrentPrincipalDependency,
+):
     _authorize(principal)
     try:
         return await manager.create_product(body.name.strip())
@@ -68,7 +86,12 @@ async def create_product(body: NamedResourceBody, manager: ProductsDependency, p
 
 
 @router.put("/products/{resource_id}")
-async def update_product(resource_id: UUID, body: NamedResourceBody, manager: ProductsDependency, principal: CurrentPrincipalDependency):
+async def update_product(
+    resource_id: UUID,
+    body: NamedResourceBody,
+    manager: ProductsDependency,
+    principal: CurrentPrincipalDependency,
+):
     _authorize(principal)
     try:
         record = await manager.update_product(resource_id, body.name.strip(), body.is_active)
@@ -86,7 +109,11 @@ async def list_vendors(manager: VendorsDependency, principal: CurrentPrincipalDe
 
 
 @router.post("/vendors", status_code=201)
-async def create_vendor(body: NamedResourceBody, manager: VendorsDependency, principal: CurrentPrincipalDependency):
+async def create_vendor(
+    body: NamedResourceBody,
+    manager: VendorsDependency,
+    principal: CurrentPrincipalDependency,
+):
     _authorize(principal)
     try:
         return await manager.create_vendor(body.name.strip())
@@ -95,7 +122,12 @@ async def create_vendor(body: NamedResourceBody, manager: VendorsDependency, pri
 
 
 @router.put("/vendors/{resource_id}")
-async def update_vendor(resource_id: UUID, body: NamedResourceBody, manager: VendorsDependency, principal: CurrentPrincipalDependency):
+async def update_vendor(
+    resource_id: UUID,
+    body: NamedResourceBody,
+    manager: VendorsDependency,
+    principal: CurrentPrincipalDependency,
+):
     _authorize(principal)
     try:
         record = await manager.update_vendor(resource_id, body.name.strip(), body.is_active)
@@ -113,16 +145,28 @@ async def list_offers(manager: OffersDependency, principal: CurrentPrincipalDepe
 
 
 @router.post("/offers", status_code=201)
-async def create_offer(body: OfferBody, manager: OffersDependency, principal: CurrentPrincipalDependency):
+async def create_offer(
+    body: OfferBody,
+    manager: OffersDependency,
+    principal: CurrentPrincipalDependency,
+):
     _authorize(principal)
     try:
         return await manager.create_offer(_offer_values(body))
     except IntegrityError as error:
-        raise HTTPException(status_code=409, detail="Trusted offer conflicts with existing trusted data.") from error
+        raise HTTPException(
+            status_code=409,
+            detail="Trusted offer conflicts with existing trusted data.",
+        ) from error
 
 
 @router.put("/offers/{resource_id}")
-async def update_offer(resource_id: UUID, body: OfferBody, manager: OffersDependency, principal: CurrentPrincipalDependency):
+async def update_offer(
+    resource_id: UUID,
+    body: OfferBody,
+    manager: OffersDependency,
+    principal: CurrentPrincipalDependency,
+):
     _authorize(principal)
     try:
         record = await manager.update_offer(resource_id, _offer_values(body))
@@ -140,16 +184,28 @@ async def list_budgets(manager: BudgetsDependency, principal: CurrentPrincipalDe
 
 
 @router.post("/budgets", status_code=201)
-async def create_budget(body: BudgetBody, manager: BudgetsDependency, principal: CurrentPrincipalDependency):
+async def create_budget(
+    body: BudgetBody,
+    manager: BudgetsDependency,
+    principal: CurrentPrincipalDependency,
+):
     _authorize(principal)
     try:
         return await manager.create_budget(_budget_values(body))
     except IntegrityError as error:
-        raise HTTPException(status_code=409, detail="Budget conflicts with existing trusted data.") from error
+        raise HTTPException(
+            status_code=409,
+            detail="Budget conflicts with existing trusted data.",
+        ) from error
 
 
 @router.put("/budgets/{resource_id}")
-async def update_budget(resource_id: UUID, body: BudgetBody, manager: BudgetsDependency, principal: CurrentPrincipalDependency):
+async def update_budget(
+    resource_id: UUID,
+    body: BudgetBody,
+    manager: BudgetsDependency,
+    principal: CurrentPrincipalDependency,
+):
     _authorize(principal)
     try:
         record = await manager.update_budget(resource_id, _budget_values(body))
@@ -167,8 +223,14 @@ async def list_roles(session: SessionDependency, principal: CurrentPrincipalDepe
 
 
 @router.put("/roles/{user_id}")
-async def replace_roles(user_id: UUID, body: RoleAssignmentBody, session: SessionDependency, principal: CurrentPrincipalDependency):
+async def replace_roles(
+    user_id: UUID,
+    body: RoleAssignmentBody,
+    session: SessionDependency,
+    principal: CurrentPrincipalDependency,
+):
     _authorize(principal)
     if not body.roles:
         raise HTTPException(status_code=422, detail="At least one application role is required.")
-    return await SqlAlchemyRoleAssignmentRepository(session).replace_roles(user_id, frozenset(body.roles))
+    repository = SqlAlchemyRoleAssignmentRepository(session)
+    return await repository.replace_roles(user_id, frozenset(body.roles))
