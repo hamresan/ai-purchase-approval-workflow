@@ -21,7 +21,7 @@ describe("HttpAdminApi", () => {
       api.roles(),
     ]);
 
-    expect(fetch).toHaveBeenCalledTimes(10);
+    expect(fetch).toHaveBeenCalledTimes(6);
   });
 
   it("reports failed administration reads", async () => {
@@ -45,7 +45,7 @@ describe("HttpAdminApi", () => {
     await expect(api.replaceRoles("user-1", ["admin"])).resolves.toEqual(assignment);
     expect(fetch).toHaveBeenCalledWith(
       "/api/admin/roles/user-1",
-      expect.objectContaining({ method: "POST" }),
+      expect.objectContaining({ method: "PUT" }),
     );
   });
 
@@ -101,14 +101,14 @@ describe("HttpAdminApi", () => {
       is_active: true,
     });
 
-    expect(fetch).toHaveBeenCalledTimes(6);
+    expect(fetch).toHaveBeenCalledTimes(10);
     expect(fetch).toHaveBeenCalledWith(
       "/api/admin/departments",
       expect.objectContaining({ method: "POST" }),
     );
     expect(fetch).toHaveBeenCalledWith(
       "/api/admin/products",
-      expect.objectContaining({ method: "PUT" }),
+      expect.objectContaining({ method: "POST" }),
     );
   });
 
