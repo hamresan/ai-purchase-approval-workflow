@@ -8,7 +8,11 @@ from ai_purchase_workflow.application.admin import (
     ManageDepartments,
     ManageOffers,
     ManageProducts,
+    ManageRoleAssignments,
     ManageVendors,
+)
+from ai_purchase_workflow.infrastructure.access.sqlalchemy_role_assignment_repository import (
+    SqlAlchemyRoleAssignmentRepository,
 )
 from ai_purchase_workflow.infrastructure.trusted_data.budget_repository import (
     SqlAlchemyBudgetRepository,
@@ -48,3 +52,7 @@ def get_manage_offers(session: SessionDependency) -> ManageOffers:
 
 def get_manage_budgets(session: SessionDependency) -> ManageBudgets:
     return ManageBudgets(SqlAlchemyBudgetRepository(session))
+
+
+def get_manage_role_assignments(session: SessionDependency) -> ManageRoleAssignments:
+    return ManageRoleAssignments(SqlAlchemyRoleAssignmentRepository(session))
