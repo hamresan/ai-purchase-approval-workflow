@@ -5,6 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ai_purchase_workflow.application.access import ApplicationRole
+from ai_purchase_workflow.application.admin import BudgetRecord, OfferRecord, ProductRecord, VendorRecord
 
 
 class NamedResourceBody(BaseModel):
@@ -50,3 +51,67 @@ class BudgetBody(BaseModel):
 
 class RoleAssignmentBody(BaseModel):
     roles: set[ApplicationRole]
+
+
+class ProductResponse(BaseModel):
+    id: UUID
+    name: str
+    is_active: bool
+
+    @classmethod
+    def from_record(cls, record: ProductRecord) -> "ProductResponse":
+        return cls(id=record.id, name=record.name, is_active=record.is_active)
+
+
+class VendorResponse(BaseModel):
+    id: UUID
+    name: str
+    is_active: bool
+
+    @classmethod
+    def from_record(cls, record: VendorRecord) -> "VendorResponse":
+        return cls(id=record.id, name=record.name, is_active=record.is_active)
+
+
+class OfferResponse(BaseModel):
+    id: UUID
+    product_id: UUID
+    vendor_id: UUID
+    unit_price_amount: str
+    currency: str
+    available_quantity: int
+    is_active: bool
+
+    @classmethod
+    def from_record(cls, record: OfferRecord) -> "OfferResponse":
+        return cls(
+            id=record.id,
+            product_id=record.product_id,
+            vendor_id=record.vendor_id,
+            unit_price_amount=format(record.unit_price_amount, ".2f"),
+            currency=record.currency,
+            available_quantity=record.available_quantity,
+            is_active=record.is_active,
+        )
+
+
+class BudgetResponse(BaseModel):
+    id: UUID
+    owner_type: str
+    user_id: UUID | None
+    department_id: UUID | None
+    amount: str
+    currency: str
+    is_active: bool
+
+    @classmethod
+    def from_record(cls, record: BudgetRecord) -> "BudgetResponse":
+        return cls(
+            id=record.id,
+            owner_type=record.owner_type,
+            user_id=record.user_id,
+            department_id=record.department_id,
+            amount=format(record.amount, ".2f"),
+            currency=record.currency,
+            is_active=record.is_active,
+        )
