@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,14 +22,18 @@ class SqlAlchemyRoleAssignmentRepository(RoleAssignmentRepository):
             .scalars()
             .all()
         )
-        grouped: dict[object, set[ApplicationRole]] = {}
+        grouped: dict[UUID, set[ApplicationRole]] = {}
         for row in rows:
             grouped.setdefault(row.user_id, set()).add(ApplicationRole(row.role))
         return tuple(
             RoleAssignment(user_id, frozenset(roles)) for user_id, roles in grouped.items()
         )
 
-    async def replace_roles(self, user_id, roles: frozenset[ApplicationRole]) -> RoleAssignment:
+    async def replace_roles(
+        self,
+        user_id: UUID,
+        roles: frozenset[ApplicationRole],
+    ) -> RoleAssignment:
         await self._session.execute(
             delete(ApplicationUserRoleModel).where(ApplicationUserRoleModel.user_id == user_id)
         )
