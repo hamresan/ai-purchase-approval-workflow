@@ -79,6 +79,18 @@ describe("App", () => {
     );
   });
 
+  it("shows an explicit loading state while administrator access is resolving", () => {
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(() => new Promise(() => undefined)));
+    window.history.replaceState({}, "", "/admin");
+
+    render(<App />);
+
+    expect(
+      screen.getByRole("heading", { name: "Loading administrator access…" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Admin Management" })).not.toBeInTheDocument();
+  });
+
   it("revokes the refresh session and returns to authentication on sign out", async () => {
     const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL) => {
       const url = String(input);
