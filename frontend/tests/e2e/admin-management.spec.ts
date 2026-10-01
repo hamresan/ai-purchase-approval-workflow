@@ -2,7 +2,15 @@ import { expect, test } from "@playwright/test";
 
 test("admin manages trusted catalog data from the browser", async ({ page }) => {
   await page.setExtraHTTPHeaders({ "X-E2E-Actor": "admin" });
+  const profileResponse = page.waitForResponse(
+    response =>
+      response.request().method() === "GET"
+      && new URL(response.url()).pathname === "/api/profile"
+      && response.status() === 200,
+  );
+
   await page.goto("/admin");
+  await profileResponse;
 
   await expect(page.getByRole("heading", { name: "Admin Management" })).toBeVisible();
 
