@@ -138,6 +138,62 @@ describe("AdminManagement", () => {
     ));
   });
 
+
+  it("covers edit cancellation and alternate edit fields", async () => {
+    const api = await renderAdmin();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Departments" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Catalog & Vendors" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Edit" })[1]);
+    fireEvent.change(screen.getByLabelText("Edit Vendor name"), { target: { value: "Acme Updated" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(api.saveVendor).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "v1", name: "Acme Updated" }),
+    ));
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Edit" })[2]);
+    fireEvent.change(screen.getByLabelText("Edit offer product"), { target: { value: "p1" } });
+    fireEvent.change(screen.getByLabelText("Edit offer vendor"), { target: { value: "v1" } });
+    fireEvent.change(screen.getByLabelText("Edit offer currency"), { target: { value: "eur" } });
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Budgets" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.change(screen.getByLabelText("Edit budget owner"), { target: { value: "d1" } });
+    fireEvent.change(screen.getByLabelText("Edit budget currency"), { target: { value: "eur" } });
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("edits a user-owned budget", async () => {
+    const api = buildApi({
+      budgets: vi.fn().mockResolvedValue([{
+        id: "b2", owner_type: "USER", user_id: "u1", department_id: null,
+        amount: "250.00", currency: "USD", is_active: true,
+      }]),
+    });
+    await renderAdmin(api);
+    fireEvent.click(screen.getByRole("tab", { name: "Budgets" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.change(screen.getByLabelText("Edit budget owner"), { target: { value: "u1" } });
+    fireEvent.change(screen.getByLabelText("Edit budget currency"), { target: { value: "omr" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(api.saveBudget).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "b2", owner_type: "USER", user_id: "u1", department_id: null, currency: "OMR",
+      }),
+    ));
+  });
+
   it("shows loading failures", async () => {
     const api = buildApi({
       departments: vi.fn().mockRejectedValue(new Error("Admin unavailable")),
