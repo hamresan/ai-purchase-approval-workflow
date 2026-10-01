@@ -28,22 +28,26 @@ function buildApi(overrides: Partial<HttpAdminApi> = {}): HttpAdminApi {
 
 async function renderAdmin(api = buildApi()) {
   render(<AdminManagement api={api} />);
-  await screen.findByRole("heading", { name: "Departments" });
+  await screen.findByRole("heading", { name: "Users & roles" });
   return api;
 }
 
 describe("AdminManagement", () => {
   it("renders trusted administration data", async () => {
     await renderAdmin();
-    expect(screen.getAllByText("Engineering").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Laptop stand").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Acme").length).toBeGreaterThan(0);
-    expect(screen.getByText("USD 35.00")).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: "Admin" })).toBeChecked();
+    expect(screen.queryByText("Engineering")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Departments" }));
+    expect(screen.getByText("Engineering")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Catalog & Vendors" }));
+    expect(screen.getByText("Laptop stand")).toBeInTheDocument();
+    expect(screen.getByText("Acme")).toBeInTheDocument();
+    expect(screen.getByText("USD 35.00")).toBeInTheDocument();
   });
 
   it("creates a department and reloads data", async () => {
     const api = await renderAdmin();
+    fireEvent.click(screen.getByRole("tab", { name: "Departments" }));
     fireEvent.change(screen.getByLabelText("New Department"), { target: { value: "Finance" } });
     fireEvent.click(screen.getAllByRole("button", { name: "Add" })[0]);
     await waitFor(() => expect(api.createDepartment).toHaveBeenCalledWith("Finance"));
@@ -52,10 +56,12 @@ describe("AdminManagement", () => {
 
   it("deactivates named resources", async () => {
     const api = await renderAdmin();
+    fireEvent.click(screen.getByRole("tab", { name: "Departments" }));
+    fireEvent.click(screen.getByRole("button", { name: "Deactivate" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Catalog & Vendors" }));
     const buttons = screen.getAllByRole("button", { name: "Deactivate" });
     fireEvent.click(buttons[0]);
     fireEvent.click(buttons[1]);
-    fireEvent.click(buttons[2]);
     await waitFor(() => expect(api.updateDepartment).toHaveBeenCalled());
     await waitFor(() => expect(api.saveProduct).toHaveBeenCalled());
     await waitFor(() => expect(api.saveVendor).toHaveBeenCalled());
@@ -63,12 +69,14 @@ describe("AdminManagement", () => {
 
   it("creates an offer and budget", async () => {
     const api = await renderAdmin();
+    fireEvent.click(screen.getByRole("tab", { name: "Catalog & Vendors" }));
     fireEvent.change(screen.getByLabelText("Product"), { target: { value: "p1" } });
     fireEvent.change(screen.getByLabelText("Vendor"), { target: { value: "v1" } });
     fireEvent.change(screen.getByLabelText("Price"), { target: { value: "40" } });
     fireEvent.click(screen.getByRole("button", { name: "Add offer" }));
     await waitFor(() => expect(api.createOffer).toHaveBeenCalled());
 
+    fireEvent.click(screen.getByRole("tab", { name: "Budgets" }));
     fireEvent.change(screen.getByLabelText("Budget owner"), { target: { value: "d1" } });
     fireEvent.change(screen.getByLabelText("Budget amount"), { target: { value: "900" } });
     fireEvent.click(screen.getByRole("button", { name: "Add budget" }));
@@ -77,17 +85,19 @@ describe("AdminManagement", () => {
 
   it("supports user budgets and active-state mutations", async () => {
     const api = await renderAdmin();
+    fireEvent.click(screen.getByRole("tab", { name: "Budgets" }));
     fireEvent.change(screen.getByLabelText("Budget owner type"), { target: { value: "USER" } });
     fireEvent.change(screen.getByLabelText("Budget owner"), { target: { value: "u1" } });
     fireEvent.change(screen.getByLabelText("Budget amount"), { target: { value: "250" } });
     fireEvent.click(screen.getByRole("button", { name: "Add budget" }));
     await waitFor(() => expect(api.createBudget).toHaveBeenCalled());
 
-    const buttons = screen.getAllByRole("button", { name: "Deactivate" });
-    fireEvent.click(buttons[3]);
-    fireEvent.click(buttons[4]);
-    await waitFor(() => expect(api.saveOffer).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByRole("button", { name: "Deactivate" }));
     await waitFor(() => expect(api.saveBudget).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByRole("tab", { name: "Catalog & Vendors" }));
+    const catalogButtons = screen.getAllByRole("button", { name: "Deactivate" });
+    fireEvent.click(catalogButtons[2]);
+    await waitFor(() => expect(api.saveOffer).toHaveBeenCalledTimes(1));
   });
 
   it("shows loading failures", async () => {
