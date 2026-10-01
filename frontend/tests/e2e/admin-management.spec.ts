@@ -23,8 +23,8 @@ test("admin manages trusted catalog data from the browser", async ({ page }) => 
   await page.getByRole("button", { name: "Add", exact: true }).first().click();
   await expect(page.getByRole("cell", { name: departmentName })).toBeVisible();
 
-  await page.getByLabel("Product").selectOption({ label: productName });
-  await page.getByLabel("Vendor").selectOption({ label: vendorName });
+  await page.getByLabel("Product", { exact: true }).selectOption({ label: productName });
+  await page.getByLabel("Vendor", { exact: true }).selectOption({ label: vendorName });
   await page.getByLabel("Price").fill("49.90");
   await page.getByLabel("Currency").fill("usd");
   await page.getByLabel("Available quantity").fill("7");
