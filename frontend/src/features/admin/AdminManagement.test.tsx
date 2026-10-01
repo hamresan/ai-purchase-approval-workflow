@@ -14,9 +14,13 @@ function buildApi(overrides: Partial<HttpAdminApi> = {}): HttpAdminApi {
     replaceRoles: vi.fn().mockResolvedValue({ user_id: "u1", roles: ["admin"] }),
     createDepartment: vi.fn().mockResolvedValue({ id: "d2", name: "Finance", is_active: true }),
     updateDepartment: vi.fn().mockResolvedValue({ id: "d1", name: "Engineering", is_active: false }),
+    createProduct: vi.fn().mockResolvedValue({}),
     saveProduct: vi.fn().mockResolvedValue({}),
+    createVendor: vi.fn().mockResolvedValue({}),
     saveVendor: vi.fn().mockResolvedValue({}),
+    createOffer: vi.fn().mockResolvedValue({}),
     saveOffer: vi.fn().mockResolvedValue({}),
+    createBudget: vi.fn().mockResolvedValue({}),
     saveBudget: vi.fn().mockResolvedValue({}),
     ...overrides,
   } as unknown as HttpAdminApi;
@@ -63,12 +67,12 @@ describe("AdminManagement", () => {
     fireEvent.change(screen.getByLabelText("Vendor"), { target: { value: "v1" } });
     fireEvent.change(screen.getByLabelText("Price"), { target: { value: "40" } });
     fireEvent.click(screen.getByRole("button", { name: "Add offer" }));
-    await waitFor(() => expect(api.saveOffer).toHaveBeenCalled());
+    await waitFor(() => expect(api.createOffer).toHaveBeenCalled());
 
     fireEvent.change(screen.getByLabelText("Budget owner"), { target: { value: "d1" } });
     fireEvent.change(screen.getByLabelText("Budget amount"), { target: { value: "900" } });
     fireEvent.click(screen.getByRole("button", { name: "Add budget" }));
-    await waitFor(() => expect(api.saveBudget).toHaveBeenCalled());
+    await waitFor(() => expect(api.createBudget).toHaveBeenCalled());
   });
 
   it("supports user budgets and active-state mutations", async () => {
@@ -77,7 +81,7 @@ describe("AdminManagement", () => {
     fireEvent.change(screen.getByLabelText("Budget owner"), { target: { value: "u1" } });
     fireEvent.change(screen.getByLabelText("Budget amount"), { target: { value: "250" } });
     fireEvent.click(screen.getByRole("button", { name: "Add budget" }));
-    await waitFor(() => expect(api.saveBudget).toHaveBeenCalled());
+    await waitFor(() => expect(api.createBudget).toHaveBeenCalled());
 
     const buttons = screen.getAllByRole("button", { name: "Deactivate" });
     fireEvent.click(buttons[3]);
