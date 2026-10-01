@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import FastAPI
 
 from ai_purchase_workflow.application.access import ApplicationPrincipal, ApplicationRole
+from ai_purchase_workflow.composition_root.admin import build_admin_services
 from ai_purchase_workflow.composition_root.identity import build_identity_module
 from ai_purchase_workflow.composition_root.settings import Settings, get_settings
 from ai_purchase_workflow.infrastructure.notifications import InMemoryNotificationQueue
@@ -44,6 +45,7 @@ def create_app(
     app.state.settings = resolved_settings
     app.state.session_factory = session_factory
     app.state.identity = identity
+    app.state.admin_services_builder = build_admin_services
     if resolved_settings.app_env == "test":
         app.state.e2e_principals = {
             "requester": ApplicationPrincipal(
