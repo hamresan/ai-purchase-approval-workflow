@@ -54,13 +54,39 @@ export class HttpAdminApi {
     });
   }
 
-  createProduct(name: string): Promise<Product> {\n    return this.write<Product>("POST", "/api/admin/products", { name });\n  }\n\n  saveProduct(item: Product): Promise<Product> {\n    return this.write<Product>("PUT", `/api/admin/products/${item.id}`, { name: item.name, is_active: item.is_active });\n  }
+  createProduct(name: string): Promise<Product> {
+    return this.write<Product>("POST", "/api/admin/products", { name });
+  }
 
-  createVendor(name: string): Promise<Vendor> {\n    return this.write<Vendor>("POST", "/api/admin/vendors", { name });\n  }\n\n  saveVendor(item: Vendor): Promise<Vendor> {\n    return this.write<Vendor>("PUT", `/api/admin/vendors/${item.id}`, { name: item.name, is_active: item.is_active });\n  }
+  saveProduct(item: Product): Promise<Product> {
+    return this.write<Product>("PUT", `/api/admin/products/${item.id}`, { name: item.name, is_active: item.is_active });
+  }
 
-  createOffer(item: Omit<Offer, "id">): Promise<Offer> {\n    return this.write<Offer>("POST", "/api/admin/offers", item);\n  }\n\n  saveOffer(item: Offer): Promise<Offer> {\n    const { id, ...body } = item;\n    return this.write<Offer>("PUT", `/api/admin/offers/${id}`, body);\n  }
+  createVendor(name: string): Promise<Vendor> {
+    return this.write<Vendor>("POST", "/api/admin/vendors", { name });
+  }
 
-  createBudget(item: Omit<Budget, "id">): Promise<Budget> {\n    return this.write<Budget>("POST", "/api/admin/budgets", item);\n  }\n\n  saveBudget(item: Budget): Promise<Budget> {\n    const { id, ...body } = item;\n    return this.write<Budget>("PUT", `/api/admin/budgets/${id}`, body);\n  }
+  saveVendor(item: Vendor): Promise<Vendor> {
+    return this.write<Vendor>("PUT", `/api/admin/vendors/${item.id}`, { name: item.name, is_active: item.is_active });
+  }
+
+  createOffer(item: Omit<Offer, "id">): Promise<Offer> {
+    return this.write<Offer>("POST", "/api/admin/offers", item);
+  }
+
+  saveOffer(item: Offer): Promise<Offer> {
+    const { id, ...body } = item;
+    return this.write<Offer>("PUT", `/api/admin/offers/${id}`, body);
+  }
+
+  createBudget(item: Omit<Budget, "id">): Promise<Budget> {
+    return this.write<Budget>("POST", "/api/admin/budgets", item);
+  }
+
+  saveBudget(item: Budget): Promise<Budget> {
+    const { id, ...body } = item;
+    return this.write<Budget>("PUT", `/api/admin/budgets/${id}`, body);
+  }
 
   replaceRoles(userId: string, roles: string[]): Promise<RoleAssignment> {
     return this.write<RoleAssignment>("PUT",
