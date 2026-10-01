@@ -30,8 +30,8 @@ export function AdminManagement({ api }: Props) {
       <div className="admin-grid">
         <AdminCard title="Users & roles"><RoleManagement api={api} assignments={data.roles} onChanged={roles => setData(current => current ? { ...current, roles } : current)} /></AdminCard>
         <AdminCard title="Departments"><NamedEditor kind="Department" items={data.departments} create={name => api.createDepartment(name)} save={item => api.updateDepartment(item)} reload={reload} /></AdminCard>
-        <AdminCard title="Products"><NamedEditor kind="Product" items={data.products} create={name => api.saveProduct({ id: crypto.randomUUID(), name, is_active: true })} save={item => api.saveProduct(item)} reload={reload} /></AdminCard>
-        <AdminCard title="Vendors"><NamedEditor kind="Vendor" items={data.vendors} create={name => api.saveVendor({ id: crypto.randomUUID(), name, is_active: true })} save={item => api.saveVendor(item)} reload={reload} /></AdminCard>
+        <AdminCard title="Products"><NamedEditor kind="Product" items={data.products} create={name => api.createProduct(name)} save={item => api.saveProduct(item)} reload={reload} /></AdminCard>
+        <AdminCard title="Vendors"><NamedEditor kind="Vendor" items={data.vendors} create={name => api.createVendor(name)} save={item => api.saveVendor(item)} reload={reload} /></AdminCard>
         <AdminCard title="Trusted prices & availability"><OfferEditor api={api} data={data} reload={reload} /></AdminCard>
         <AdminCard title="Budgets"><BudgetEditor api={api} data={data} reload={reload} /></AdminCard>
       </div>
@@ -66,7 +66,7 @@ function OfferEditor({ api, data, reload }: { api: HttpAdminApi; data: AdminData
   const [price, setPrice] = useState(""); const [currency, setCurrency] = useState("USD"); const [quantity, setQuantity] = useState("0");
   const add = async () => {
     if (!productId || !vendorId || !price) return;
-    await api.saveOffer({ id: crypto.randomUUID(), product_id: productId, vendor_id: vendorId, unit_price_amount: price, currency, available_quantity: Number(quantity), is_active: true });
+    await api.createOffer({ product_id: productId, vendor_id: vendorId, unit_price_amount: price, currency, available_quantity: Number(quantity), is_active: true });
     setPrice(""); setQuantity("0"); await reload();
   };
   const names = (id: string, values: Array<Product | Vendor>) => values.find(item => item.id === id)?.name ?? id;
@@ -87,7 +87,7 @@ function BudgetEditor({ api, data, reload }: { api: HttpAdminApi; data: AdminDat
   const [amount, setAmount] = useState(""); const [currency, setCurrency] = useState("USD");
   const add = async () => {
     if (!ownerId || !amount) return;
-    await api.saveBudget({ id: crypto.randomUUID(), owner_type: ownerType, user_id: ownerType === "USER" ? ownerId : null, department_id: ownerType === "DEPARTMENT" ? ownerId : null, amount, currency, is_active: true });
+    await api.createBudget({ owner_type: ownerType, user_id: ownerType === "USER" ? ownerId : null, department_id: ownerType === "DEPARTMENT" ? ownerId : null, amount, currency, is_active: true });
     setAmount(""); await reload();
   };
   return <><div className="admin-resource-form">
