@@ -194,6 +194,17 @@ describe("AdminManagement", () => {
     ));
   });
 
+  it("shows actionable mutation failures", async () => {
+    const api = buildApi({
+      createDepartment: vi.fn().mockRejectedValue(new Error("Department already exists")),
+    });
+    await renderAdmin(api);
+    fireEvent.click(screen.getByRole("tab", { name: "Departments" }));
+    fireEvent.change(screen.getByLabelText("New Department"), { target: { value: "Finance" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Department already exists");
+  });
+
   it("shows loading failures", async () => {
     const api = buildApi({
       departments: vi.fn().mockRejectedValue(new Error("Admin unavailable")),
