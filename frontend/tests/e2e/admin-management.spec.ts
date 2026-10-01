@@ -28,7 +28,29 @@ test("admin manages trusted catalog data from the browser", async ({ page }) => 
   await page.getByLabel("Price").fill("49.90");
   await page.getByLabel("Currency", { exact: true }).fill("usd");
   await page.getByLabel("Available quantity").fill("7");
+  const offerRequestPromise = page.waitForRequest(
+    request =>
+      request.method() === "POST"
+      && new URL(request.url()).pathname === "/api/admin/offers",
+  );
+  const offerResponsePromise = page.waitForResponse(
+    response =>
+      response.request().method() === "POST"
+      && new URL(response.url()).pathname === "/api/admin/offers",
+  );
   await page.getByRole("button", { name: "Add offer" }).click();
+  const offerRequest = await offerRequestPromise;
+  const offerResponse = await offerResponsePromise;
+  expect(offerRequest.postDataJSON()).toMatchObject({
+    unit_price_amount: "49.90",
+    currency: "USD",
+    available_quantity: 7,
+  });
+  expect(offerResponse.status()).toBe(201);
+  await expect.poll(async () => {
+    const body = (await offerResponse.json()) as { unit_price_amount?: unknown };
+    return body.unit_price_amount;
+  }).toBe("49.90");
 
   const offerRow = page.getByRole("row").filter({ hasText: productName }).filter({ hasText: vendorName });
   await expect(offerRow).toContainText("USD 49.90");
