@@ -1,6 +1,9 @@
 from decimal import Decimal
 from uuid import UUID, uuid4
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -34,7 +37,7 @@ async def test_non_admin_cannot_mutate_admin_resources(
     session_factory: async_sessionmaker[AsyncSession],
     test_database_url: str,
 ) -> None:
-    async with await _client(session_factory, test_database_url) as client:
+    async with _client(session_factory, test_database_url) as client:
         response = await client.post(
             "/api/admin/products",
             headers={"X-E2E-Actor": "requester"},
@@ -48,7 +51,7 @@ async def test_admin_product_create_conflict_and_missing_update(
     session_factory: async_sessionmaker[AsyncSession],
     test_database_url: str,
 ) -> None:
-    async with await _client(session_factory, test_database_url) as client:
+    async with _client(session_factory, test_database_url) as client:
         created = await client.post(
             "/api/admin/products",
             headers={"X-E2E-Actor": "admin"},
@@ -74,7 +77,7 @@ async def test_admin_resource_validation_rejects_invalid_values(
     session_factory: async_sessionmaker[AsyncSession],
     test_database_url: str,
 ) -> None:
-    async with await _client(session_factory, test_database_url) as client:
+    async with _client(session_factory, test_database_url) as client:
         invalid_offer = await client.post(
             "/api/admin/offers",
             headers={"X-E2E-Actor": "admin"},
@@ -106,7 +109,7 @@ async def test_admin_catalog_mutations_are_consumed_by_trusted_reader(
     session_factory: async_sessionmaker[AsyncSession],
     test_database_url: str,
 ) -> None:
-    async with await _client(session_factory, test_database_url) as client:
+    async with _client(session_factory, test_database_url) as client:
         product = await client.post(
             "/api/admin/products",
             headers={"X-E2E-Actor": "admin"},
@@ -147,7 +150,7 @@ async def test_admin_department_budget_is_consumed_by_trusted_reader(
     session_factory: async_sessionmaker[AsyncSession],
     test_database_url: str,
 ) -> None:
-    async with await _client(session_factory, test_database_url) as client:
+    async with _client(session_factory, test_database_url) as client:
         department = await client.post(
             "/api/admin/departments",
             headers={"X-E2E-Actor": "admin"},
