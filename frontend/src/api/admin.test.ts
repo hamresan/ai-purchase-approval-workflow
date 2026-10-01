@@ -2,11 +2,13 @@ import { HttpAdminApi } from "@/api/admin";
 
 describe("HttpAdminApi", () => {
   it("loads all administration resources", async () => {
-    const fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify([]), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }),
+    const fetch = vi.fn().mockImplementation(() =>
+      Promise.resolve(
+        new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      ),
     );
     const api = new HttpAdminApi({ fetch });
 
