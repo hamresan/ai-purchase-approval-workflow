@@ -46,7 +46,6 @@ def _authorize(principal: ApplicationPrincipal) -> None:
     AuthorizationPolicy().require_admin(principal)
 
 
-
 @router.get("/products", response_model=list[ProductResponse])
 async def list_products(manager: ProductsDependency, principal: CurrentPrincipalDependency):
     _authorize(principal)
@@ -174,7 +173,8 @@ async def create_budget(
 ):
     _authorize(principal)
     try:
-        return AdminMapper.budget_response(await manager.create_budget(AdminMapper.budget_values(body)))
+        record = await manager.create_budget(AdminMapper.budget_values(body))
+        return AdminMapper.budget_response(record)
     except IntegrityError as error:
         raise HTTPException(
             status_code=409,
