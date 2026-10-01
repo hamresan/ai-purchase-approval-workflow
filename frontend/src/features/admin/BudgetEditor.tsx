@@ -1,8 +1,9 @@
 import { useState } from "react";
 import type { Budget, HttpAdminApi } from "@/api/admin";
 import type { AdminData } from "@/features/admin/types";
+import { runAdminMutation } from "@/features/admin/mutation";
 
-export function BudgetEditor({ api, data, reload }: { api: HttpAdminApi; data: AdminData; reload: () => Promise<void> }) {
+export function BudgetEditor({ api, data, reload, onError }: { api: HttpAdminApi; data: AdminData; reload: () => Promise<void>; onError: (message: string) => void }) {
   const [ownerType, setOwnerType] = useState<"USER" | "DEPARTMENT">("DEPARTMENT");
   const [ownerId, setOwnerId] = useState("");
   const [amount, setAmount] = useState("");
@@ -10,15 +11,20 @@ export function BudgetEditor({ api, data, reload }: { api: HttpAdminApi; data: A
   const [editing, setEditing] = useState<Budget | null>(null);
   const add = async () => {
     if (!ownerId || !amount) return;
-    await api.createBudget({ owner_type: ownerType, user_id: ownerType === "USER" ? ownerId : null,
-      department_id: ownerType === "DEPARTMENT" ? ownerId : null, amount, currency, is_active: true });
-    setAmount(""); await reload();
+    const succeeded = await runAdminMutation(async () => {
+      await api.createBudget({ owner_type: ownerType, user_id: ownerType === "USER" ? ownerId : null,
+        department_id: ownerType === "DEPARTMENT" ? ownerId : null, amount, currency, is_active: true });
+      await reload();
+    }, onError);
+    if (succeeded) setAmount("");
   };
   const saveEdit = async () => {
     if (!editing) return;
-    await api.saveBudget(editing);
-    setEditing(null);
-    await reload();
+    const succeeded = await runAdminMutation(async () => {
+      await api.saveBudget(editing);
+      await reload();
+    }, onError);
+    if (succeeded) setEditing(null);
   };
   const ownerValue = (item: Budget) => item.owner_type === "USER" ? item.user_id ?? "" : item.department_id ?? "";
   const changeEditOwner = (value: string) => {
@@ -33,7 +39,10 @@ export function BudgetEditor({ api, data, reload }: { api: HttpAdminApi; data: A
     <input aria-label="Budget currency" maxLength={3} value={currency} onChange={e => setCurrency(e.target.value.toUpperCase())} />
     <button className="primary-button" onClick={() => void add()}>Add budget</button>
   </div><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Owner</th><th>Currency</th><th>Limit</th><th>Status</th><th>Actions</th></tr></thead>
-    <tbody>{data.budgets.map(item => <tr key={item.id}><td>{item.owner_type === "USER" ? item.user_id : data.departments.find(x => x.id === item.department_id)?.name ?? item.department_id}</td><td>{item.currency}</td><td>{item.amount}</td><td>{item.is_active ? "Active" : "Inactive"}</td><td><div className="admin-row-actions"><button className="admin-link-button" onClick={() => setEditing(item)}>Edit</button><button className="admin-link-button" onClick={() => void api.saveBudget({ ...item, is_active: !item.is_active }).then(reload)}>{item.is_active ? "Deactivate" : "Activate"}</button></div></td></tr>)}</tbody>
+    <tbody>{data.budgets.map(item => <tr key={item.id}><td>{item.owner_type === "USER" ? item.user_id : data.departments.find(x => x.id === item.department_id)?.name ?? item.department_id}</td><td>{item.currency}</td><td>{item.amount}</td><td>{item.is_active ? "Active" : "Inactive"}</td><td><div className="admin-row-actions"><button className="admin-link-button" onClick={() => setEditing(item)}>Edit</button><button className="admin-link-button" onClick={() => void runAdminMutation(async () => {
+      await api.saveBudget({ ...item, is_active: !item.is_active });
+      await reload();
+    }, onError)}>{item.is_active ? "Deactivate" : "Activate"}</button></div></td></tr>)}</tbody>
   </table></div>
   {editing && <div className="modal-backdrop" role="presentation"><div className="approval-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-budget-title">
     <div className="dialog-heading"><div className="dialog-icon">✎</div><div><h2 id="edit-budget-title">Edit budget</h2><p>Update the trusted budget limit.</p></div><button className="dialog-close" aria-label="Close" onClick={() => setEditing(null)}>×</button></div>
