@@ -78,4 +78,7 @@ async def list_roles(session: SessionDependency, principal: CurrentPrincipalDepe
 @router.put("/roles/{user_id}")
 async def replace_roles(user_id: UUID, body: RoleAssignmentBody, session: SessionDependency, principal: CurrentPrincipalDependency):
     _authorize(principal)
+    if not body.roles:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=422, detail="At least one application role is required.")
     return await SqlAlchemyRoleAssignmentRepository(session).replace_roles(user_id, frozenset(body.roles))
