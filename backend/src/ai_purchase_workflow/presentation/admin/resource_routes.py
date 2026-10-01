@@ -6,13 +6,11 @@ from sqlalchemy.exc import IntegrityError
 
 from ai_purchase_workflow.application.access import ApplicationPrincipal, AuthorizationPolicy
 from ai_purchase_workflow.application.admin import (
-    BudgetValues,
     ManageBudgets,
     ManageOffers,
     ManageProducts,
     ManageRoleAssignments,
     ManageVendors,
-    OfferValues,
 )
 from ai_purchase_workflow.presentation.admin.dependencies import (
     get_manage_budgets,
@@ -21,6 +19,7 @@ from ai_purchase_workflow.presentation.admin.dependencies import (
     get_manage_role_assignments,
     get_manage_vendors,
 )
+from ai_purchase_workflow.presentation.admin.mappers import AdminMapper
 from ai_purchase_workflow.presentation.admin.resource_schemas import (
     BudgetBody,
     BudgetResponse,
@@ -47,32 +46,11 @@ def _authorize(principal: ApplicationPrincipal) -> None:
     AuthorizationPolicy().require_admin(principal)
 
 
-def _offer_values(body: OfferBody) -> OfferValues:
-    return OfferValues(
-        body.product_id,
-        body.vendor_id,
-        body.unit_price_amount,
-        body.currency,
-        body.available_quantity,
-        body.is_active,
-    )
-
-
-def _budget_values(body: BudgetBody) -> BudgetValues:
-    return BudgetValues(
-        body.owner_type,
-        body.user_id,
-        body.department_id,
-        body.amount,
-        body.currency,
-        body.is_active,
-    )
-
 
 @router.get("/products", response_model=list[ProductResponse])
 async def list_products(manager: ProductsDependency, principal: CurrentPrincipalDependency):
     _authorize(principal)
-    return [ProductResponse.from_record(record) for record in await manager.list_products()]
+    return [AdminMapper.product_response(record) for record in await manager.list_products()]
 
 
 @router.post("/products", status_code=201, response_model=ProductResponse)
@@ -83,7 +61,7 @@ async def create_product(
 ):
     _authorize(principal)
     try:
-        return ProductResponse.from_record(await manager.create_product(body.name.strip()))
+        return AdminMapper.product_response(await manager.create_product(body.name.strip()))
     except IntegrityError as error:
         raise HTTPException(status_code=409, detail="Product name already exists.") from error
 
@@ -102,13 +80,13 @@ async def update_product(
         raise HTTPException(status_code=409, detail="Product name already exists.") from error
     if record is None:
         raise HTTPException(status_code=404, detail="Product not found.")
-    return ProductResponse.from_record(record)
+    return AdminMapper.product_response(record)
 
 
 @router.get("/vendors", response_model=list[VendorResponse])
 async def list_vendors(manager: VendorsDependency, principal: CurrentPrincipalDependency):
     _authorize(principal)
-    return [VendorResponse.from_record(record) for record in await manager.list_vendors()]
+    return [AdminMapper.vendor_response(record) for record in await manager.list_vendors()]
 
 
 @router.post("/vendors", status_code=201, response_model=VendorResponse)
@@ -119,7 +97,7 @@ async def create_vendor(
 ):
     _authorize(principal)
     try:
-        return VendorResponse.from_record(await manager.create_vendor(body.name.strip()))
+        return AdminMapper.vendor_response(await manager.create_vendor(body.name.strip()))
     except IntegrityError as error:
         raise HTTPException(status_code=409, detail="Vendor name already exists.") from error
 
@@ -138,13 +116,13 @@ async def update_vendor(
         raise HTTPException(status_code=409, detail="Vendor name already exists.") from error
     if record is None:
         raise HTTPException(status_code=404, detail="Vendor not found.")
-    return VendorResponse.from_record(record)
+    return AdminMapper.vendor_response(record)
 
 
 @router.get("/offers", response_model=list[OfferResponse])
 async def list_offers(manager: OffersDependency, principal: CurrentPrincipalDependency):
     _authorize(principal)
-    return [OfferResponse.from_record(record) for record in await manager.list_offers()]
+    return [AdminMapper.offer_response(record) for record in await manager.list_offers()]
 
 
 @router.post("/offers", status_code=201, response_model=OfferResponse)
@@ -155,7 +133,7 @@ async def create_offer(
 ):
     _authorize(principal)
     try:
-        return OfferResponse.from_record(await manager.create_offer(_offer_values(body)))
+        return AdminMapper.offer_response(await manager.create_offer(AdminMapper.offer_values(body)))
     except IntegrityError as error:
         raise HTTPException(
             status_code=409,
@@ -172,20 +150,20 @@ async def update_offer(
 ):
     _authorize(principal)
     try:
-        record = await manager.update_offer(resource_id, _offer_values(body))
+        record = await manager.update_offer(resource_id, AdminMapper.offer_values(body))
     except IntegrityError as error:
         raise HTTPException(
             status_code=409, detail="Trusted offer conflicts with existing trusted data."
         ) from error
     if record is None:
         raise HTTPException(status_code=404, detail="Trusted offer not found.")
-    return OfferResponse.from_record(record)
+    return AdminMapper.offer_response(record)
 
 
 @router.get("/budgets", response_model=list[BudgetResponse])
 async def list_budgets(manager: BudgetsDependency, principal: CurrentPrincipalDependency):
     _authorize(principal)
-    return [BudgetResponse.from_record(record) for record in await manager.list_budgets()]
+    return [AdminMapper.budget_response(record) for record in await manager.list_budgets()]
 
 
 @router.post("/budgets", status_code=201, response_model=BudgetResponse)
@@ -196,7 +174,7 @@ async def create_budget(
 ):
     _authorize(principal)
     try:
-        return BudgetResponse.from_record(await manager.create_budget(_budget_values(body)))
+        return AdminMapper.budget_response(await manager.create_budget(AdminMapper.budget_values(body)))
     except IntegrityError as error:
         raise HTTPException(
             status_code=409,
@@ -213,21 +191,21 @@ async def update_budget(
 ):
     _authorize(principal)
     try:
-        record = await manager.update_budget(resource_id, _budget_values(body))
+        record = await manager.update_budget(resource_id, AdminMapper.budget_values(body))
     except IntegrityError as error:
         raise HTTPException(
             status_code=409, detail="Budget conflicts with existing trusted data."
         ) from error
     if record is None:
         raise HTTPException(status_code=404, detail="Budget not found.")
-    return BudgetResponse.from_record(record)
+    return AdminMapper.budget_response(record)
 
 
 @router.get("/roles", response_model=list[RoleAssignmentResponse])
 async def list_roles(manager: RolesDependency, principal: CurrentPrincipalDependency):
     _authorize(principal)
     return [
-        RoleAssignmentResponse.from_record(record) for record in await manager.list_assignments()
+        AdminMapper.role_response(record) for record in await manager.list_assignments()
     ]
 
 
@@ -242,4 +220,4 @@ async def replace_roles(
     if not body.roles:
         raise HTTPException(status_code=422, detail="At least one application role is required.")
     record = await manager.replace_roles(user_id, frozenset(body.roles))
-    return RoleAssignmentResponse.from_record(record)
+    return AdminMapper.role_response(record)
