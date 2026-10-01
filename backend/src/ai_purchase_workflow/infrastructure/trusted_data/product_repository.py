@@ -1,4 +1,4 @@
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,7 +21,7 @@ class SqlAlchemyProductRepository(ProductRepository):
         await self._session.commit()
         return ProductRecord(row.id, row.name, row.is_active)
 
-    async def update_product(self, product_id, name: str, is_active: bool):
+    async def update_product(\n        self, product_id: UUID, name: str, is_active: bool\n    ) -> ProductRecord | None:
         row = await self._session.get(ProductModel, product_id)
         if row is None:
             return None
