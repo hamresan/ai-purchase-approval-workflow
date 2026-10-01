@@ -21,11 +21,11 @@ test("admin manages trusted catalog data from the browser", async ({ page }) => 
 
   await page.getByRole("tab", { name: "Catalog & Vendors" }).click();
   await page.getByLabel("New Product").fill(productName);
-  await page.getByRole("button", { name: "Add", exact: true }).nth(1).click();
+  await page.getByRole("button", { name: "Add", exact: true }).first().click();
   await expect(page.getByRole("cell", { name: productName })).toBeVisible();
 
   await page.getByLabel("New Vendor").fill(vendorName);
-  await page.getByRole("button", { name: "Add", exact: true }).nth(2).click();
+  await page.getByRole("button", { name: "Add", exact: true }).nth(1).click();
   await expect(page.getByRole("cell", { name: vendorName })).toBeVisible();
 
   await page.getByRole("tab", { name: "Departments" }).click();
