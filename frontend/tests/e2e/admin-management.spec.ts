@@ -69,7 +69,7 @@ test("admin manages trusted catalog data from the browser", async ({ page }) => 
   await page.getByLabel("Budget currency").fill("usd");
   await page.getByRole("button", { name: "Add budget" }).click();
 
-  const budgetRow = page.getByRole("row").filter({ hasText: departmentName });
+  const budgetRow = page.getByRole("row").filter({ hasText: departmentName }).filter({ hasText: "USD" });
   await expect(budgetRow).toContainText("USD");
   await expect(budgetRow).toContainText("1200");
 });
