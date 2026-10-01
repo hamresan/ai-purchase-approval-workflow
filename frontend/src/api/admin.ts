@@ -20,4 +20,9 @@ export class HttpAdminApi {
   offers() { return this.get<Offer[]>("/api/admin/offers"); }
   budgets() { return this.get<Budget[]>("/api/admin/budgets"); }
   roles() { return this.get<RoleAssignment[]>("/api/admin/roles"); }
+  async replaceRoles(userId: string, roles: string[]): Promise<RoleAssignment> {
+    const response = await this.http.fetch(`/api/admin/roles/${encodeURIComponent(userId)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ roles }) });
+    if (!response.ok) throw new Error("Unable to update user roles.");
+    return response.json() as Promise<RoleAssignment>;
+  }
 }
