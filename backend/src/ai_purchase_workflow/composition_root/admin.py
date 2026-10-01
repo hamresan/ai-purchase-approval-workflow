@@ -1,8 +1,7 @@
-from dataclasses import dataclass
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ai_purchase_workflow.application.admin import (
+    AdminServices,
     ManageBudgets,
     ManageDepartments,
     ManageOffers,
@@ -28,16 +27,6 @@ from ai_purchase_workflow.infrastructure.trusted_data.product_repository import 
 from ai_purchase_workflow.infrastructure.trusted_data.vendor_repository import (
     SqlAlchemyVendorRepository,
 )
-
-
-@dataclass(frozen=True, slots=True)
-class AdminServices:
-    departments: ManageDepartments
-    products: ManageProducts
-    vendors: ManageVendors
-    offers: ManageOffers
-    budgets: ManageBudgets
-    roles: ManageRoleAssignments
 
 
 def build_admin_services(session: AsyncSession) -> AdminServices:
