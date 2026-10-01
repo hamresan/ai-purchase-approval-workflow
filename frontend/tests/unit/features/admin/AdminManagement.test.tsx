@@ -100,6 +100,44 @@ describe("AdminManagement", () => {
     await waitFor(() => expect(api.saveOffer).toHaveBeenCalledTimes(1));
   });
 
+
+  it("edits named resources, offers, and budgets", async () => {
+    const api = await renderAdmin();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Departments" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.change(screen.getByLabelText("Edit Department name"), { target: { value: "Operations" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(api.updateDepartment).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "d1", name: "Operations" }),
+    ));
+
+    fireEvent.click(screen.getByRole("tab", { name: "Catalog & Vendors" }));
+    const editButtons = screen.getAllByRole("button", { name: "Edit" });
+    fireEvent.click(editButtons[0]);
+    fireEvent.change(screen.getByLabelText("Edit Product name"), { target: { value: "Monitor stand" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(api.saveProduct).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "p1", name: "Monitor stand" }),
+    ));
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Edit" })[2]);
+    fireEvent.change(screen.getByLabelText("Edit offer price"), { target: { value: "42.50" } });
+    fireEvent.change(screen.getByLabelText("Edit offer available quantity"), { target: { value: "12" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(api.saveOffer).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "o1", unit_price_amount: "42.50", available_quantity: 12 }),
+    ));
+
+    fireEvent.click(screen.getByRole("tab", { name: "Budgets" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.change(screen.getByLabelText("Edit budget amount"), { target: { value: "750" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(api.saveBudget).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "b1", amount: "750" }),
+    ));
+  });
+
   it("shows loading failures", async () => {
     const api = buildApi({
       departments: vi.fn().mockRejectedValue(new Error("Admin unavailable")),
