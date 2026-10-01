@@ -3,7 +3,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from ai_purchase_workflow.application.access import ApplicationPrincipal, AuthorizationPolicy
 from ai_purchase_workflow.application.admin import (
@@ -11,37 +10,37 @@ from ai_purchase_workflow.application.admin import (
     ManageBudgets,
     ManageOffers,
     ManageProducts,
+    ManageRoleAssignments,
     ManageVendors,
     OfferValues,
-)
-from ai_purchase_workflow.infrastructure.access.sqlalchemy_role_assignment_repository import (
-    SqlAlchemyRoleAssignmentRepository,
 )
 from ai_purchase_workflow.presentation.admin.dependencies import (
     get_manage_budgets,
     get_manage_offers,
     get_manage_products,
+    get_manage_role_assignments,
     get_manage_vendors,
 )
 from ai_purchase_workflow.presentation.admin.resource_schemas import (
     BudgetBody,
     BudgetResponse,
-    NamedResourceBody,
+    NamedResourceCreateBody,
+    NamedResourceUpdateBody,
     OfferBody,
     OfferResponse,
     ProductResponse,
     RoleAssignmentBody,
+    RoleAssignmentResponse,
     VendorResponse,
 )
 from ai_purchase_workflow.presentation.auth import CurrentPrincipalDependency
-from ai_purchase_workflow.presentation.dependencies import get_session
 
 router = APIRouter(prefix="/api/admin", tags=["admin-resources"])
-SessionDependency = Annotated[AsyncSession, Depends(get_session)]
 ProductsDependency = Annotated[ManageProducts, Depends(get_manage_products)]
 VendorsDependency = Annotated[ManageVendors, Depends(get_manage_vendors)]
 OffersDependency = Annotated[ManageOffers, Depends(get_manage_offers)]
 BudgetsDependency = Annotated[ManageBudgets, Depends(get_manage_budgets)]
+RolesDependency = Annotated[ManageRoleAssignments, Depends(get_manage_role_assignments)]
 
 
 def _authorize(principal: ApplicationPrincipal) -> None:
@@ -53,7 +52,7 @@ def _offer_values(body: OfferBody) -> OfferValues:
         body.product_id,
         body.vendor_id,
         body.unit_price_amount,
-        body.currency.upper(),
+        body.currency,
         body.available_quantity,
         body.is_active,
     )
@@ -65,7 +64,7 @@ def _budget_values(body: BudgetBody) -> BudgetValues:
         body.user_id,
         body.department_id,
         body.amount,
-        body.currency.upper(),
+        body.currency,
         body.is_active,
     )
 
@@ -78,7 +77,7 @@ async def list_products(manager: ProductsDependency, principal: CurrentPrincipal
 
 @router.post("/products", status_code=201, response_model=ProductResponse)
 async def create_product(
-    body: NamedResourceBody,
+    body: NamedResourceCreateBody,
     manager: ProductsDependency,
     principal: CurrentPrincipalDependency,
 ):
@@ -92,7 +91,7 @@ async def create_product(
 @router.put("/products/{resource_id}", response_model=ProductResponse)
 async def update_product(
     resource_id: UUID,
-    body: NamedResourceBody,
+    body: NamedResourceUpdateBody,
     manager: ProductsDependency,
     principal: CurrentPrincipalDependency,
 ):
@@ -114,7 +113,7 @@ async def list_vendors(manager: VendorsDependency, principal: CurrentPrincipalDe
 
 @router.post("/vendors", status_code=201, response_model=VendorResponse)
 async def create_vendor(
-    body: NamedResourceBody,
+    body: NamedResourceCreateBody,
     manager: VendorsDependency,
     principal: CurrentPrincipalDependency,
 ):
@@ -128,7 +127,7 @@ async def create_vendor(
 @router.put("/vendors/{resource_id}", response_model=VendorResponse)
 async def update_vendor(
     resource_id: UUID,
-    body: NamedResourceBody,
+    body: NamedResourceUpdateBody,
     manager: VendorsDependency,
     principal: CurrentPrincipalDependency,
 ):
@@ -224,21 +223,24 @@ async def update_budget(
     return BudgetResponse.from_record(record)
 
 
-@router.get("/roles")
-async def list_roles(session: SessionDependency, principal: CurrentPrincipalDependency):
+@router.get("/roles", response_model=list[RoleAssignmentResponse])
+async def list_roles(manager: RolesDependency, principal: CurrentPrincipalDependency):
     _authorize(principal)
-    return await SqlAlchemyRoleAssignmentRepository(session).list_assignments()
+    return [
+        RoleAssignmentResponse.from_record(record)
+        for record in await manager.list_assignments()
+    ]
 
 
-@router.put("/roles/{user_id}")
+@router.put("/roles/{user_id}", response_model=RoleAssignmentResponse)
 async def replace_roles(
     user_id: UUID,
     body: RoleAssignmentBody,
-    session: SessionDependency,
+    manager: RolesDependency,
     principal: CurrentPrincipalDependency,
 ):
     _authorize(principal)
     if not body.roles:
         raise HTTPException(status_code=422, detail="At least one application role is required.")
-    repository = SqlAlchemyRoleAssignmentRepository(session)
-    return await repository.replace_roles(user_id, frozenset(body.roles))
+    record = await manager.replace_roles(user_id, frozenset(body.roles))
+    return RoleAssignmentResponse.from_record(record)
