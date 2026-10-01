@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from decimal import Decimal
 from uuid import UUID, uuid4
@@ -27,7 +27,7 @@ UNKNOWN_ID = UUID("99999999-9999-9999-9999-999999999999")
 async def _client(
     session_factory: async_sessionmaker[AsyncSession],
     database_url: str,
-) -> AsyncIterator[AsyncClient]:
+) -> AsyncGenerator[AsyncClient]:
     app = create_app(Settings(database_url=database_url, app_env="test"))
     app.state.session_factory = session_factory
     async with (
