@@ -25,9 +25,13 @@ from ai_purchase_workflow.presentation.admin.dependencies import (
 )
 from ai_purchase_workflow.presentation.admin.resource_schemas import (
     BudgetBody,
+    BudgetResponse,
     NamedResourceBody,
     OfferBody,
+    OfferResponse,
+    ProductResponse,
     RoleAssignmentBody,
+    VendorResponse,
 )
 from ai_purchase_workflow.presentation.auth import CurrentPrincipalDependency
 from ai_purchase_workflow.presentation.dependencies import get_session
@@ -66,13 +70,13 @@ def _budget_values(body: BudgetBody) -> BudgetValues:
     )
 
 
-@router.get("/products")
+@router.get("/products", response_model=list[ProductResponse])
 async def list_products(manager: ProductsDependency, principal: CurrentPrincipalDependency):
     _authorize(principal)
     return await manager.list_products()
 
 
-@router.post("/products", status_code=201)
+@router.post("/products", status_code=201, response_model=ProductResponse)
 async def create_product(
     body: NamedResourceBody,
     manager: ProductsDependency,
@@ -85,7 +89,7 @@ async def create_product(
         raise HTTPException(status_code=409, detail="Product name already exists.") from error
 
 
-@router.put("/products/{resource_id}")
+@router.put("/products/{resource_id}", response_model=ProductResponse)
 async def update_product(
     resource_id: UUID,
     body: NamedResourceBody,
@@ -102,13 +106,13 @@ async def update_product(
     return record
 
 
-@router.get("/vendors")
+@router.get("/vendors", response_model=list[VendorResponse])
 async def list_vendors(manager: VendorsDependency, principal: CurrentPrincipalDependency):
     _authorize(principal)
     return await manager.list_vendors()
 
 
-@router.post("/vendors", status_code=201)
+@router.post("/vendors", status_code=201, response_model=VendorResponse)
 async def create_vendor(
     body: NamedResourceBody,
     manager: VendorsDependency,
@@ -121,7 +125,7 @@ async def create_vendor(
         raise HTTPException(status_code=409, detail="Vendor name already exists.") from error
 
 
-@router.put("/vendors/{resource_id}")
+@router.put("/vendors/{resource_id}", response_model=VendorResponse)
 async def update_vendor(
     resource_id: UUID,
     body: NamedResourceBody,
@@ -138,13 +142,13 @@ async def update_vendor(
     return record
 
 
-@router.get("/offers")
+@router.get("/offers", response_model=list[OfferResponse])
 async def list_offers(manager: OffersDependency, principal: CurrentPrincipalDependency):
     _authorize(principal)
     return await manager.list_offers()
 
 
-@router.post("/offers", status_code=201)
+@router.post("/offers", status_code=201, response_model=OfferResponse)
 async def create_offer(
     body: OfferBody,
     manager: OffersDependency,
@@ -160,7 +164,7 @@ async def create_offer(
         ) from error
 
 
-@router.put("/offers/{resource_id}")
+@router.put("/offers/{resource_id}", response_model=OfferResponse)
 async def update_offer(
     resource_id: UUID,
     body: OfferBody,
@@ -179,13 +183,13 @@ async def update_offer(
     return record
 
 
-@router.get("/budgets")
+@router.get("/budgets", response_model=list[BudgetResponse])
 async def list_budgets(manager: BudgetsDependency, principal: CurrentPrincipalDependency):
     _authorize(principal)
     return await manager.list_budgets()
 
 
-@router.post("/budgets", status_code=201)
+@router.post("/budgets", status_code=201, response_model=BudgetResponse)
 async def create_budget(
     body: BudgetBody,
     manager: BudgetsDependency,
@@ -201,7 +205,7 @@ async def create_budget(
         ) from error
 
 
-@router.put("/budgets/{resource_id}")
+@router.put("/budgets/{resource_id}", response_model=BudgetResponse)
 async def update_budget(
     resource_id: UUID,
     body: BudgetBody,
