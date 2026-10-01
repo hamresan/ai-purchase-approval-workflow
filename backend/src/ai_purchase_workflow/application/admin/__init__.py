@@ -1,26 +1,50 @@
+from ai_purchase_workflow.application.admin.budgets import (
+    BudgetRecord,
+    BudgetRepository,
+    BudgetValues,
+    ManageBudgets,
+)
 from ai_purchase_workflow.application.admin.departments import (
     DepartmentRecord,
     DepartmentRepository,
     ManageDepartments,
 )
-from ai_purchase_workflow.application.admin.resources import (
-    AdminResourceRepository,
-    BudgetRecord,
+from ai_purchase_workflow.application.admin.offers import (
+    ManageOffers,
     OfferRecord,
+    OfferRepository,
+    OfferValues,
+)
+from ai_purchase_workflow.application.admin.products import (
+    ManageProducts,
     ProductRecord,
-    VendorRecord,
+    ProductRepository,
 )
 from ai_purchase_workflow.application.admin.roles import RoleAssignment, RoleAssignmentRepository
+from ai_purchase_workflow.application.admin.vendors import (
+    ManageVendors,
+    VendorRecord,
+    VendorRepository,
+)
 
 __all__ = [
-    "AdminResourceRepository",
     "BudgetRecord",
+    "BudgetRepository",
+    "BudgetValues",
     "DepartmentRecord",
     "DepartmentRepository",
+    "ManageBudgets",
     "ManageDepartments",
+    "ManageOffers",
+    "ManageProducts",
+    "ManageVendors",
     "OfferRecord",
+    "OfferRepository",
+    "OfferValues",
     "ProductRecord",
+    "ProductRepository",
     "RoleAssignment",
     "RoleAssignmentRepository",
     "VendorRecord",
+    "VendorRepository",
 ]
