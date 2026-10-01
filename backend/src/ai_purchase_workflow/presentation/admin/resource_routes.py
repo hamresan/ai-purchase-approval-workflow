@@ -73,7 +73,7 @@ def _budget_values(body: BudgetBody) -> BudgetValues:
 @router.get("/products", response_model=list[ProductResponse])
 async def list_products(manager: ProductsDependency, principal: CurrentPrincipalDependency):
     _authorize(principal)
-    return await manager.list_products()
+    return [ProductResponse.from_record(record) for record in await manager.list_products()]
 
 
 @router.post("/products", status_code=201, response_model=ProductResponse)
@@ -84,7 +84,7 @@ async def create_product(
 ):
     _authorize(principal)
     try:
-        return await manager.create_product(body.name.strip())
+        return ProductResponse.from_record(await manager.create_product(body.name.strip()))
     except IntegrityError as error:
         raise HTTPException(status_code=409, detail="Product name already exists.") from error
 
@@ -103,13 +103,13 @@ async def update_product(
         raise HTTPException(status_code=409, detail="Product name already exists.") from error
     if record is None:
         raise HTTPException(status_code=404, detail="Product not found.")
-    return record
+    return ProductResponse.from_record(record)
 
 
 @router.get("/vendors", response_model=list[VendorResponse])
 async def list_vendors(manager: VendorsDependency, principal: CurrentPrincipalDependency):
     _authorize(principal)
-    return await manager.list_vendors()
+    return [VendorResponse.from_record(record) for record in await manager.list_vendors()]
 
 
 @router.post("/vendors", status_code=201, response_model=VendorResponse)
@@ -120,7 +120,7 @@ async def create_vendor(
 ):
     _authorize(principal)
     try:
-        return await manager.create_vendor(body.name.strip())
+        return VendorResponse.from_record(await manager.create_vendor(body.name.strip()))
     except IntegrityError as error:
         raise HTTPException(status_code=409, detail="Vendor name already exists.") from error
 
@@ -139,13 +139,13 @@ async def update_vendor(
         raise HTTPException(status_code=409, detail="Vendor name already exists.") from error
     if record is None:
         raise HTTPException(status_code=404, detail="Vendor not found.")
-    return record
+    return VendorResponse.from_record(record)
 
 
 @router.get("/offers", response_model=list[OfferResponse])
 async def list_offers(manager: OffersDependency, principal: CurrentPrincipalDependency):
     _authorize(principal)
-    return await manager.list_offers()
+    return [OfferResponse.from_record(record) for record in await manager.list_offers()]
 
 
 @router.post("/offers", status_code=201, response_model=OfferResponse)
@@ -156,7 +156,7 @@ async def create_offer(
 ):
     _authorize(principal)
     try:
-        return await manager.create_offer(_offer_values(body))
+        return OfferResponse.from_record(await manager.create_offer(_offer_values(body)))
     except IntegrityError as error:
         raise HTTPException(
             status_code=409,
@@ -180,13 +180,13 @@ async def update_offer(
         ) from error
     if record is None:
         raise HTTPException(status_code=404, detail="Trusted offer not found.")
-    return record
+    return OfferResponse.from_record(record)
 
 
 @router.get("/budgets", response_model=list[BudgetResponse])
 async def list_budgets(manager: BudgetsDependency, principal: CurrentPrincipalDependency):
     _authorize(principal)
-    return await manager.list_budgets()
+    return [BudgetResponse.from_record(record) for record in await manager.list_budgets()]
 
 
 @router.post("/budgets", status_code=201, response_model=BudgetResponse)
@@ -197,7 +197,7 @@ async def create_budget(
 ):
     _authorize(principal)
     try:
-        return await manager.create_budget(_budget_values(body))
+        return BudgetResponse.from_record(await manager.create_budget(_budget_values(body)))
     except IntegrityError as error:
         raise HTTPException(
             status_code=409,
@@ -221,7 +221,7 @@ async def update_budget(
         ) from error
     if record is None:
         raise HTTPException(status_code=404, detail="Budget not found.")
-    return record
+    return BudgetResponse.from_record(record)
 
 
 @router.get("/roles")
