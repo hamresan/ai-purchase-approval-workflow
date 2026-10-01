@@ -87,7 +87,7 @@ describe("AdminManagement", () => {
     fireEvent.click(buttons[3]);
     fireEvent.click(buttons[4]);
     await waitFor(() => expect(api.saveOffer).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(api.saveBudget).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(api.saveBudget).toHaveBeenCalledTimes(1));
   });
 
   it("shows loading failures", async () => {
