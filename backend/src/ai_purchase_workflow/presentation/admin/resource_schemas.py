@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ai_purchase_workflow.application.access import ApplicationRole
 
+
 class NamedResourceCreateBody(BaseModel):
     name: str = Field(min_length=1, max_length=200)
 
