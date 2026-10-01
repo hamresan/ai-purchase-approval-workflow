@@ -38,17 +38,17 @@ export function AdminManagement({ api }: Props) {
         </AdminCard>}
         {activeTab === "departments" && <AdminCard title="Departments">
           <NamedResourceEditor kind="Department" items={data.departments}
-            create={name => api.createDepartment(name)} save={item => api.updateDepartment(item)} reload={reload} />
+            create={name => api.createDepartment(name)} save={item => api.updateDepartment(item)} reload={reload} onError={setError} />
         </AdminCard>}
         {activeTab === "catalog" && <div className="admin-grid">
           <AdminCard title="Products"><NamedResourceEditor kind="Product" items={data.products}
-            create={name => api.createProduct(name)} save={item => api.saveProduct(item)} reload={reload} /></AdminCard>
+            create={name => api.createProduct(name)} save={item => api.saveProduct(item)} reload={reload} onError={setError} /></AdminCard>
           <AdminCard title="Vendors"><NamedResourceEditor kind="Vendor" items={data.vendors}
-            create={name => api.createVendor(name)} save={item => api.saveVendor(item)} reload={reload} /></AdminCard>
-          <AdminCard title="Trusted prices & availability" wide><OfferEditor api={api} data={data} reload={reload} /></AdminCard>
+            create={name => api.createVendor(name)} save={item => api.saveVendor(item)} reload={reload} onError={setError} /></AdminCard>
+          <AdminCard title="Trusted prices & availability" wide><OfferEditor api={api} data={data} reload={reload} onError={setError} /></AdminCard>
         </div>}
         {activeTab === "budgets" && <AdminCard title="Budgets">
-          <BudgetEditor api={api} data={data} reload={reload} />
+          <BudgetEditor api={api} data={data} reload={reload} onError={setError} />
         </AdminCard>}
       </div>
     </>}
