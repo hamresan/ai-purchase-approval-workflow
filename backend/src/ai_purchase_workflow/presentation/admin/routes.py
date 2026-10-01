@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from ai_purchase_workflow.application.access import AuthorizationPolicy
 from ai_purchase_workflow.application.admin import ManageDepartments
 from ai_purchase_workflow.presentation.admin.dependencies import get_manage_departments
+from ai_purchase_workflow.presentation.admin.mappers import AdminMapper
 from ai_purchase_workflow.presentation.admin.schemas import (
     DepartmentCreateBody,
     DepartmentResponse,
@@ -23,7 +24,7 @@ async def list_departments(
     manager: ManageDepartmentsDependency, principal: CurrentPrincipalDependency
 ) -> list[DepartmentResponse]:
     AuthorizationPolicy().require_admin(principal)
-    return [DepartmentResponse.from_record(row) for row in await manager.list_departments()]
+    return [AdminMapper.department_response(row) for row in await manager.list_departments()]
 
 
 @router.post("", response_model=DepartmentResponse, status_code=201)
@@ -37,7 +38,7 @@ async def create_department(
         record = await manager.create_department(body.name.strip())
     except IntegrityError as error:
         raise HTTPException(status_code=409, detail="Department name already exists.") from error
-    return DepartmentResponse.from_record(record)
+    return AdminMapper.department_response(record)
 
 
 @router.put("/{department_id}", response_model=DepartmentResponse)
@@ -54,4 +55,4 @@ async def update_department(
         raise HTTPException(status_code=409, detail="Department name already exists.") from error
     if record is None:
         raise HTTPException(status_code=404, detail="Department not found.")
-    return DepartmentResponse.from_record(record)
+    return AdminMapper.department_response(record)
