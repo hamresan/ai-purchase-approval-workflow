@@ -9,20 +9,67 @@ export interface RoleAssignment { user_id: string; roles: string[] }
 
 export class HttpAdminApi {
   constructor(private readonly http: AdminHttpClient) {}
-  private async get<T>(path: string): Promise<T> {
-    const response = await this.http.fetch(path);
-    if (!response.ok) throw new Error("Unable to load administration data.");
+
+  private async request<T>(path: string, init?: RequestInit): Promise<T> {
+    const response = await this.http.fetch(path, init);
+    if (!response.ok) throw new Error("Unable to update administration data.");
     return response.json() as Promise<T>;
   }
+
+  private get<T>(path: string): Promise<T> {
+    return this.request<T>(path);
+  }
+
+  private put<T>(path: string, body: unknown): Promise<T> {
+    return this.request<T>(path, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  }
+
   departments() { return this.get<Department[]>("/api/admin/departments"); }
   products() { return this.get<Product[]>("/api/admin/products"); }
   vendors() { return this.get<Vendor[]>("/api/admin/vendors"); }
   offers() { return this.get<Offer[]>("/api/admin/offers"); }
   budgets() { return this.get<Budget[]>("/api/admin/budgets"); }
   roles() { return this.get<RoleAssignment[]>("/api/admin/roles"); }
-  async replaceRoles(userId: string, roles: string[]): Promise<RoleAssignment> {
-    const response = await this.http.fetch(`/api/admin/roles/${encodeURIComponent(userId)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ roles }) });
-    if (!response.ok) throw new Error("Unable to update user roles.");
-    return response.json() as Promise<RoleAssignment>;
+
+  createDepartment(name: string): Promise<Department> {
+    return this.request<Department>("/api/admin/departments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+  }
+
+  updateDepartment(item: Department): Promise<Department> {
+    return this.put<Department>(`/api/admin/departments/${item.id}`, {
+      name: item.name,
+      is_active: item.is_active,
+    });
+  }
+
+  saveProduct(item: Product): Promise<Product> {
+    return this.put<Product>(`/api/admin/products/${item.id}`, item);
+  }
+
+  saveVendor(item: Vendor): Promise<Vendor> {
+    return this.put<Vendor>(`/api/admin/vendors/${item.id}`, item);
+  }
+
+  saveOffer(item: Offer): Promise<Offer> {
+    return this.put<Offer>(`/api/admin/offers/${item.id}`, item);
+  }
+
+  saveBudget(item: Budget): Promise<Budget> {
+    return this.put<Budget>(`/api/admin/budgets/${item.id}`, item);
+  }
+
+  replaceRoles(userId: string, roles: string[]): Promise<RoleAssignment> {
+    return this.put<RoleAssignment>(
+      `/api/admin/roles/${encodeURIComponent(userId)}`,
+      { roles },
+    );
   }
 }
