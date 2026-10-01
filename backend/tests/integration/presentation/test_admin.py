@@ -24,14 +24,18 @@ REQUESTER_ID = UUID("11111111-1111-1111-1111-111111111111")
 UNKNOWN_ID = UUID("99999999-9999-9999-9999-999999999999")
 
 
+@asynccontextmanager
 async def _client(
     session_factory: async_sessionmaker[AsyncSession],
     database_url: str,
-) -> AsyncClient:
+) -> AsyncIterator[AsyncClient]:
     app = create_app(Settings(database_url=database_url, app_env="test"))
     app.state.session_factory = session_factory
-    return AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
-
+    async with (
+        app.router.lifespan_context(app),
+        AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client,
+    ):
+        yield client
 
 async def test_non_admin_cannot_mutate_admin_resources(
     session_factory: async_sessionmaker[AsyncSession],
