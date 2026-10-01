@@ -132,7 +132,9 @@ async def create_offer(
 ):
     _authorize(principal)
     try:
-        return AdminMapper.offer_response(await manager.create_offer(AdminMapper.offer_values(body)))
+        return AdminMapper.offer_response(
+            await manager.create_offer(AdminMapper.offer_values(body))
+        )
     except IntegrityError as error:
         raise HTTPException(
             status_code=409,
@@ -204,9 +206,7 @@ async def update_budget(
 @router.get("/roles", response_model=list[RoleAssignmentResponse])
 async def list_roles(manager: RolesDependency, principal: CurrentPrincipalDependency):
     _authorize(principal)
-    return [
-        AdminMapper.role_response(record) for record in await manager.list_assignments()
-    ]
+    return [AdminMapper.role_response(record) for record in await manager.list_assignments()]
 
 
 @router.put("/roles/{user_id}", response_model=RoleAssignmentResponse)
