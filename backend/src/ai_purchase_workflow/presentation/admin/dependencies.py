@@ -4,6 +4,7 @@ from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ai_purchase_workflow.application.admin import (
+    AdminServices,
     ManageBudgets,
     ManageDepartments,
     ManageOffers,
@@ -11,7 +12,6 @@ from ai_purchase_workflow.application.admin import (
     ManageRoleAssignments,
     ManageVendors,
 )
-from ai_purchase_workflow.composition_root.admin import AdminServices
 from ai_purchase_workflow.presentation.dependencies import get_session
 
 SessionDependency = Annotated[AsyncSession, Depends(get_session)]
