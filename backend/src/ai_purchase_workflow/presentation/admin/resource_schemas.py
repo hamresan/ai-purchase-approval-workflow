@@ -2,7 +2,7 @@ from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ai_purchase_workflow.application.access import ApplicationRole
 
@@ -13,6 +13,8 @@ class NamedResourceBody(BaseModel):
 
 
 class OfferBody(BaseModel):
+    model_config = ConfigDict(json_encoders={Decimal: str})
+
     product_id: UUID
     vendor_id: UUID
     unit_price_amount: Decimal = Field(gt=0)
@@ -22,6 +24,8 @@ class OfferBody(BaseModel):
 
 
 class BudgetBody(BaseModel):
+    model_config = ConfigDict(json_encoders={Decimal: str})
+
     owner_type: Literal["USER", "DEPARTMENT"]
     user_id: UUID | None = None
     department_id: UUID | None = None
