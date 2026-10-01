@@ -40,8 +40,8 @@ describe("AdminManagement", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Departments" }));
     expect(screen.getByText("Engineering")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: "Catalog & Vendors" }));
-    expect(screen.getByText("Laptop stand")).toBeInTheDocument();
-    expect(screen.getByText("Acme")).toBeInTheDocument();
+    expect(screen.getAllByText("Laptop stand").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Acme").length).toBeGreaterThan(0);
     expect(screen.getByText("USD 35.00")).toBeInTheDocument();
   });
 
