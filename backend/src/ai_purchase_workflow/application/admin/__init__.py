@@ -25,6 +25,7 @@ from ai_purchase_workflow.application.admin.roles import (
     RoleAssignment,
     RoleAssignmentRepository,
 )
+from ai_purchase_workflow.application.admin.services import AdminServices
 from ai_purchase_workflow.application.admin.vendors import (
     ManageVendors,
     VendorRecord,
@@ -32,6 +33,7 @@ from ai_purchase_workflow.application.admin.vendors import (
 )
 
 __all__ = [
+    "AdminServices",
     "BudgetRecord",
     "BudgetRepository",
     "BudgetValues",
