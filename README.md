@@ -201,6 +201,23 @@ curl -X POST http://localhost:8000/api/purchase-requests/<request-uuid>/approval
 
 Reject uses `"action": "reject"` and requires a non-empty `reason`. Edit uses `"action": "edit"` and an `items` array containing `description` and positive `quantity`; the authenticated principal is the authoritative decision actor, and trusted vendor and price are resolved again by the backend.
 
+## Administration API
+
+Administrators can manage application roles and the trusted purchasing data consumed by
+subsequent purchase decisions. All endpoints below require an authenticated principal with
+the application `ADMIN` role.
+
+- `/api/admin/departments` — list, create, and update departments.
+- `/api/admin/products` — list, create, and update trusted products.
+- `/api/admin/vendors` — list, create, and update trusted vendors.
+- `/api/admin/offers` — list, create, and update trusted price and availability records.
+- `/api/admin/budgets` — list, create, and update user or department budget limits.
+- `/api/admin/roles` — list assignments and replace a user's application roles.
+
+Trusted monetary responses use fixed two-decimal strings, while currency codes are normalized
+to uppercase three-letter alphabetic values. Resources are deactivated rather than deleted so
+existing workflow history and references remain intact.
+
 ## Supported behavior
 
 - Free-text purchase-request extraction through a provider-neutral model contract.
@@ -211,7 +228,7 @@ Reject uses `"action": "reject"` and requires a non-empty `reason`. Edit uses `"
 - Audit timeline and safe user-facing errors.
 - Idempotent structured request creation support.
 - Fake, Ollama, OpenAI, and OpenRouter model configuration.
-- Responsive React dashboard, creation form, request detail, and approval dialogs.
+- Responsive React dashboard, creation form, request detail, approval dialogs, and protected administration management.
 
 ## Safety and reliability
 
@@ -309,7 +326,7 @@ docs/
 
 ## Release status
 
-Stages 0–10 are complete. Stage 11 adds application-owned organization membership plus PostgreSQL-backed trusted catalog, vendor, availability, and user/department budget persistence.
+Stages 0–11 are complete. Stage 12 adds protected administration APIs and UI for application roles, departments, trusted catalog/vendor offers, availability, and user/department budgets.
 
 Verified UI screenshots/GIFs should be captured from the final release build only and must not contain private request data. They are intentionally not represented by mock images.
 
