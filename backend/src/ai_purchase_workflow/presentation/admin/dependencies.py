@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ai_purchase_workflow.application.admin import (
@@ -11,48 +11,38 @@ from ai_purchase_workflow.application.admin import (
     ManageRoleAssignments,
     ManageVendors,
 )
-from ai_purchase_workflow.infrastructure.access.sqlalchemy_role_assignment_repository import (
-    SqlAlchemyRoleAssignmentRepository,
-)
-from ai_purchase_workflow.infrastructure.trusted_data.budget_repository import (
-    SqlAlchemyBudgetRepository,
-)
-from ai_purchase_workflow.infrastructure.trusted_data.department_repository import (
-    SqlAlchemyDepartmentRepository,
-)
-from ai_purchase_workflow.infrastructure.trusted_data.offer_repository import (
-    SqlAlchemyOfferRepository,
-)
-from ai_purchase_workflow.infrastructure.trusted_data.product_repository import (
-    SqlAlchemyProductRepository,
-)
-from ai_purchase_workflow.infrastructure.trusted_data.vendor_repository import (
-    SqlAlchemyVendorRepository,
-)
+from ai_purchase_workflow.composition_root.admin import AdminServices
 from ai_purchase_workflow.presentation.dependencies import get_session
 
 SessionDependency = Annotated[AsyncSession, Depends(get_session)]
 
 
-def get_manage_departments(session: SessionDependency) -> ManageDepartments:
-    return ManageDepartments(SqlAlchemyDepartmentRepository(session))
+def get_admin_services(request: Request, session: SessionDependency) -> AdminServices:
+    return request.app.state.admin_services_builder(session)
 
 
-def get_manage_products(session: SessionDependency) -> ManageProducts:
-    return ManageProducts(SqlAlchemyProductRepository(session))
+AdminServicesDependency = Annotated[AdminServices, Depends(get_admin_services)]
 
 
-def get_manage_vendors(session: SessionDependency) -> ManageVendors:
-    return ManageVendors(SqlAlchemyVendorRepository(session))
+def get_manage_departments(services: AdminServicesDependency) -> ManageDepartments:
+    return services.departments
 
 
-def get_manage_offers(session: SessionDependency) -> ManageOffers:
-    return ManageOffers(SqlAlchemyOfferRepository(session))
+def get_manage_products(services: AdminServicesDependency) -> ManageProducts:
+    return services.products
 
 
-def get_manage_budgets(session: SessionDependency) -> ManageBudgets:
-    return ManageBudgets(SqlAlchemyBudgetRepository(session))
+def get_manage_vendors(services: AdminServicesDependency) -> ManageVendors:
+    return services.vendors
 
 
-def get_manage_role_assignments(session: SessionDependency) -> ManageRoleAssignments:
-    return ManageRoleAssignments(SqlAlchemyRoleAssignmentRepository(session))
+def get_manage_offers(services: AdminServicesDependency) -> ManageOffers:
+    return services.offers
+
+
+def get_manage_budgets(services: AdminServicesDependency) -> ManageBudgets:
+    return services.budgets
+
+
+def get_manage_role_assignments(services: AdminServicesDependency) -> ManageRoleAssignments:
+    return services.roles
