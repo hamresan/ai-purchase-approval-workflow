@@ -5,14 +5,6 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ai_purchase_workflow.application.access import ApplicationRole
-from ai_purchase_workflow.application.admin import (
-    BudgetRecord,
-    OfferRecord,
-    ProductRecord,
-    RoleAssignment,
-    VendorRecord,
-)
-
 
 class NamedResourceCreateBody(BaseModel):
     name: str = Field(min_length=1, max_length=200)
@@ -80,29 +72,17 @@ class RoleAssignmentResponse(BaseModel):
     user_id: UUID
     roles: set[ApplicationRole]
 
-    @classmethod
-    def from_record(cls, record: RoleAssignment) -> "RoleAssignmentResponse":
-        return cls(user_id=record.user_id, roles=set(record.roles))
-
 
 class ProductResponse(BaseModel):
     id: UUID
     name: str
     is_active: bool
 
-    @classmethod
-    def from_record(cls, record: ProductRecord) -> "ProductResponse":
-        return cls(id=record.id, name=record.name, is_active=record.is_active)
-
 
 class VendorResponse(BaseModel):
     id: UUID
     name: str
     is_active: bool
-
-    @classmethod
-    def from_record(cls, record: VendorRecord) -> "VendorResponse":
-        return cls(id=record.id, name=record.name, is_active=record.is_active)
 
 
 class OfferResponse(BaseModel):
@@ -114,18 +94,6 @@ class OfferResponse(BaseModel):
     available_quantity: int
     is_active: bool
 
-    @classmethod
-    def from_record(cls, record: OfferRecord) -> "OfferResponse":
-        return cls(
-            id=record.id,
-            product_id=record.product_id,
-            vendor_id=record.vendor_id,
-            unit_price_amount=format(record.unit_price_amount, ".2f"),
-            currency=record.currency,
-            available_quantity=record.available_quantity,
-            is_active=record.is_active,
-        )
-
 
 class BudgetResponse(BaseModel):
     id: UUID
@@ -135,15 +103,3 @@ class BudgetResponse(BaseModel):
     amount: str
     currency: str
     is_active: bool
-
-    @classmethod
-    def from_record(cls, record: BudgetRecord) -> "BudgetResponse":
-        return cls(
-            id=record.id,
-            owner_type=record.owner_type,
-            user_id=record.user_id,
-            department_id=record.department_id,
-            amount=format(record.amount, ".2f"),
-            currency=record.currency,
-            is_active=record.is_active,
-        )
