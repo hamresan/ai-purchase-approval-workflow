@@ -16,3 +16,16 @@ class RoleAssignmentRepository(Protocol):
     async def replace_roles(
         self, user_id: UUID, roles: frozenset[ApplicationRole]
     ) -> RoleAssignment: ...
+
+
+class ManageRoleAssignments:
+    def __init__(self, repository: RoleAssignmentRepository) -> None:
+        self._repository = repository
+
+    async def list_assignments(self) -> tuple[RoleAssignment, ...]:
+        return await self._repository.list_assignments()
+
+    async def replace_roles(
+        self, user_id: UUID, roles: frozenset[ApplicationRole]
+    ) -> RoleAssignment:
+        return await self._repository.replace_roles(user_id, roles)
