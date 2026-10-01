@@ -27,37 +27,64 @@ async def seed() -> None:
 
     session_factory = create_session_factory(settings.database_url)
     async with session_factory() as session:
-        if await session.get(ProductModel, PRODUCT_ID) is not None:
-            return
-        session.add_all(
-            [
-                ProductModel(id=PRODUCT_ID, name="Laptop stand", is_active=True),
-                VendorModel(id=VENDOR_ID, name="Acme", is_active=True),
-            ]
-        )
+        product = await session.get(ProductModel, PRODUCT_ID)
+        if product is None:
+            product = ProductModel(id=PRODUCT_ID, name="Laptop stand", is_active=True)
+            session.add(product)
+        else:
+            product.name = "Laptop stand"
+            product.is_active = True
+
+        vendor = await session.get(VendorModel, VENDOR_ID)
+        if vendor is None:
+            vendor = VendorModel(id=VENDOR_ID, name="Acme", is_active=True)
+            session.add(vendor)
+        else:
+            vendor.name = "Acme"
+            vendor.is_active = True
+
         await session.flush()
-        session.add_all(
-            [
-                TrustedOfferModel(
-                    id=OFFER_ID,
-                    product_id=PRODUCT_ID,
-                    vendor_id=VENDOR_ID,
-                    unit_price_amount=Decimal("35.00"),
-                    currency="USD",
-                    available_quantity=10,
-                    is_active=True,
-                ),
-                BudgetLimitModel(
-                    id=BUDGET_ID,
-                    owner_type="USER",
-                    user_id=REQUESTER_ID,
-                    department_id=None,
-                    amount=Decimal("500.00"),
-                    currency="USD",
-                    is_active=True,
-                ),
-            ]
-        )
+
+        offer = await session.get(TrustedOfferModel, OFFER_ID)
+        if offer is None:
+            offer = TrustedOfferModel(
+                id=OFFER_ID,
+                product_id=PRODUCT_ID,
+                vendor_id=VENDOR_ID,
+                unit_price_amount=Decimal("35.00"),
+                currency="USD",
+                available_quantity=10,
+                is_active=True,
+            )
+            session.add(offer)
+        else:
+            offer.product_id = PRODUCT_ID
+            offer.vendor_id = VENDOR_ID
+            offer.unit_price_amount = Decimal("35.00")
+            offer.currency = "USD"
+            offer.available_quantity = 10
+            offer.is_active = True
+
+        budget = await session.get(BudgetLimitModel, BUDGET_ID)
+        if budget is None:
+            budget = BudgetLimitModel(
+                id=BUDGET_ID,
+                owner_type="USER",
+                user_id=REQUESTER_ID,
+                department_id=None,
+                amount=Decimal("500.00"),
+                currency="USD",
+                is_active=True,
+            )
+            session.add(budget)
+        else:
+            budget.owner_type = "USER"
+            budget.user_id = REQUESTER_ID
+            budget.department_id = None
+            budget.amount = Decimal("500.00")
+            budget.currency = "USD"
+            budget.is_active = True
+
         await session.commit()
 
 
