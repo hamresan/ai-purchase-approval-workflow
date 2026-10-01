@@ -227,8 +227,7 @@ async def update_budget(
 async def list_roles(manager: RolesDependency, principal: CurrentPrincipalDependency):
     _authorize(principal)
     return [
-        RoleAssignmentResponse.from_record(record)
-        for record in await manager.list_assignments()
+        RoleAssignmentResponse.from_record(record) for record in await manager.list_assignments()
     ]
 
 
