@@ -139,6 +139,8 @@ async def test_admin_catalog_mutations_are_consumed_by_trusted_reader(
     assert product.status_code == 201
     assert vendor.status_code == 201
     assert offer.status_code == 201
+    assert offer.json()["unit_price_amount"] == "49.90"
+    assert offer.json()["currency"] == "USD"
 
     async with session_factory() as session:
         item = await SqlAlchemyTrustedCatalogReader(session).find_item("USB-C hubs")
@@ -174,6 +176,8 @@ async def test_admin_department_budget_is_consumed_by_trusted_reader(
 
     assert department.status_code == 201
     assert budget.status_code == 201
+    assert budget.json()["amount"] == "1200.00"
+    assert budget.json()["currency"] == "USD"
 
     async with session_factory() as session:
         member = OrganizationMemberModel(
