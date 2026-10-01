@@ -1,13 +1,15 @@
 import { useState } from "react";
+import { runAdminMutation } from "@/features/admin/mutation";
 
 export function NamedResourceEditor<T extends { id: string; name: string; is_active: boolean }>({
-  kind, items, create, save, reload,
+  kind, items, create, save, reload, onError,
 }: {
   kind: string;
   items: T[];
   create: (name: string) => Promise<unknown>;
   save: (item: T) => Promise<unknown>;
   reload: () => Promise<void>;
+  onError: (message: string) => void;
 }) {
   const [name, setName] = useState("");
   const [editing, setEditing] = useState<T | null>(null);
@@ -15,9 +17,11 @@ export function NamedResourceEditor<T extends { id: string; name: string; is_act
 
   const submit = async () => {
     if (!name.trim()) return;
-    await create(name.trim());
-    setName("");
-    await reload();
+    const succeeded = await runAdminMutation(async () => {
+      await create(name.trim());
+      await reload();
+    }, onError);
+    if (succeeded) setName("");
   };
   const startEdit = (item: T) => {
     setEditing(item);
@@ -25,9 +29,11 @@ export function NamedResourceEditor<T extends { id: string; name: string; is_act
   };
   const submitEdit = async () => {
     if (!editing || !editName.trim()) return;
-    await save({ ...editing, name: editName.trim() });
-    setEditing(null);
-    await reload();
+    const succeeded = await runAdminMutation(async () => {
+      await save({ ...editing, name: editName.trim() });
+      await reload();
+    }, onError);
+    if (succeeded) setEditing(null);
   };
 
   return <>
@@ -42,7 +48,10 @@ export function NamedResourceEditor<T extends { id: string; name: string; is_act
         <td>{item.is_active ? "Active" : "Inactive"}</td>
         <td><div className="admin-row-actions"><button className="admin-link-button" onClick={() => startEdit(item)}>Edit</button>
           <button className="admin-link-button"
-            onClick={() => void save({ ...item, is_active: !item.is_active }).then(reload)}>
+            onClick={() => void runAdminMutation(async () => {
+              await save({ ...item, is_active: !item.is_active });
+              await reload();
+            }, onError)}>
             {item.is_active ? "Deactivate" : "Activate"}
           </button></div></td></tr>)}</tbody>
     </table></div>
