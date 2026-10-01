@@ -10,18 +10,18 @@ export interface RoleAssignment { user_id: string; roles: string[] }
 export class HttpAdminApi {
   constructor(private readonly http: AdminHttpClient) {}
 
-  private async request<T>(path: string, init?: RequestInit): Promise<T> {
+  private async request<T>(path: string, errorMessage: string, init?: RequestInit): Promise<T> {
     const response = await this.http.fetch(path, init);
-    if (!response.ok) throw new Error("Unable to update administration data.");
+    if (!response.ok) throw new Error(errorMessage);
     return response.json() as Promise<T>;
   }
 
   private get<T>(path: string): Promise<T> {
-    return this.request<T>(path);
+    return this.request<T>(path, "Unable to load administration data.");
   }
 
-  private put<T>(path: string, body: unknown): Promise<T> {
-    return this.request<T>(path, {
+  private put<T>(path: string, body: unknown, errorMessage = "Unable to update administration data."): Promise<T> {
+    return this.request<T>(path, errorMessage, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -36,11 +36,15 @@ export class HttpAdminApi {
   roles() { return this.get<RoleAssignment[]>("/api/admin/roles"); }
 
   createDepartment(name: string): Promise<Department> {
-    return this.request<Department>("/api/admin/departments", {
+    return this.request<Department>(
+      "/api/admin/departments",
+      "Unable to update administration data.",
+      {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
-    });
+      },
+    );
   }
 
   updateDepartment(item: Department): Promise<Department> {
@@ -70,6 +74,7 @@ export class HttpAdminApi {
     return this.put<RoleAssignment>(
       `/api/admin/roles/${encodeURIComponent(userId)}`,
       { roles },
+      "Unable to update user roles.",
     );
   }
 }
