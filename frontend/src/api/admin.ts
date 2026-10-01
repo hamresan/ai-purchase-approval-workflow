@@ -20,9 +20,9 @@ export class HttpAdminApi {
     return this.request<T>(path, "Unable to load administration data.");
   }
 
-  private put<T>(path: string, body: unknown, errorMessage = "Unable to update administration data."): Promise<T> {
+  private write<T>(method: "POST" | "PUT", path: string, body: unknown, errorMessage = "Unable to update administration data."): Promise<T> {
     return this.request<T>(path, errorMessage, {
-      method: "PUT",
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
@@ -48,30 +48,22 @@ export class HttpAdminApi {
   }
 
   updateDepartment(item: Department): Promise<Department> {
-    return this.put<Department>(`/api/admin/departments/${item.id}`, {
+    return this.write<Department>("PUT", `/api/admin/departments/${item.id}`, {
       name: item.name,
       is_active: item.is_active,
     });
   }
 
-  saveProduct(item: Product): Promise<Product> {
-    return this.put<Product>(`/api/admin/products/${item.id}`, item);
-  }
+  createProduct(name: string): Promise<Product> {\n    return this.write<Product>("POST", "/api/admin/products", { name });\n  }\n\n  saveProduct(item: Product): Promise<Product> {\n    return this.write<Product>("PUT", `/api/admin/products/${item.id}`, { name: item.name, is_active: item.is_active });\n  }
 
-  saveVendor(item: Vendor): Promise<Vendor> {
-    return this.put<Vendor>(`/api/admin/vendors/${item.id}`, item);
-  }
+  createVendor(name: string): Promise<Vendor> {\n    return this.write<Vendor>("POST", "/api/admin/vendors", { name });\n  }\n\n  saveVendor(item: Vendor): Promise<Vendor> {\n    return this.write<Vendor>("PUT", `/api/admin/vendors/${item.id}`, { name: item.name, is_active: item.is_active });\n  }
 
-  saveOffer(item: Offer): Promise<Offer> {
-    return this.put<Offer>(`/api/admin/offers/${item.id}`, item);
-  }
+  createOffer(item: Omit<Offer, "id">): Promise<Offer> {\n    return this.write<Offer>("POST", "/api/admin/offers", item);\n  }\n\n  saveOffer(item: Offer): Promise<Offer> {\n    const { id, ...body } = item;\n    return this.write<Offer>("PUT", `/api/admin/offers/${id}`, body);\n  }
 
-  saveBudget(item: Budget): Promise<Budget> {
-    return this.put<Budget>(`/api/admin/budgets/${item.id}`, item);
-  }
+  createBudget(item: Omit<Budget, "id">): Promise<Budget> {\n    return this.write<Budget>("POST", "/api/admin/budgets", item);\n  }\n\n  saveBudget(item: Budget): Promise<Budget> {\n    const { id, ...body } = item;\n    return this.write<Budget>("PUT", `/api/admin/budgets/${id}`, body);\n  }
 
   replaceRoles(userId: string, roles: string[]): Promise<RoleAssignment> {
-    return this.put<RoleAssignment>(
+    return this.write<RoleAssignment>("PUT",
       `/api/admin/roles/${encodeURIComponent(userId)}`,
       { roles },
       "Unable to update user roles.",
