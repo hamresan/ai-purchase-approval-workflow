@@ -2,36 +2,59 @@ from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ai_purchase_workflow.application.access import ApplicationRole
-from ai_purchase_workflow.application.admin import BudgetRecord, OfferRecord, ProductRecord, VendorRecord
+from ai_purchase_workflow.application.admin import (
+    BudgetRecord,
+    OfferRecord,
+    ProductRecord,
+    RoleAssignment,
+    VendorRecord,
+)
 
 
-class NamedResourceBody(BaseModel):
+class NamedResourceCreateBody(BaseModel):
     name: str = Field(min_length=1, max_length=200)
-    is_active: bool = True
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("Name must not be blank.")
+        return stripped
 
 
-class OfferBody(BaseModel):
-    model_config = ConfigDict(json_encoders={Decimal: str})
+class NamedResourceUpdateBody(NamedResourceCreateBody):
+    is_active: bool
 
+
+class CurrencyBody(BaseModel):
+    currency: str = Field(min_length=3, max_length=3)
+
+    @field_validator("currency")
+    @classmethod
+    def validate_currency(cls, value: str) -> str:
+        normalized = value.strip().upper()
+        if len(normalized) != 3 or not normalized.isalpha():
+            raise ValueError("Currency must be a three-letter alphabetic code.")
+        return normalized
+
+
+class OfferBody(CurrencyBody):
     product_id: UUID
     vendor_id: UUID
     unit_price_amount: Decimal = Field(gt=0)
-    currency: str = Field(min_length=3, max_length=3)
     available_quantity: int = Field(ge=0)
     is_active: bool = True
 
 
-class BudgetBody(BaseModel):
-    model_config = ConfigDict(json_encoders={Decimal: str})
-
+class BudgetBody(CurrencyBody):
     owner_type: Literal["USER", "DEPARTMENT"]
     user_id: UUID | None = None
     department_id: UUID | None = None
     amount: Decimal = Field(gt=0)
-    currency: str = Field(min_length=3, max_length=3)
     is_active: bool = True
 
     @model_validator(mode="after")
@@ -51,6 +74,15 @@ class BudgetBody(BaseModel):
 
 class RoleAssignmentBody(BaseModel):
     roles: set[ApplicationRole]
+
+
+class RoleAssignmentResponse(BaseModel):
+    user_id: UUID
+    roles: set[ApplicationRole]
+
+    @classmethod
+    def from_record(cls, record: RoleAssignment) -> "RoleAssignmentResponse":
+        return cls(user_id=record.user_id, roles=set(record.roles))
 
 
 class ProductResponse(BaseModel):
