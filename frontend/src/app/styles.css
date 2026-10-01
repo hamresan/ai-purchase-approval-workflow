@@ -22,3 +22,5 @@
 .admin-inline-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:12px}.admin-inline-form input,.admin-resource-form input,.admin-resource-form select{min-width:0;border:1px solid #cbd8ea;border-radius:7px;padding:9px 10px;background:#fff;color:#15264b;outline:none}.admin-inline-form input:focus,.admin-resource-form input:focus,.admin-resource-form select:focus{border-color:#4389f3;box-shadow:0 0 0 3px #4389f31a}.admin-resource-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}.admin-resource-form .primary-button{grid-column:1/-1}.admin-link-button{border:0;background:transparent;color:#0759e6;font-weight:650;padding:4px 0}.admin-card .primary-button{padding:9px 13px}@media(max-width:560px){.admin-resource-form{grid-template-columns:1fr}.admin-resource-form .primary-button{grid-column:auto}}
 
 .admin-tab-content{min-height:360px}.admin-tab-content>.admin-card{max-width:100%}.admin-card-wide{grid-column:1/-1}
+
+.admin-row-actions{display:flex;align-items:center;gap:12px;white-space:nowrap}.admin-edit-form{margin-top:22px}.admin-edit-form .primary-button{grid-column:auto}
