@@ -171,7 +171,9 @@ async def update_offer(
     try:
         record = await manager.update_offer(resource_id, _offer_values(body))
     except IntegrityError as error:
-        raise HTTPException(status_code=409, detail="Trusted offer conflicts with existing trusted data.") from error
+        raise HTTPException(
+            status_code=409, detail="Trusted offer conflicts with existing trusted data."
+        ) from error
     if record is None:
         raise HTTPException(status_code=404, detail="Trusted offer not found.")
     return record
@@ -210,7 +212,9 @@ async def update_budget(
     try:
         record = await manager.update_budget(resource_id, _budget_values(body))
     except IntegrityError as error:
-        raise HTTPException(status_code=409, detail="Budget conflicts with existing trusted data.") from error
+        raise HTTPException(
+            status_code=409, detail="Budget conflicts with existing trusted data."
+        ) from error
     if record is None:
         raise HTTPException(status_code=404, detail="Budget not found.")
     return record

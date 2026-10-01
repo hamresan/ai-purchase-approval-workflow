@@ -28,9 +28,7 @@ class BudgetValues:
 class BudgetRepository(Protocol):
     async def list_budgets(self) -> tuple[BudgetRecord, ...]: ...
     async def create_budget(self, values: BudgetValues) -> BudgetRecord: ...
-    async def update_budget(
-        self, budget_id: UUID, values: BudgetValues
-    ) -> BudgetRecord | None: ...
+    async def update_budget(self, budget_id: UUID, values: BudgetValues) -> BudgetRecord | None: ...
 
 
 class ManageBudgets:
@@ -43,7 +41,5 @@ class ManageBudgets:
     async def create_budget(self, values: BudgetValues) -> BudgetRecord:
         return await self._repository.create_budget(values)
 
-    async def update_budget(
-        self, budget_id: UUID, values: BudgetValues
-    ) -> BudgetRecord | None:
+    async def update_budget(self, budget_id: UUID, values: BudgetValues) -> BudgetRecord | None:
         return await self._repository.update_budget(budget_id, values)

@@ -10,11 +10,21 @@ from ai_purchase_workflow.application.admin import (
     ManageProducts,
     ManageVendors,
 )
-from ai_purchase_workflow.infrastructure.trusted_data.budget_repository import SqlAlchemyBudgetRepository
-from ai_purchase_workflow.infrastructure.trusted_data.department_repository import SqlAlchemyDepartmentRepository
-from ai_purchase_workflow.infrastructure.trusted_data.offer_repository import SqlAlchemyOfferRepository
-from ai_purchase_workflow.infrastructure.trusted_data.product_repository import SqlAlchemyProductRepository
-from ai_purchase_workflow.infrastructure.trusted_data.vendor_repository import SqlAlchemyVendorRepository
+from ai_purchase_workflow.infrastructure.trusted_data.budget_repository import (
+    SqlAlchemyBudgetRepository,
+)
+from ai_purchase_workflow.infrastructure.trusted_data.department_repository import (
+    SqlAlchemyDepartmentRepository,
+)
+from ai_purchase_workflow.infrastructure.trusted_data.offer_repository import (
+    SqlAlchemyOfferRepository,
+)
+from ai_purchase_workflow.infrastructure.trusted_data.product_repository import (
+    SqlAlchemyProductRepository,
+)
+from ai_purchase_workflow.infrastructure.trusted_data.vendor_repository import (
+    SqlAlchemyVendorRepository,
+)
 from ai_purchase_workflow.presentation.dependencies import get_session
 
 SessionDependency = Annotated[AsyncSession, Depends(get_session)]

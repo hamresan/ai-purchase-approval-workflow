@@ -12,12 +12,8 @@ class SqlAlchemyProductRepository(ProductRepository):
         self._session = session
 
     async def list_products(self) -> tuple[ProductRecord, ...]:
-        result = await self._session.execute(
-            select(ProductModel).order_by(ProductModel.name)
-        )
-        return tuple(
-            ProductRecord(row.id, row.name, row.is_active) for row in result.scalars()
-        )
+        result = await self._session.execute(select(ProductModel).order_by(ProductModel.name))
+        return tuple(ProductRecord(row.id, row.name, row.is_active) for row in result.scalars())
 
     async def create_product(self, name: str) -> ProductRecord:
         row = ProductModel(id=uuid4(), name=name, is_active=True)
