@@ -64,7 +64,7 @@ test("admin manages trusted catalog data from the browser", async ({ page }) => 
   await expect(offerRow).toContainText("USD 49.90");
   await expect(offerRow).toContainText("7");
 
-  await page.getByLabel("Budget owner").selectOption({ label: departmentName });
+  await page.getByLabel("Budget owner", { exact: true }).selectOption({ label: departmentName });
   await page.getByLabel("Budget amount").fill("1200");
   await page.getByLabel("Budget currency").fill("usd");
   await page.getByRole("button", { name: "Add budget" }).click();
