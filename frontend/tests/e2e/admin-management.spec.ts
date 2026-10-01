@@ -19,6 +19,7 @@ test("admin manages trusted catalog data from the browser", async ({ page }) => 
   const vendorName = `E2E vendor ${suffix}`;
   const departmentName = `E2E department ${suffix}`;
 
+  await page.getByRole("tab", { name: "Catalog & Vendors" }).click();
   await page.getByLabel("New Product").fill(productName);
   await page.getByRole("button", { name: "Add", exact: true }).nth(1).click();
   await expect(page.getByRole("cell", { name: productName })).toBeVisible();
@@ -27,10 +28,12 @@ test("admin manages trusted catalog data from the browser", async ({ page }) => 
   await page.getByRole("button", { name: "Add", exact: true }).nth(2).click();
   await expect(page.getByRole("cell", { name: vendorName })).toBeVisible();
 
+  await page.getByRole("tab", { name: "Departments" }).click();
   await page.getByLabel("New Department").fill(departmentName);
   await page.getByRole("button", { name: "Add", exact: true }).first().click();
   await expect(page.getByRole("cell", { name: departmentName })).toBeVisible();
 
+  await page.getByRole("tab", { name: "Catalog & Vendors" }).click();
   await page.getByLabel("Product", { exact: true }).selectOption({ label: productName });
   await page.getByLabel("Vendor", { exact: true }).selectOption({ label: vendorName });
   await page.getByLabel("Price").fill("49.90");
@@ -64,6 +67,7 @@ test("admin manages trusted catalog data from the browser", async ({ page }) => 
   await expect(offerRow).toContainText("USD 49.90");
   await expect(offerRow).toContainText("7");
 
+  await page.getByRole("tab", { name: "Budgets" }).click();
   await page.getByLabel("Budget owner", { exact: true }).selectOption({ label: departmentName });
   await page.getByLabel("Budget amount").fill("1200");
   await page.getByLabel("Budget currency").fill("usd");
