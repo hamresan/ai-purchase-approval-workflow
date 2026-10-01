@@ -3,7 +3,13 @@ from dataclasses import dataclass
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
+from ai_purchase_workflow.application.access import ApplicationRole
 from ai_purchase_workflow.presentation.auth.dependencies import CurrentPrincipalDependency
+
+
+class CurrentProfileResponse(BaseModel):
+    user_id: str
+    roles: list[ApplicationRole]
 
 
 class UpdateProfileBody(BaseModel):
@@ -29,6 +35,12 @@ def build_profile_router() -> APIRouter:
     router = APIRouter(prefix="/api/profile", tags=["profile"])
     endpoint = UpdateProfileEndpoint()
 
+    async def get_profile(principal: CurrentPrincipalDependency) -> CurrentProfileResponse:
+        return CurrentProfileResponse(
+            user_id=str(principal.user_id),
+            roles=sorted(principal.roles, key=lambda role: role.value),
+        )
+
     async def update_profile(
         body: UpdateProfileBody,
         request: Request,
@@ -36,5 +48,6 @@ def build_profile_router() -> APIRouter:
     ) -> dict[str, str]:
         return await endpoint(body, request, principal)
 
+    router.add_api_route("", get_profile, methods=["GET"], response_model=CurrentProfileResponse)
     router.add_api_route("", update_profile, methods=["PATCH"], response_model=dict[str, str])
     return router

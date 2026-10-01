@@ -22,12 +22,17 @@ describe("App", () => {
   it("renders the purchase request application shell and navigates back", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ items: [], total: 0, limit: 7, offset: 0 }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        }),
-      ),
+      vi.fn().mockImplementation((input: RequestInfo | URL) => {
+        const payload = String(input).endsWith("/api/profile")
+          ? { user_id: "user-1", roles: [] }
+          : { items: [], total: 0, limit: 7, offset: 0 };
+        return Promise.resolve(
+          new Response(JSON.stringify(payload), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+      }),
     );
     window.history.replaceState({}, "", "/requests/new");
 
@@ -48,12 +53,17 @@ describe("App", () => {
   it("synchronizes the rendered route with browser history navigation", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ items: [], total: 0, limit: 7, offset: 0 }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        }),
-      ),
+      vi.fn().mockImplementation((input: RequestInfo | URL) => {
+        const payload = String(input).endsWith("/api/profile")
+          ? { user_id: "user-1", roles: [] }
+          : { items: [], total: 0, limit: 7, offset: 0 };
+        return Promise.resolve(
+          new Response(JSON.stringify(payload), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+      }),
     );
     window.history.replaceState({}, "", "/requests/new");
     render(<App />);
@@ -67,6 +77,18 @@ describe("App", () => {
     await waitFor(() =>
       expect(screen.getByText("No purchase requests yet")).toBeInTheDocument(),
     );
+  });
+
+  it("shows an explicit loading state while administrator access is resolving", () => {
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(() => new Promise(() => undefined)));
+    window.history.replaceState({}, "", "/admin");
+
+    render(<App />);
+
+    expect(
+      screen.getByRole("heading", { name: "Loading administrator access…" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Admin Management" })).not.toBeInTheDocument();
   });
 
   it("revokes the refresh session and returns to authentication on sign out", async () => {

@@ -5,11 +5,14 @@ from uuid import UUID
 from fastapi import FastAPI
 
 from ai_purchase_workflow.application.access import ApplicationPrincipal, ApplicationRole
+from ai_purchase_workflow.composition_root.admin import build_admin_services
 from ai_purchase_workflow.composition_root.identity import build_identity_module
 from ai_purchase_workflow.composition_root.settings import Settings, get_settings
 from ai_purchase_workflow.infrastructure.notifications import InMemoryNotificationQueue
 from ai_purchase_workflow.infrastructure.persistence import create_session_factory
 from ai_purchase_workflow.infrastructure.workflows import postgres_checkpointer
+from ai_purchase_workflow.presentation.admin import resource_router as admin_resource_router
+from ai_purchase_workflow.presentation.admin import router as admin_router
 from ai_purchase_workflow.presentation.auth import build_profile_router
 from ai_purchase_workflow.presentation.observability import register_http_observability
 from ai_purchase_workflow.presentation.purchase_requests import router as purchase_requests_router
@@ -42,6 +45,7 @@ def create_app(
     app.state.settings = resolved_settings
     app.state.session_factory = session_factory
     app.state.identity = identity
+    app.state.admin_services_builder = build_admin_services
     if resolved_settings.app_env == "test":
         app.state.e2e_principals = {
             "requester": ApplicationPrincipal(
@@ -70,4 +74,6 @@ def create_app(
     app.include_router(health_router)
     app.include_router(build_profile_router())
     app.include_router(purchase_requests_router)
+    app.include_router(admin_router)
+    app.include_router(admin_resource_router)
     return app
