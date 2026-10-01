@@ -35,9 +35,7 @@ class BudgetBody(BaseModel):
     @model_validator(mode="after")
     def validate_owner(self) -> "BudgetBody":
         user_owner = (
-            self.owner_type == "USER"
-            and self.user_id is not None
-            and self.department_id is None
+            self.owner_type == "USER" and self.user_id is not None and self.department_id is None
         )
         department_owner = (
             self.owner_type == "DEPARTMENT"

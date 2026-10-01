@@ -11,20 +11,23 @@ class SqlAlchemyRoleAssignmentRepository(RoleAssignmentRepository):
         self._session = session
 
     async def list_assignments(self) -> tuple[RoleAssignment, ...]:
-        rows = (await self._session.execute(
-            select(ApplicationUserRoleModel).order_by(ApplicationUserRoleModel.user_id)
-        )).scalars().all()
+        rows = (
+            (
+                await self._session.execute(
+                    select(ApplicationUserRoleModel).order_by(ApplicationUserRoleModel.user_id)
+                )
+            )
+            .scalars()
+            .all()
+        )
         grouped: dict[object, set[ApplicationRole]] = {}
         for row in rows:
             grouped.setdefault(row.user_id, set()).add(ApplicationRole(row.role))
         return tuple(
-            RoleAssignment(user_id, frozenset(roles))
-            for user_id, roles in grouped.items()
+            RoleAssignment(user_id, frozenset(roles)) for user_id, roles in grouped.items()
         )
 
-    async def replace_roles(
-        self, user_id, roles: frozenset[ApplicationRole]
-    ) -> RoleAssignment:
+    async def replace_roles(self, user_id, roles: frozenset[ApplicationRole]) -> RoleAssignment:
         await self._session.execute(
             delete(ApplicationUserRoleModel).where(ApplicationUserRoleModel.user_id == user_id)
         )

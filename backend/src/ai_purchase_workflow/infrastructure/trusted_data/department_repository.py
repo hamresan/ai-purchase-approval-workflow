@@ -13,9 +13,11 @@ class SqlAlchemyDepartmentRepository(DepartmentRepository):
         self._session = session
 
     async def list_departments(self) -> tuple[DepartmentRecord, ...]:
-        rows = (await self._session.execute(
-            select(DepartmentModel).order_by(DepartmentModel.name)
-        )).scalars().all()
+        rows = (
+            (await self._session.execute(select(DepartmentModel).order_by(DepartmentModel.name)))
+            .scalars()
+            .all()
+        )
         return tuple(DepartmentMapper.to_record(row) for row in rows)
 
     async def create_department(self, name: str) -> DepartmentRecord:

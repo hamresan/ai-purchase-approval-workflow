@@ -1,11 +1,9 @@
 from uuid import UUID
 
 import pytest
-
-from ai_purchase_workflow.application.admin import DepartmentRecord, ManageDepartments
 from tests.unit.application.admin.fake_department_repository import FakeDepartmentRepository
 
-
+from ai_purchase_workflow.application.admin import DepartmentRecord, ManageDepartments
 
 
 @pytest.mark.asyncio

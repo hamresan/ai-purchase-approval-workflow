@@ -23,4 +23,3 @@ class FakeDepartmentRepository(DepartmentRepository):
         record = DepartmentRecord(department_id, name, is_active)
         self.rows[department_id] = record
         return record
-

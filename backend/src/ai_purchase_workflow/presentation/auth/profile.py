@@ -4,7 +4,6 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
 from ai_purchase_workflow.application.access import ApplicationRole
-
 from ai_purchase_workflow.presentation.auth.dependencies import CurrentPrincipalDependency
 
 

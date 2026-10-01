@@ -1,4 +1,8 @@
-from ai_purchase_workflow.application.admin.departments import DepartmentRecord, DepartmentRepository, ManageDepartments
+from ai_purchase_workflow.application.admin.departments import (
+    DepartmentRecord,
+    DepartmentRepository,
+    ManageDepartments,
+)
 from ai_purchase_workflow.application.admin.resources import (
     AdminResourceRepository,
     BudgetRecord,

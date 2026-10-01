@@ -49,9 +49,7 @@ async def update_department(
 ) -> DepartmentResponse:
     AuthorizationPolicy().require_admin(principal)
     try:
-        record = await manager.update_department(
-            department_id, body.name.strip(), body.is_active
-        )
+        record = await manager.update_department(department_id, body.name.strip(), body.is_active)
     except IntegrityError as error:
         raise HTTPException(status_code=409, detail="Department name already exists.") from error
     if record is None:
