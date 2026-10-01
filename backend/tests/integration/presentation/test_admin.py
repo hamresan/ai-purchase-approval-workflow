@@ -1,8 +1,7 @@
-from decimal import Decimal
-from uuid import UUID, uuid4
-
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from decimal import Decimal
+from uuid import UUID, uuid4
 
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -36,6 +35,7 @@ async def _client(
         AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client,
     ):
         yield client
+
 
 async def test_non_admin_cannot_mutate_admin_resources(
     session_factory: async_sessionmaker[AsyncSession],
@@ -191,9 +191,9 @@ async def test_admin_department_budget_is_consumed_by_trusted_reader(
             )
         )
         await session.commit()
-        constraints = await SqlAlchemyBudgetConstraintReader(
-            session
-        ).get_applicable_constraints(REQUESTER_ID, "USD")
+        constraints = await SqlAlchemyBudgetConstraintReader(session).get_applicable_constraints(
+            REQUESTER_ID, "USD"
+        )
 
     assert [(item.owner_type, item.available.amount) for item in constraints] == [
         ("DEPARTMENT", Decimal("1200.00"))
