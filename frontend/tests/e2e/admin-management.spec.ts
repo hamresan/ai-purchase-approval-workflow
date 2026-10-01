@@ -26,7 +26,7 @@ test("admin manages trusted catalog data from the browser", async ({ page }) => 
   await page.getByLabel("Product", { exact: true }).selectOption({ label: productName });
   await page.getByLabel("Vendor", { exact: true }).selectOption({ label: vendorName });
   await page.getByLabel("Price").fill("49.90");
-  await page.getByLabel("Currency").fill("usd");
+  await page.getByLabel("Currency", { exact: true }).fill("usd");
   await page.getByLabel("Available quantity").fill("7");
   await page.getByRole("button", { name: "Add offer" }).click();
 
