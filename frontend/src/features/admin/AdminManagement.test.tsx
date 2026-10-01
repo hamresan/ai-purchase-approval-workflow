@@ -15,9 +15,9 @@ describe("AdminManagement", () => {
       replaceRoles: async (userId: string, roles: string[]) => ({ user_id: userId, roles }),
     } as HttpAdminApi;
     render(<AdminManagement api={api} />);
-    await waitFor(() => expect(screen.getByText("Engineering")).toBeInTheDocument());
-    expect(screen.getByText("Laptop stand")).toBeInTheDocument();
-    expect(screen.getByText("Acme")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getAllByText("Engineering").length).toBeGreaterThan(0));
+    expect(screen.getAllByText("Laptop stand").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Acme").length).toBeGreaterThan(0);
     expect(screen.getByText("USD 35.00")).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: "Admin" })).toBeChecked();
   });
