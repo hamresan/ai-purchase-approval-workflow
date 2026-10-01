@@ -18,7 +18,7 @@ import "@/app/styles.css";
 export function App() {
   const sessionStore = useMemo(() => new BrowserAuthSessionStore(), []);
   const [session, setSession] = useState<AuthSession | null>(() => sessionStore.load());
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const e2eMode = import.meta.env.VITE_E2E_AUTH_BYPASS === "true";
   const [route, setRoute] = useState<AppRoute>(() => routeFromPath(window.location.pathname));
   const [requestId, setRequestId] = useState<string | null>(() => requestIdFromPath(window.location.pathname));
@@ -40,7 +40,8 @@ export function App() {
   }), [authApi, e2eMode, sessionStore]);
   const adminApi = useMemo(() => new HttpAdminApi(http), [http]);
   useEffect(() => {
-    if (!session && !e2eMode) { setIsAdmin(false); return; }
+    if (!session && !e2eMode) { setIsAdmin(null); return; }
+    setIsAdmin(null);
     void http.fetch("/api/profile").then(async response => {
       if (!response.ok) return;
       const profile = await response.json() as { roles?: string[] };
@@ -73,8 +74,9 @@ export function App() {
   };
 
   if (!session && !e2eMode) return <AuthScreen api={authApi} onAuthenticated={authenticated} />;
-  return <AppShell route={route} isAdmin={isAdmin} onNavigate={navigate} onSignOut={signOut}>
-    {route === "admin" && isAdmin && <AdminManagement api={adminApi} />}
+  return <AppShell route={route} isAdmin={isAdmin === true} onNavigate={navigate} onSignOut={signOut}>
+    {route === "admin" && isAdmin === null && <section className="page"><div className="state-panel"><div className="spinner" aria-hidden="true" /><h2>Loading administrator access…</h2></div></section>}
+    {route === "admin" && isAdmin === true && <AdminManagement api={adminApi} />}
     {route === "new-request" && <NewPurchaseRequest api={submissionApi} onBack={() => navigate("requests")} />}
     {route === "request-detail" && requestId && <RequestDetail api={requestApi} approvalApi={approvalApi} requestId={requestId} onBack={() => navigate("requests")} />}
     {route === "requests" && <RequestDashboard api={requestApi} onNewRequest={() => navigate("new-request")} onOpenRequest={openRequest} />}
