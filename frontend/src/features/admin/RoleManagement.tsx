@@ -15,7 +15,11 @@ export function RoleManagement({ api, assignments, onChanged }: Props) {
 
   async function toggleRole(assignment: RoleAssignment, role: string) {
     const selected = new Set(assignment.roles);
-    selected.has(role) ? selected.delete(role) : selected.add(role);
+    if (selected.has(role)) {
+      selected.delete(role);
+    } else {
+      selected.add(role);
+    }
     if (selected.size === 0) {
       setError("Each user must keep at least one application role.");
       return;
