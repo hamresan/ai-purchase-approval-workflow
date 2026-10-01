@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Budget, Department, Offer, Product, RoleAssignment, Vendor } from "@/api/admin";
 import { HttpAdminApi } from "@/api/admin";
+import { RoleManagement } from "@/features/admin/RoleManagement";
 
 interface Props { api: HttpAdminApi }
 
@@ -19,7 +20,7 @@ export function AdminManagement({ api }: Props) {
     {data && <>
       <div className="admin-tabs"><span className="active">Users & Roles</span><span>Departments</span><span>Catalog & Vendors</span><span>Budgets</span></div>
       <div className="admin-grid">
-        <AdminCard title="Users & roles"><AdminTable headers={["User ID", "Roles"]} rows={data.roles.map(item => [item.user_id, item.roles.join(", ")])} /></AdminCard>
+        <AdminCard title="Users & roles"><RoleManagement api={api} assignments={data.roles} onChanged={roles => setData(current => current ? { ...current, roles } : current)} /></AdminCard>
         <AdminCard title="Departments"><AdminTable headers={["Department", "Status"]} rows={data.departments.map(item => [item.name, item.is_active ? "Active" : "Inactive"])} /></AdminCard>
         <AdminCard title="Products"><AdminTable headers={["Product", "Status"]} rows={data.products.map(item => [item.name, item.is_active ? "Active" : "Inactive"])} /></AdminCard>
         <AdminCard title="Vendors"><AdminTable headers={["Vendor", "Status"]} rows={data.vendors.map(item => [item.name, item.is_active ? "Active" : "Inactive"])} /></AdminCard>
